@@ -1,0 +1,231 @@
+/* post.module.css - tuned for a 60% content column */
+
+/* Base */
+.postStyle {
+    font-size: var(--post-base-size);
+    line-height: var(--post-line-height);
+    color: #333333;
+    word-break: break-word;
+}
+
+/* Headings (smaller than full-screen layout) */
+.postStyle h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 1.25rem 0 0.9rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--post-accent);
+    color: var(--post-accent);
+}
+
+.postStyle h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 1.25rem 0 0.75rem;
+    color: var(--post-accent);
+}
+
+.postStyle h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 1rem 0 0.6rem;
+    color: var(--post-accent);
+}
+
+/* Paragraphs & lists */
+.postStyle p {
+    margin-bottom: 0.9rem;
+    color: var(--post-muted);
+    font-size: 0.95em;
+}
+
+.postStyle ul,
+.postStyle ol {
+    margin: 0.7rem 0 1rem;
+    padding-left: 1.4rem;
+}
+
+.postStyle li {
+    margin-bottom: 0.45rem;
+    position: relative;
+}
+
+.postStyle ul li::before {
+    content: "•";
+    color: var(--post-accent);
+    font-weight: bold;
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+}
+
+/* Links, strong, hr */
+.postStyle a {
+    color: #0066cc;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.postStyle a:hover {
+    color: var(--post-accent);
+    text-decoration: none;
+}
+
+.postStyle strong {
+    color: var(--post-accent);
+    font-weight: 600;
+}
+
+.postStyle hr {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--post-accent), transparent);
+    margin: 1.6rem 0;
+}
+
+/* Table Styles (compact) */
+.postStyle table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: var(--post-bg);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    border-radius: 6px;
+    overflow: hidden;
+    display: table;
+    font-size: 0.95rem;
+}
+
+.postStyle th {
+    background-color: #6066a3;
+    color: white;
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 10px;
+}
+
+.postStyle td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f3f3f3;
+}
+
+.postStyle tr:last-child td {
+    border-bottom: none;
+}
+
+.postStyle tr:nth-child(even) {
+    background-color: #fbfdff;
+}
+
+.postStyle tr:hover {
+    background-color: #f6fbff;
+}
+
+/* Responsive tables */
+@media (max-width: 768px) {
+    .postStyle table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        font-size: 0.9rem;
+    }
+
+    .postStyle th,
+    .postStyle td {
+        padding: 10px 12px;
+    }
+}
+
+/* ---------- IMAGE HELPERS FOR RICH CONTENT ---------- */
+/* Generic content images */
+.postStyle img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0.6rem 0;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    object-fit: cover;
+}
+
+/* Common size helpers you can set on the <img> tag in rich text */
+.postStyle img.full {
+    width: 100%;
+    max-width: 100%;
+}
+
+.postStyle img.half {
+    width: 48%;
+    max-width: 48%;
+}
+
+.postStyle img.third {
+    width: 32%;
+    max-width: 32%;
+}
+
+/* small thumbnail (useful for inline icons or author avatars) */
+.postStyle img.thumb {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Float helpers (use in your HTML: <img class="align-left" ...>) */
+.postStyle img.align-left {
+    float: left;
+    margin: 0 12px 8px 0;
+    width: 40%;
+    max-width: 220px;
+}
+
+.postStyle img.align-right {
+    float: right;
+    margin: 0 0 8px 12px;
+    width: 40%;
+    max-width: 220px;
+}
+
+/* Figure + caption support */
+.postStyle figure {
+    margin: 0.6rem 0;
+    display: block;
+    text-align: center;
+}
+
+.postStyle figure img {
+    margin: 0 auto;
+}
+
+.postStyle figcaption {
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: #666666;
+}
+
+/* Small screens: make half/third/align widths stack nicely */
+@media (max-width: 640px) {
+
+    .postStyle img.half,
+    .postStyle img.third,
+    .postStyle img.align-left,
+    .postStyle img.align-right {
+        width: 100%;
+        max-width: 100%;
+        float: none;
+        margin: 0.6rem 0;
+    }
+
+    .postStyle h1 {
+        font-size: 1.25rem;
+    }
+
+    .postStyle h2 {
+        font-size: 1.05rem;
+    }
+
+    .postStyle h3 {
+        font-size: 0.98rem;
+    }
+}
