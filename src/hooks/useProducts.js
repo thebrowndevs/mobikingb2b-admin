@@ -91,6 +91,7 @@ export const useProducts = () => {
 
     const getProductByIdQuery = (id) => useQuery({
         queryKey: ['product', id],
+        enabled: !!id,
         queryFn: async () => {
             const res = await api.get(`/products/${id}`);
             const data = res.data;
@@ -104,6 +105,21 @@ export const useProducts = () => {
         staleTime: 1000 * 60 * 5,
         onError: (err) => {
             toast.error(err?.response?.data?.message || 'Failed to fetch service');
+        }
+    });
+
+    const getProductInventoryDetailsQuery = (id) => useQuery({
+        queryKey: ['productInventory', id],
+        enabled: !!id,
+        queryFn: async () => {
+            const res = await api.get(`/products/inventory-details/${id}`);
+            const data = res.data?.data;
+            if (!data) throw new Error('Product not found');
+            return data;
+        },
+        staleTime: 1000 * 60 * 2,
+        onError: (err) => {
+            toast.error(err?.response?.data?.message || 'Failed to fetch product inventory details');
         }
     });
 
@@ -150,12 +166,12 @@ export const useProducts = () => {
     });
 
     const addProductStock = useMutation({
-        mutationFn: (data) => api.post(api.defaults.baseURL.replace('/v1', '/v2') + '/products/addProductStock', data),
+        mutationFn: (data) => api.post('/products/addProductStock', data),
         enabled: canAdd,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['productsPagination'] });
             queryClient.invalidateQueries({ queryKey: ['stock'] });
-            // queryClient.invalidateQueries({ queryKey: ['product'] });
+            queryClient.invalidateQueries({ queryKey: ['productInventory'] });
             toast.success('Stock Added successfully');
         },
         onError: (err) => {
@@ -164,16 +180,64 @@ export const useProducts = () => {
     });
 
     const bulkUpdateProductStock = useMutation({
-        mutationFn: (data) => api.post(api.defaults.baseURL.replace('/v1', '/v2') + '/products/bulkUpdateProductStock', data),
+        mutationFn: (data) => api.post('/products/bulkUpdateProductStock', data),
         enabled: canAdd,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['productsPagination'] });
             queryClient.invalidateQueries({ queryKey: ['stock'] });
-            // queryClient.invalidateQueries({ queryKey: ['product'] });
+            queryClient.invalidateQueries({ queryKey: ['productInventory'] });
             toast.success('Bulk Stock updated successfully');
         },
         onError: (err) => {
             toast.error(err?.response?.data?.message || 'Failed to bulk update stock.');
+        }
+    });
+
+    const updateProductPrice = useMutation({
+        mutationFn: ({ id, data }) => api.put(`/products/price/${id}`, data),
+        enabled: canEdit,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['productsPagination'] });
+            queryClient.invalidateQueries({ queryKey: ['product'] });
+        },
+        onError: (err) => {
+            toast.error(err?.response?.data?.message || 'Failed to update pricing slabs.');
+        }
+    });
+
+    const createVariant = useMutation({
+        mutationFn: (data) => api.post('/products/variant/create', data),
+        enabled: canEdit,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['productsPagination'] });
+            queryClient.invalidateQueries({ queryKey: ['product'] });
+        },
+        onError: (err) => {
+            toast.error(err?.response?.data?.message || 'Failed to create variant.');
+        }
+    });
+
+    const updateVariant = useMutation({
+        mutationFn: ({ variantId, data }) => api.put(`/products/variant/${variantId}`, data),
+        enabled: canEdit,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['productsPagination'] });
+            queryClient.invalidateQueries({ queryKey: ['product'] });
+        },
+        onError: (err) => {
+            toast.error(err?.response?.data?.message || 'Failed to update variant.');
+        }
+    });
+
+    const deleteVariant = useMutation({
+        mutationFn: (variantId) => api.delete(`/products/variant/${variantId}`),
+        enabled: canEdit,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['productsPagination'] });
+            queryClient.invalidateQueries({ queryKey: ['product'] });
+        },
+        onError: (err) => {
+            toast.error(err?.response?.data?.message || 'Failed to delete variant.');
         }
     });
 
@@ -182,7 +246,6 @@ export const useProducts = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['productsPagination'] });
             queryClient.invalidateQueries({ queryKey: ['stock'] });
-            // queryClient.invalidateQueries({ queryKey: ['product'] });
             toast.success('Product checked successfully');
         },
         onError: (err) => {
@@ -194,32 +257,18 @@ export const useProducts = () => {
         mutationFn: ({ data, id }) => api.put(`/products/status/${id}`, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['productsPagination'] });
-            // toast.success('Stock Added successfully');
         },
         onError: (err) => {
             toast.error(err?.response?.data?.message || 'Failed to update status.');
         }
     })
 
-    // Delete Product mutation
-    // const deleteProduct = useMutation({
-    //     mutationFn: (id) => api.delete(`/products/${id}`),
-    //     enabled: canDelete,
-    //     onSuccess: () => {
-    //         queryClient.invalidateQueries({ queryKey: ['products'] });
-    //         toast.success('Product deleted successfully');
-    //     },
-    //     onError: (err) => {
-    //         toast.error(err?.response?.data?.message || 'Failed to delete Product');
-    //     }
-    // });
-
     return {
         productsQuery, createProduct, getProductQuery,
         updateProduct, markProductChecked, addProductStock, bulkUpdateProductStock, getStockHistoryByProductQuery,
-        // deleteProduct,
+        updateProductPrice, createVariant, updateVariant, deleteVariant,
         productsPaginationQuery, updateProductStatus, availableProductsQuery, getProductByIdQuery,
-        getProductOrdersQuery,
+        getProductOrdersQuery, getProductInventoryDetailsQuery,
         permissions: {
             canView,
             canAdd,

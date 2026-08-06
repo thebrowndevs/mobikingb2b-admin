@@ -16,255 +16,258 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { z } from "zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   vendor: z.string().optional(),
-  isScratchy: z.boolean().optional().default(false),
-  updates: z
-    .array(
-      z.object({
-        variantName: z.string().min(1, "Variant Name is required"),
-        quantity: z.coerce.number().min(1, "Quantity must be at least 1"),
-        purchasePrice: z.coerce.number().optional().default(0),
-      })
-    )
-    .min(1, "At least one variant update is required"),
-});
+  updates: z.array(
+    z.object({
+      variantId: z.string(),
+      variantName: z.string(),
+      selected: z.boolean().default(false),
+      quantity: z.coerce.number().default(0),
+      purchasePrice: z.coerce.number().default(0),
+      currentStock: z.coerce.number().optional().default(0),
+    })
+  )
+}).refine(
+  (data) => data.updates.some(u => u.selected),
+  {
+    message: "At least one variant option must be checked to save updates.",
+    path: ["updates"]
+  }
+);
 
-function BulkStockUpdate({ open, onOpenChange, product }) {
+function BulkStockUpdate({ open, onOpenChange, product, productId }) {
   const { bulkUpdateProductStock } = useProducts();
+  const resolvedId = productId || product?._id;
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       vendor: "",
-      isScratchy: false,
-      updates: [{ variantName: "", quantity: 1, purchasePrice: 0 }],
+      updates: [],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields } = useFieldArray({
     control: form.control,
     name: "updates",
   });
 
-  // Reset form when opening/closing
+  // Reset form when opening/closing and load variants
   React.useEffect(() => {
     if (open) {
+      const initialUpdates = (product?.variants || []).map(v => ({
+        variantId: v.id,
+        variantName: v.name,
+        selected: false,
+        quantity: 0,
+        purchasePrice: 0,
+        currentStock: v.totalStock || 0,
+      }));
       form.reset({
         vendor: "",
-        isScratchy: false,
-        updates: [{ variantName: "", quantity: 1, purchasePrice: 0 }],
+        updates: initialUpdates,
       });
     }
-  }, [open, form]);
+  }, [open, product, form]);
 
   async function onSubmit(values) {
-    await bulkUpdateProductStock.mutateAsync({
-      productId: product?._id,
-      vendor: values.vendor,
-      isScratchy: values.isScratchy,
-      updates: values.updates,
-    });
-    onOpenChange();
+    // Validate quantities for selected variants
+    const selectedUpdates = values.updates.filter(u => u.selected);
+    const invalid = selectedUpdates.some(u => u.quantity < 1);
+    if (invalid) {
+      toast.error("Please enter a valid quantity of 1 or more for all selected variants.");
+      return;
+    }
+
+    const payloadUpdates = selectedUpdates.map(u => ({
+      variantId: u.variantId,
+      variantName: u.variantName,
+      quantity: u.quantity,
+      purchasePrice: u.purchasePrice,
+    }));
+
+    const clientVersion = product?.inventory?.version ?? 0;
+    try {
+      await bulkUpdateProductStock.mutateAsync({
+        productId: resolvedId,
+        vendor: values.vendor,
+        clientVersion,
+        updates: payloadUpdates,
+      });
+      toast.success("Bulk stock updated successfully");
+      onOpenChange(false);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to update bulk stock");
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto bg-back2 border border-bdr2 rounded-xl p-6 shadow-none">
         <DialogHeader>
-          <DialogTitle>Bulk Stock Update</DialogTitle>
-          <DialogDescription>
-            Bulk add stock for {product?.fullName}
+          <DialogTitle className="text-sm font-bold text-slate-800 tracking-tight">
+            Bulk Stock Update
+          </DialogTitle>
+          <DialogDescription className="text-xs text-slate-450">
+            Select variants of <strong className="text-slate-700">{product?.fullName || product?.name}</strong> to bulk-add stock.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-wrap gap-3">
-          <div>
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Regular Variants</span>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {product?.variants && Object.entries(product.variants).length > 0 ? (
-                Object.entries(product.variants).map(([key, value], idx) => (
-                  <div key={idx} className="bg-gray-100 rounded p-2 text-sm flex gap-1">
-                    <strong>{key}:</strong>
-                    <p>{value}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-gray-400">No regular variants</p>
-              )}
-            </div>
-          </div>
-          <div>
-            <span className="text-xs font-semibold text-green-700 uppercase tracking-wider">Scratchy Variants</span>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {product?.scratchyVariants && Object.entries(product.scratchyVariants).length > 0 ? (
-                Object.entries(product.scratchyVariants).map(([key, value], idx) => (
-                  <div key={idx} className="bg-green-50 border border-green-200 rounded p-2 text-sm flex gap-1 text-green-700">
-                    <strong>{key}:</strong>
-                    <p>{value}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-gray-400">No scratchy variants</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div>
+        <div className="mt-2.5">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Common Vendor & Scratchy Toggle */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              {/* Common Vendor Input */}
+              <div className="p-4 bg-back1 border border-bdr2 rounded-xl">
                 <FormField
                   control={form.control}
                   name="vendor"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Common Vendor</FormLabel>
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                        Common Vendor / Supplier
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="ABC Supplier" {...field} />
+                        <Input
+                          placeholder="e.g. ABC Wholesalers Ltd"
+                          {...field}
+                          className="w-full bg-white border-bdr2 text-slate-700 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-none text-xs h-9"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
 
-                <FormField
-                  control={form.control}
-                  name="isScratchy"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-2 mt-5">
-                      <FormControl>
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                        />
-                      </FormControl>
-                      <FormLabel className="text-sm font-medium cursor-pointer">
-                        Is Scratchy Variant Stock?
-                      </FormLabel>
-                    </FormItem>
+              {/* Variants Selector Table Grid */}
+              <div className="space-y-2 border border-bdr2 rounded-xl overflow-hidden bg-back1">
+                <Table className="overflow-visible text-xs">
+                  <TableHeader className="bg-slate-50/75 border-b border-bdr2">
+                    <TableRow>
+                      <TableHead className="text-center font-bold text-slate-600 text-[10px] uppercase tracking-wider py-3 w-16">Select</TableHead>
+                      <TableHead className="text-left font-bold text-slate-600 text-[10px] uppercase tracking-wider py-3">Variant Name</TableHead>
+                      <TableHead className="text-center font-bold text-slate-600 text-[10px] uppercase tracking-wider py-3 w-28">Current Stock</TableHead>
+                      <TableHead className="text-center font-bold text-slate-600 text-[10px] uppercase tracking-wider py-3 w-32">Qty to Add</TableHead>
+                      <TableHead className="text-center font-bold text-slate-600 text-[10px] uppercase tracking-wider py-3 w-36">Pur. Price (₹)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {fields.map((field, index) => {
+                      const isSelected = form.watch(`updates.${index}.selected`);
+                      return (
+                        <TableRow key={field.id} className="border-b border-bdr2 last:border-b-0 hover:bg-slate-50/20">
+                          <TableCell className="p-3 text-center align-middle">
+                            <FormField
+                              control={form.control}
+                              name={`updates.${index}.selected`}
+                              render={({ field: selectField }) => (
+                                <input
+                                  type="checkbox"
+                                  checked={selectField.value}
+                                  onChange={selectField.onChange}
+                                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                />
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell className="p-3 text-left align-middle font-bold text-slate-800">
+                            {field.variantName}
+                          </TableCell>
+                          <TableCell className="p-3 text-center align-middle font-semibold text-slate-500">
+                            {field.currentStock}
+                          </TableCell>
+                          <TableCell className="p-2.5 align-middle">
+                            <FormField
+                              control={form.control}
+                              name={`updates.${index}.quantity`}
+                              render={({ field: qtyField }) => (
+                                <Input
+                                  type="number"
+                                  disabled={!isSelected}
+                                  placeholder={isSelected ? "1" : "—"}
+                                  value={qtyField.value || ""}
+                                  onChange={(e) => qtyField.onChange(e.target.value)}
+                                  className={`w-full bg-white border-bdr2 text-slate-855 text-xs h-8 text-center ${!isSelected ? "opacity-40 cursor-not-allowed bg-slate-50" : "focus:border-indigo-500"
+                                    }`}
+                                />
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell className="p-2.5 align-middle">
+                            <FormField
+                              control={form.control}
+                              name={`updates.${index}.purchasePrice`}
+                              render={({ field: priceField }) => (
+                                <Input
+                                  type="number"
+                                  disabled={!isSelected}
+                                  placeholder={isSelected ? "0" : "—"}
+                                  value={priceField.value || ""}
+                                  onChange={(e) => priceField.onChange(e.target.value)}
+                                  className={`w-full bg-white border-bdr2 text-slate-855 text-xs h-8 text-center ${!isSelected ? "opacity-40 cursor-not-allowed bg-slate-50" : "focus:border-indigo-500"
+                                    }`}
+                                />
+                              )}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {fields.length === 0 && (
+                      <TableRow>
+                        <td colSpan={5} className="text-center py-6 text-slate-450 italic">
+                          No variants available for this product.
+                        </td>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex gap-2.5 justify-end pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onOpenChange(false)}
+                  className="h-9 text-xs font-semibold bg-white border-bdr2 text-slate-700"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={form.formState.isSubmitting}
+                  className="h-9 text-xs font-semibold bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text"
+                >
+                  {form.formState.isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Saving Stock...
+                    </>
+                  ) : (
+                    "Save Updates"
                   )}
-                />
+                </Button>
               </div>
-
-              {/* Variants Dynamic List */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                    Variant Quantities
-                  </h3>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5"
-                    onClick={() =>
-                      append({ variantName: "", quantity: 1, purchasePrice: 0 })
-                    }
-                  >
-                    <Plus className="h-4 w-4" /> Add Row
-                  </Button>
-                </div>
-
-                <div className="space-y-3">
-                  {fields.map((field, index) => (
-                    <div
-                      key={field.id}
-                      className="grid grid-cols-12 gap-3 items-end border p-3 rounded bg-gray-50/50"
-                    >
-                      <div className="col-span-5 sm:col-span-5">
-                        <FormField
-                          control={form.control}
-                          name={`updates.${index}.variantName`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">Variant Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g. Red" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div className="col-span-3 sm:col-span-3">
-                        <FormField
-                          control={form.control}
-                          name={`updates.${index}.quantity`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">Quantity</FormLabel>
-                              <FormControl>
-                                <Input type="number" min={1} {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div className="col-span-3 sm:col-span-3">
-                        <FormField
-                          control={form.control}
-                          name={`updates.${index}.purchasePrice`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">
-                                Purchase Price
-                              </FormLabel>
-                              <FormControl>
-                                <Input type="number" min={0} {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div className="col-span-1 flex justify-center pb-2">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => remove(index)}
-                          disabled={fields.length === 1}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={form.formState.isSubmitting}
-              >
-                {form.formState.isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  "Submit Bulk Stock Update"
-                )}
-              </Button>
             </form>
           </Form>
         </div>

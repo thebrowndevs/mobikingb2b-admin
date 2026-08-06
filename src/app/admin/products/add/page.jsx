@@ -5,12 +5,10 @@ import ProductForm from "../components/ProductForm";
 import InnerDashboardLayout from "@/components/dashboard/InnerDashboardLayout";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
   const router = useRouter();
-  const params = useParams();
-  const id = params.id;
 
   return (
     <InnerDashboardLayout>
@@ -25,13 +23,13 @@ export default function Page() {
           <ArrowLeft size={16} />
         </Button>
         <div>
-          <h1 className="text-primary font-bold text-3xl tracking-tighter">Edit Product</h1>
-          <p className="text-sm text-slate-500 font-medium">Update the product catalog specifications, pricing slabs, and model variants</p>
+          <h1 className="text-primary font-bold text-3xl tracking-tighter">Add New Product</h1>
+          <p className="text-sm text-slate-500 font-medium">Create a new product spec entry in the wholesale catalog</p>
         </div>
       </div>
 
       <div className="mt-4">
-        <ProductForm productId={id} />
+        <ProductForm />
       </div>
     </InnerDashboardLayout>
   );
