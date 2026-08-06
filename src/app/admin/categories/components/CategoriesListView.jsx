@@ -55,108 +55,116 @@ export default function CategoriesListView({
     };
 
     if (isLoading) return <TableSkeleton showHeader={false} />;
-    if (error) return <div className="text-red-600 p-4">Error: {error.message}</div>;
-    if (!categories?.length) return <div className="text-center text-gray-500 p-4">No categories Found!</div>;
+    if (error) return <div className="text-red-605 p-4 bg-back2 border border-bdr2 rounded-xl">Error: {error.message}</div>;
+    if (!categories?.length) return <div className="text-center text-slate-400 p-8 bg-back2 border border-bdr2 rounded-xl font-medium">No categories found.</div>;
 
     return (
-        <section className="w-full">
-            <div className="rounded-md border">
-                <Table className={'overflow-hidden'}>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="text-center text-primary text-base">#</TableHead>
-                            <TableHead className="text-center text-primary text-base">Image</TableHead>
-                            <TableHead className="text-center text-primary text-base">Name</TableHead>
-                            <TableHead className="text-center text-primary text-base">Slug</TableHead>
-                            <TableHead className="text-center text-primary text-base">Subcategories</TableHead>
-                            <TableHead className="text-center text-primary text-base">Status</TableHead>
-                            <TableHead className="text-center text-primary text-base">Action</TableHead>
-                        </TableRow>
-                    </TableHeader>
+        <section className="w-full bg-back2 border border-bdr2 rounded-xl overflow-hidden shadow-none">
+            <Table containerClassName="border-0 bg-transparent" className="overflow-visible">
+                <TableHeader className="bg-slate-50/75">
+                    <TableRow className="border-b border-bdr2">
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-16">#</TableHead>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-28">Image</TableHead>
+                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Name</TableHead>
+                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Slug</TableHead>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-48">Subcategories</TableHead>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-44">Status</TableHead>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-32">Action</TableHead>
+                    </TableRow>
+                </TableHeader>
 
-                    <TableBody>
-                        <AnimatePresence mode="wait">
-                            {categories.map((item, index) => {
-                                const subCount = item.subCategories?.length || 0;
+                <TableBody>
+                    <AnimatePresence mode="wait">
+                        {categories.map((item, index) => {
+                            const subCount = item.subCategories?.length || 0;
 
-                                return (
-                                    <motion.tr
-                                        key={item._id || index}
-                                        initial={{ opacity: 0, y: 8 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -8 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="border-b"
-                                    >
-                                        <TableCell className="text-center align-middle font-medium">{index + 1}</TableCell>
-                                        <TableCell className="text-center align-middle">
-                                            <div className="flex justify-center">
-                                                <Image
-                                                    height={80}
-                                                    width={80}
-                                                    quality={100}
-                                                    src={item.image || '/not-found-img.webp'}
-                                                    alt={item.name}
-                                                    className="object-contain rounded-sm"
-                                                />
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-center align-middle font-semibold text-gray-800">{item.name}</TableCell>
-                                        <TableCell className="text-center align-middle text-gray-500 font-mono text-xs">{item.slug}</TableCell>
+                            return (
+                                <motion.tr
+                                    key={item._id || index}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="border-b border-bdr2 last:border-b-0 hover:bg-slate-50/40 transition-colors"
+                                >
+                                    <TableCell className="text-center align-middle font-medium text-slate-400 py-3.5">{index + 1}</TableCell>
+                                    <TableCell className="text-center align-middle py-3.5">
+                                        <div className="flex justify-center">
+                                            <Image
+                                                height={48}
+                                                width={48}
+                                                quality={100}
+                                                src={item.image || '/not-found-img.webp'}
+                                                alt={item.name}
+                                                className="object-cover rounded-lg border border-bdr2"
+                                            />
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-left align-middle font-bold text-slate-800 py-3.5">{item.name}</TableCell>
+                                    <TableCell className="text-left align-middle text-slate-500 font-mono text-xs py-3.5">{item.slug}</TableCell>
 
-                                        {/* Subcategories count column */}
-                                        <TableCell className="text-center align-middle">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => setSelectedCategoryForSub(item)}
-                                                className="gap-1.5 h-8 px-2.5 rounded-full hover:bg-primary/10 border-primary/30"
+                                    {/* Subcategories count column */}
+                                    <TableCell className="text-center align-middle py-3.5">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setSelectedCategoryForSub(item)}
+                                            className="gap-1.5 h-8 px-3 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-100/50 shadow-none font-bold text-xs"
+                                        >
+                                            <Layers size={13} />
+                                            <span>{subCount} Subcategories</span>
+                                        </Button>
+                                    </TableCell>
+
+                                    {/* Active / Inactive Toggle column */}
+                                    <TableCell className="text-center align-middle py-3.5">
+                                        <div className="flex items-center justify-center gap-2.5">
+                                            <Switch
+                                                checked={item.active !== false}
+                                                disabled={!canEdit || togglingId === item._id}
+                                                onCheckedChange={() => handleToggle(item)}
+                                            />
+                                            <Badge
+                                                className={`text-[10px] px-2 py-0.5 font-bold uppercase shadow-none ${item.active !== false
+                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
+                                                        : 'bg-rose-50 text-rose-700 border border-rose-150'
+                                                    }`}
                                             >
-                                                <Layers size={14} className="text-primary" />
-                                                <span className="font-bold text-xs">{subCount} Subcategories</span>
-                                            </Button>
-                                        </TableCell>
+                                                {item.active !== false ? 'Active' : 'Inactive'}
+                                            </Badge>
+                                        </div>
+                                    </TableCell>
 
-                                        {/* Active / Inactive Toggle column */}
-                                        <TableCell className="text-center align-middle">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <Switch
-                                                    checked={item.active !== false}
-                                                    disabled={!canEdit || togglingId === item._id}
-                                                    onCheckedChange={() => handleToggle(item)}
-                                                />
-                                                <Badge
-                                                    className={`text-[10px] px-2 py-0.5 font-bold uppercase ${item.active !== false
-                                                            ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
-                                                            : 'bg-rose-100 text-rose-700 border border-rose-300'
-                                                        }`}
+                                    <TableCell className="text-center align-middle py-3.5">
+                                        <div className="flex justify-center gap-1.5">
+                                            {canEdit && (
+                                                <Button 
+                                                    size="sm" 
+                                                    variant="ghost" 
+                                                    className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-650 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 rounded-lg transition-all shadow-none"
+                                                    onClick={() => onEdit(item)}
                                                 >
-                                                    {item.active !== false ? 'Active' : 'Inactive'}
-                                                </Badge>
-                                            </div>
-                                        </TableCell>
-
-                                        <TableCell className="text-center align-middle">
-                                            <div className="flex justify-center gap-2">
-                                                {canEdit &&
-                                                    <Button size="icon" variant="outline" onClick={() => onEdit(item)}>
-                                                        <Pencil size={16} />
-                                                    </Button>
-                                                }
-                                                {canDelete &&
-                                                    <Button variant="destructive" size="icon" onClick={() => handleDeleteClick(item._id)}>
-                                                        <Trash size={16} />
-                                                    </Button>
-                                                }
-                                            </div>
-                                        </TableCell>
-                                    </motion.tr>
-                                );
-                            })}
-                        </AnimatePresence>
-                    </TableBody>
-                </Table>
-            </div>
+                                                    <Pencil size={14} />
+                                                </Button>
+                                            )}
+                                            {canDelete && (
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="sm" 
+                                                    className="h-8 w-8 p-0 text-slate-500 hover:text-red-650 hover:bg-red-50 border border-transparent hover:border-red-100 rounded-lg transition-all shadow-none"
+                                                    onClick={() => handleDeleteClick(item._id)}
+                                                >
+                                                    <Trash size={14} />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                </motion.tr>
+                            );
+                        })}
+                    </AnimatePresence>
+                </TableBody>
+            </Table>
 
             <DeleteConfirmationDialog
                 isOpen={!!deletingCategoryId}

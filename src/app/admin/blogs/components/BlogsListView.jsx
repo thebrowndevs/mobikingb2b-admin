@@ -70,15 +70,8 @@ export default function BlogsListView({
     };
 
     const handleToggleActive = async (id, checked) => {
-        const toastId = toast.loading("Updating active status...");
-        try {
-            if (onUpdateField) {
-                await onUpdateField({ id, data: { active: checked } });
-                toast.success("Active status updated successfully!", { id: toastId });
-            }
-        } catch (err) {
-            toast.error(err?.message || "Failed to update active status", { id: toastId });
-        }
+        await onUpdateField({ id, data: { active: checked } });
+
     };
 
     const getCategoryName = (id) => {
@@ -103,324 +96,323 @@ export default function BlogsListView({
     };
 
     if (isLoading) return <TableSkeleton showHeader={false} />;
-    if (error) return <div className="text-red-600 p-4">Error: {error.message || "Failed to load blogs"}</div>;
+    if (error) return <div className="text-red-600 p-4 bg-back2 border border-bdr2 rounded-xl">Error: {error.message || "Failed to load blogs"}</div>;
 
     return (
-        <section className="w-full">
-            <div className="rounded-md border bg-white overflow-visible shadow-sm">
-                <Table className="overflow-visible">
-                    <TableHeader className="relative z-20">
-                        <TableRow className="bg-gray-50 hover:bg-gray-50">
-                            <TableHead className="text-center text-primary text-base font-semibold w-16">#</TableHead>
-                            <TableHead className="text-center text-primary text-base font-semibold w-24">Image</TableHead>
-                            <TableHead className="text-left text-primary text-base font-semibold">Title</TableHead>
-                            
-                            {/* Category Filter Column Header */}
-                            <TableHead className="text-center text-primary text-base font-semibold w-44">
-                                <div className="flex flex-col items-center justify-center min-h-[50px] py-1">
-                                    <div className="flex items-center justify-center gap-1">
-                                        <span className="text-sm font-semibold text-gray-800">Category</span>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <button className="p-1 rounded hover:bg-gray-200 transition-colors text-gray-500 cursor-pointer">
-                                                    <ListFilter size={14} className={categoryFilter !== "all" ? "text-blue-600" : ""} />
+        <section className="w-full bg-back2 border border-bdr2 rounded-xl overflow-hidden">
+            <Table containerClassName="border-0 bg-transparent" className="overflow-visible">
+                <TableHeader className="bg-slate-50/75 relative z-20">
+                    <TableRow className="border-b border-bdr2 hover:bg-slate-50/75">
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-16">#</TableHead>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-24">Image</TableHead>
+                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Title</TableHead>
+
+                        {/* Category Filter Column Header */}
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider w-44">
+                            <div className="flex flex-col items-center justify-center min-h-[50px] py-1">
+                                <div className="flex items-center justify-center gap-1.5">
+                                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Category</span>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <button className="p-1 rounded hover:bg-slate-100 transition-colors text-slate-500 cursor-pointer">
+                                                <ListFilter size={13} className={categoryFilter !== "all" ? "text-indigo-600" : ""} />
+                                            </button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-48 p-1 bg-back2 border border-bdr2 shadow-none" align="center">
+                                            <div className="flex flex-col">
+                                                <button
+                                                    onClick={() => setCategoryFilter('all')}
+                                                    className="px-3 py-1.5 hover:bg-back1 rounded-lg text-sm text-left flex items-center justify-between text-slate-750 font-medium"
+                                                >
+                                                    <span>All Categories</span>
+                                                    {categoryFilter === 'all' && <Check size={14} className="text-indigo-600" />}
                                                 </button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-48 p-1 bg-white" align="center">
-                                                <div className="flex flex-col">
+                                                {categories.map((cat) => (
                                                     <button
-                                                        onClick={() => setCategoryFilter('all')}
-                                                        className="px-3 py-1.5 hover:bg-gray-100 rounded text-sm text-left flex items-center justify-between text-gray-700"
+                                                        key={cat._id}
+                                                        onClick={() => setCategoryFilter(cat._id)}
+                                                        className="px-3 py-1.5 hover:bg-back1 rounded-lg text-sm text-left flex items-center justify-between text-slate-750 font-medium"
                                                     >
-                                                        <span>All Categories</span>
-                                                        {categoryFilter === 'all' && <Check size={14} className="text-blue-600" />}
+                                                        <span className="truncate">{cat.name}</span>
+                                                        {categoryFilter === cat._id && <Check size={14} className="text-indigo-600" />}
                                                     </button>
-                                                    {categories.map((cat) => (
-                                                        <button
-                                                            key={cat._id}
-                                                            onClick={() => setCategoryFilter(cat._id)}
-                                                            className="px-3 py-1.5 hover:bg-gray-100 rounded text-sm text-left flex items-center justify-between text-gray-700"
-                                                        >
-                                                            <span className="truncate">{cat.name}</span>
-                                                            {categoryFilter === cat._id && <Check size={14} className="text-blue-600" />}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </PopoverContent>
-                                        </Popover>
-                                    </div>
-                                    {categoryFilter !== "all" && (
-                                        <span className="text-xs font-medium text-blue-600 mt-0.5 truncate max-w-[140px]" title={getCategoryName(categoryFilter)}>
-                                            {getCategoryName(categoryFilter)}
-                                        </span>
-                                    )}
+                                                ))}
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
-                            </TableHead>
+                                {categoryFilter !== "all" && (
+                                    <span className="text-[10px] font-semibold text-indigo-650 mt-0.5 truncate max-w-[130px] bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-150" title={getCategoryName(categoryFilter)}>
+                                        {getCategoryName(categoryFilter)}
+                                    </span>
+                                )}
+                            </div>
+                        </TableHead>
 
-                            <TableHead className="text-center text-primary text-base font-semibold w-32">Author</TableHead>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-32">Author</TableHead>
 
-                            {/* Status Filter Column Header */}
-                            <TableHead className="text-center text-primary text-base font-semibold w-36">
-                                <div className="flex flex-col items-center justify-center min-h-[50px] py-1">
-                                    <div className="flex items-center justify-center gap-1">
-                                        <span className="text-sm font-semibold text-gray-800">Status</span>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <button className="p-1 rounded hover:bg-gray-200 transition-colors text-gray-500 cursor-pointer">
-                                                    <ListFilter size={14} className={statusFilter !== "all" ? "text-blue-600" : ""} />
+                        {/* Status Filter Column Header */}
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider w-36">
+                            <div className="flex flex-col items-center justify-center min-h-[50px] py-1">
+                                <div className="flex items-center justify-center gap-1.5">
+                                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Status</span>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <button className="p-1 rounded hover:bg-slate-100 transition-colors text-slate-500 cursor-pointer">
+                                                <ListFilter size={13} className={statusFilter !== "all" ? "text-indigo-600" : ""} />
+                                            </button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-36 p-1 bg-back2 border border-bdr2 shadow-none" align="center">
+                                            <div className="flex flex-col">
+                                                <button
+                                                    onClick={() => setStatusFilter('all')}
+                                                    className="px-3 py-1.5 hover:bg-back1 rounded-lg text-sm text-left flex items-center justify-between text-slate-750 font-medium"
+                                                >
+                                                    <span>All</span>
+                                                    {statusFilter === 'all' && <Check size={14} className="text-indigo-600" />}
                                                 </button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-36 p-1 bg-white" align="center">
-                                                <div className="flex flex-col">
-                                                    <button
-                                                        onClick={() => setStatusFilter('all')}
-                                                        className="px-3 py-1.5 hover:bg-gray-100 rounded text-sm text-left flex items-center justify-between text-gray-700"
-                                                    >
-                                                        <span>All</span>
-                                                        {statusFilter === 'all' && <Check size={14} className="text-blue-600" />}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setStatusFilter('published')}
-                                                        className="px-3 py-1.5 hover:bg-gray-100 rounded text-sm text-left flex items-center justify-between text-gray-700"
-                                                    >
-                                                        <span>Published</span>
-                                                        {statusFilter === 'published' && <Check size={14} className="text-blue-600" />}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setStatusFilter('draft')}
-                                                        className="px-3 py-1.5 hover:bg-gray-100 rounded text-sm text-left flex items-center justify-between text-gray-700"
-                                                    >
-                                                        <span>Draft</span>
-                                                        {statusFilter === 'draft' && <Check size={14} className="text-blue-600" />}
-                                                    </button>
-                                                </div>
-                                            </PopoverContent>
-                                        </Popover>
-                                    </div>
-                                    {statusFilter !== "all" && (
-                                        <span className="text-xs font-medium text-blue-600 mt-0.5">
-                                            {getStatusLabel(statusFilter)}
-                                        </span>
-                                    )}
-                                </div>
-                            </TableHead>
-
-                            {/* Featured Filter Column Header */}
-                            <TableHead className="text-center text-primary text-base font-semibold w-36">
-                                <div className="flex flex-col items-center justify-center min-h-[50px] py-1">
-                                    <div className="flex items-center justify-center gap-1">
-                                        <span className="text-sm font-semibold text-gray-800">Featured</span>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <button className="p-1 rounded hover:bg-gray-200 transition-colors text-gray-500 cursor-pointer">
-                                                    <ListFilter size={14} className={featuredFilter !== "all" ? "text-blue-600" : ""} />
+                                                <button
+                                                    onClick={() => setStatusFilter('published')}
+                                                    className="px-3 py-1.5 hover:bg-back1 rounded-lg text-sm text-left flex items-center justify-between text-slate-750 font-medium"
+                                                >
+                                                    <span>Published</span>
+                                                    {statusFilter === 'published' && <Check size={14} className="text-indigo-600" />}
                                                 </button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-36 p-1 bg-white" align="center">
-                                                <div className="flex flex-col">
-                                                    <button
-                                                        onClick={() => setFeaturedFilter('all')}
-                                                        className="px-3 py-1.5 hover:bg-gray-100 rounded text-sm text-left flex items-center justify-between text-gray-700"
-                                                    >
-                                                        <span>All</span>
-                                                        {featuredFilter === 'all' && <Check size={14} className="text-blue-600" />}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setFeaturedFilter('true')}
-                                                        className="px-3 py-1.5 hover:bg-gray-100 rounded text-sm text-left flex items-center justify-between text-gray-700"
-                                                    >
-                                                        <span>Featured</span>
-                                                        {featuredFilter === 'true' && <Check size={14} className="text-blue-600" />}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setFeaturedFilter('false')}
-                                                        className="px-3 py-1.5 hover:bg-gray-100 rounded text-sm text-left flex items-center justify-between text-gray-700"
-                                                    >
-                                                        <span>Not Featured</span>
-                                                        {featuredFilter === 'false' && <Check size={14} className="text-blue-600" />}
-                                                    </button>
-                                                </div>
-                                            </PopoverContent>
-                                        </Popover>
-                                    </div>
-                                    {featuredFilter !== "all" && (
-                                        <span className="text-xs font-medium text-blue-600 mt-0.5">
-                                            {getFeaturedLabel(featuredFilter)}
-                                        </span>
-                                    )}
-                                </div>
-                            </TableHead>
-
-                            {/* Active Filter Column Header */}
-                            <TableHead className="text-center text-primary text-base font-semibold w-36">
-                                <div className="flex flex-col items-center justify-center min-h-[50px] py-1">
-                                    <div className="flex items-center justify-center gap-1">
-                                        <span className="text-sm font-semibold text-gray-800">Active</span>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <button className="p-1 rounded hover:bg-gray-200 transition-colors text-gray-500 cursor-pointer">
-                                                    <ListFilter size={14} className={activeFilter !== "all" ? "text-blue-600" : ""} />
+                                                <button
+                                                    onClick={() => setStatusFilter('draft')}
+                                                    className="px-3 py-1.5 hover:bg-back1 rounded-lg text-sm text-left flex items-center justify-between text-slate-750 font-medium"
+                                                >
+                                                    <span>Draft</span>
+                                                    {statusFilter === 'draft' && <Check size={14} className="text-indigo-600" />}
                                                 </button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-36 p-1 bg-white" align="center">
-                                                <div className="flex flex-col">
-                                                    <button
-                                                        onClick={() => setActiveFilter('all')}
-                                                        className="px-3 py-1.5 hover:bg-gray-100 rounded text-sm text-left flex items-center justify-between text-gray-700"
-                                                    >
-                                                        <span>All</span>
-                                                        {activeFilter === 'all' && <Check size={14} className="text-blue-600" />}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setActiveFilter('true')}
-                                                        className="px-3 py-1.5 hover:bg-gray-100 rounded text-sm text-left flex items-center justify-between text-gray-700"
-                                                    >
-                                                        <span>Active</span>
-                                                        {activeFilter === 'true' && <Check size={14} className="text-blue-600" />}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setActiveFilter('false')}
-                                                        className="px-3 py-1.5 hover:bg-gray-100 rounded text-sm text-left flex items-center justify-between text-gray-700"
-                                                    >
-                                                        <span>Inactive</span>
-                                                        {activeFilter === 'false' && <Check size={14} className="text-blue-600" />}
-                                                    </button>
-                                                </div>
-                                            </PopoverContent>
-                                        </Popover>
-                                    </div>
-                                    {activeFilter !== "all" && (
-                                        <span className="text-xs font-medium text-blue-600 mt-0.5">
-                                            {getActiveLabel(activeFilter)}
-                                        </span>
-                                    )}
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
-                            </TableHead>
-                            <TableHead className="text-center text-primary text-base font-semibold w-40">Created At</TableHead>
-                            <TableHead className="text-center text-primary text-base font-semibold w-32">Action</TableHead>
-                        </TableRow>
-                    </TableHeader>
+                                {statusFilter !== "all" && (
+                                    <span className="text-[10px] font-semibold text-indigo-650 mt-0.5 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-150">
+                                        {getStatusLabel(statusFilter)}
+                                    </span>
+                                )}
+                            </div>
+                        </TableHead>
 
-                    <TableBody>
-                        <AnimatePresence mode="wait">
-                            {blogs && blogs.length > 0 ? (
-                                blogs.map((item, index) => {
-                                    const catNames = item?.categories?.map(c => typeof c === 'object' ? c.name : c).join(', ') || '-';
-                                    return (
-                                        <motion.tr
-                                            key={item._id || index}
-                                            initial={{ opacity: 0, y: 8 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -8 }}
-                                            transition={{ duration: 0.3 }}
-                                            className="border-b hover:bg-gray-50/50"
-                                        >
-                                            <TableCell className="text-center align-middle font-medium text-gray-600">
-                                                {index + 1}
-                                            </TableCell>
-                                            <TableCell className="text-center align-middle">
-                                                <div className="flex justify-center">
-                                                    <Image
-                                                        height={56}
-                                                        width={56}
-                                                        quality={80}
-                                                        src={item?.image || '/not-found-img.webp'}
-                                                        alt={item?.title}
-                                                        className="object-cover rounded-md border"
-                                                    />
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-left align-middle font-semibold text-gray-900 max-w-xs md:max-w-sm">
-                                                <span className="truncate block">{item.title}</span>
-                                            </TableCell>
-                                            
-                                            {/* Category Cell */}
-                                            <TableCell className="text-center align-middle text-gray-600 font-medium max-w-[120px]">
-                                                <span className="truncate block" title={catNames}>{catNames}</span>
-                                            </TableCell>
+                        {/* Featured Filter Column Header */}
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider w-36">
+                            <div className="flex flex-col items-center justify-center min-h-[50px] py-1">
+                                <div className="flex items-center justify-center gap-1.5">
+                                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Featured</span>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <button className="p-1 rounded hover:bg-slate-100 transition-colors text-slate-500 cursor-pointer">
+                                                <ListFilter size={13} className={featuredFilter !== "all" ? "text-indigo-600" : ""} />
+                                            </button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-36 p-1 bg-back2 border border-bdr2 shadow-none" align="center">
+                                            <div className="flex flex-col">
+                                                <button
+                                                    onClick={() => setFeaturedFilter('all')}
+                                                    className="px-3 py-1.5 hover:bg-back1 rounded-lg text-sm text-left flex items-center justify-between text-slate-750 font-medium"
+                                                >
+                                                    <span>All</span>
+                                                    {featuredFilter === 'all' && <Check size={14} className="text-indigo-600" />}
+                                                </button>
+                                                <button
+                                                    onClick={() => setFeaturedFilter('true')}
+                                                    className="px-3 py-1.5 hover:bg-back1 rounded-lg text-sm text-left flex items-center justify-between text-slate-750 font-medium"
+                                                >
+                                                    <span>Featured</span>
+                                                    {featuredFilter === 'true' && <Check size={14} className="text-indigo-600" />}
+                                                </button>
+                                                <button
+                                                    onClick={() => setFeaturedFilter('false')}
+                                                    className="px-3 py-1.5 hover:bg-back1 rounded-lg text-sm text-left flex items-center justify-between text-slate-750 font-medium"
+                                                >
+                                                    <span>Not Featured</span>
+                                                    {featuredFilter === 'false' && <Check size={14} className="text-indigo-600" />}
+                                                </button>
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                                {featuredFilter !== "all" && (
+                                    <span className="text-[10px] font-semibold text-indigo-655 mt-0.5 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-150">
+                                        {getFeaturedLabel(featuredFilter)}
+                                    </span>
+                                )}
+                            </div>
+                        </TableHead>
 
-                                            <TableCell className="text-center align-middle text-gray-600 font-medium">
-                                                {item.author || "Admin"}
-                                            </TableCell>
-                                            
-                                            {/* Status Badge */}
-                                            <TableCell className="text-center align-middle">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                                                    item.status === 'published'
-                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                                        : 'bg-gray-50 text-gray-600 border-gray-200'
+                        {/* Active Filter Column Header */}
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider w-36">
+                            <div className="flex flex-col items-center justify-center min-h-[50px] py-1">
+                                <div className="flex items-center justify-center gap-1.5">
+                                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Active</span>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <button className="p-1 rounded hover:bg-slate-100 transition-colors text-slate-500 cursor-pointer">
+                                                <ListFilter size={13} className={activeFilter !== "all" ? "text-indigo-600" : ""} />
+                                            </button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-36 p-1 bg-back2 border border-bdr2 shadow-none" align="center">
+                                            <div className="flex flex-col">
+                                                <button
+                                                    onClick={() => setActiveFilter('all')}
+                                                    className="px-3 py-1.5 hover:bg-back1 rounded-lg text-sm text-left flex items-center justify-between text-slate-750 font-medium"
+                                                >
+                                                    <span>All</span>
+                                                    {activeFilter === 'all' && <Check size={14} className="text-indigo-600" />}
+                                                </button>
+                                                <button
+                                                    onClick={() => setActiveFilter('true')}
+                                                    className="px-3 py-1.5 hover:bg-back1 rounded-lg text-sm text-left flex items-center justify-between text-slate-750 font-medium"
+                                                >
+                                                    <span>Active</span>
+                                                    {activeFilter === 'true' && <Check size={14} className="text-indigo-600" />}
+                                                </button>
+                                                <button
+                                                    onClick={() => setActiveFilter('false')}
+                                                    className="px-3 py-1.5 hover:bg-back1 rounded-lg text-sm text-left flex items-center justify-between text-slate-750 font-medium"
+                                                >
+                                                    <span>Inactive</span>
+                                                    {activeFilter === 'false' && <Check size={14} className="text-indigo-600" />}
+                                                </button>
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                                {activeFilter !== "all" && (
+                                    <span className="text-[10px] font-semibold text-indigo-650 mt-0.5 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-150">
+                                        {getActiveLabel(activeFilter)}
+                                    </span>
+                                )}
+                            </div>
+                        </TableHead>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-40">Created At</TableHead>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-32">Action</TableHead>
+                    </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                    <AnimatePresence mode="wait">
+                        {blogs && blogs.length > 0 ? (
+                            blogs.map((item, index) => {
+                                const catNames = item?.categories?.map(c => typeof c === 'object' ? c.name : c).join(', ') || '-';
+                                return (
+                                    <motion.tr
+                                        key={item._id || index}
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -8 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="border-b border-bdr2 last:border-b-0 hover:bg-slate-50/40 transition-colors"
+                                    >
+                                        <TableCell className="text-center align-middle font-medium text-slate-400 py-3.5">
+                                            {index + 1}
+                                        </TableCell>
+                                        <TableCell className="text-center align-middle py-3.5">
+                                            <div className="flex justify-center">
+                                                <Image
+                                                    height={48}
+                                                    width={48}
+                                                    quality={80}
+                                                    src={item?.image || '/not-found-img.webp'}
+                                                    alt={item?.title || "Blog Image"}
+                                                    className="object-cover rounded-lg border border-bdr2"
+                                                />
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-left align-middle font-bold text-slate-800 py-3.5 max-w-xs md:max-w-sm">
+                                            <span className="truncate block">{item.title}</span>
+                                        </TableCell>
+
+                                        {/* Category Cell */}
+                                        <TableCell className="text-center align-middle text-slate-600 font-semibold py-3.5 max-w-[120px]">
+                                            <span className="truncate block" title={catNames}>{catNames}</span>
+                                        </TableCell>
+
+                                        <TableCell className="text-center align-middle text-slate-650 font-medium py-3.5">
+                                            {item.author || "Admin"}
+                                        </TableCell>
+
+                                        {/* Status Badge */}
+                                        <TableCell className="text-center align-middle py-3.5">
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${item.status === 'published'
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
+                                                    : 'bg-slate-100 text-slate-500 border-bdr2'
                                                 }`}>
-                                                    {item.status === 'published' ? 'Published' : 'Draft'}
-                                                </span>
-                                            </TableCell>
-                                            
-                                            {/* Featured Switch */}
-                                            <TableCell className="text-center align-middle">
-                                                <div className="flex justify-center">
-                                                    <Switch
-                                                        checked={!!item.featured}
-                                                        disabled={!canEdit}
-                                                        onCheckedChange={(checked) => handleToggleFeatured(item._id, checked)}
-                                                    />
-                                                </div>
-                                            </TableCell>
+                                                {item.status === 'published' ? 'Published' : 'Draft'}
+                                            </span>
+                                        </TableCell>
 
-                                            {/* Active Switch */}
-                                            <TableCell className="text-center align-middle">
-                                                <div className="flex justify-center">
-                                                    <Switch
-                                                        checked={item.active !== false}
-                                                        disabled={!canEdit}
-                                                        onCheckedChange={(checked) => handleToggleActive(item._id, checked)}
-                                                    />
-                                                </div>
-                                            </TableCell>
+                                        {/* Featured Switch */}
+                                        <TableCell className="text-center align-middle py-3.5">
+                                            <div className="flex justify-center">
+                                                <Switch
+                                                    checked={!!item.featured}
+                                                    disabled={!canEdit}
+                                                    onCheckedChange={(checked) => handleToggleFeatured(item._id, checked)}
+                                                />
+                                            </div>
+                                        </TableCell>
 
-                                            <TableCell className="text-center align-middle text-gray-500 text-sm">
-                                                {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: 'numeric'
-                                                }) : '-'}
-                                            </TableCell>
-                                            <TableCell className="text-center align-middle">
-                                                <div className="flex justify-center gap-2">
-                                                    {canEdit && (
-                                                        <Button
-                                                            size="icon"
-                                                            variant="outline"
-                                                            title="Edit Blog"
-                                                            onClick={() => onEdit && onEdit(item)}
-                                                        >
-                                                            <Pencil size={16} />
-                                                        </Button>
-                                                    )}
-                                                    {canDelete && (
-                                                        <Button
-                                                            size="icon"
-                                                            variant="destructive"
-                                                            title="Delete Blog"
-                                                            onClick={() => handleDeleteClick(item._id)}
-                                                        >
-                                                            <Trash size={16} />
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </TableCell>
-                                        </motion.tr>
-                                    );
-                                })
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={10} className="text-center text-gray-500 p-8 bg-white font-medium">
-                                        No blogs found. Let's create one!
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </AnimatePresence>
-                    </TableBody>
-                </Table>
-            </div>
+                                        {/* Active Switch */}
+                                        <TableCell className="text-center align-middle py-3.5">
+                                            <div className="flex justify-center">
+                                                <Switch
+                                                    checked={item.active !== false}
+                                                    disabled={!canEdit}
+                                                    onCheckedChange={(checked) => handleToggleActive(item._id, checked)}
+                                                />
+                                            </div>
+                                        </TableCell>
+
+                                        <TableCell className="text-center align-middle text-slate-500 text-sm py-3.5">
+                                            {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US', {
+                                                year: 'numeric',
+                                                month: 'short',
+                                                day: 'numeric'
+                                            }) : '-'}
+                                        </TableCell>
+                                        <TableCell className="text-center align-middle py-3.5">
+                                            <div className="flex justify-center gap-1.5">
+                                                {canEdit && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-650 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 rounded-lg transition-all shadow-none"
+                                                        title="Edit Blog"
+                                                        onClick={() => onEdit && onEdit(item)}
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </Button>
+                                                )}
+                                                {canDelete && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 w-8 p-0 text-slate-500 hover:text-red-650 hover:bg-red-50 border border-transparent hover:border-red-100 rounded-lg transition-all shadow-none"
+                                                        title="Delete Blog"
+                                                        onClick={() => handleDeleteClick(item._id)}
+                                                    >
+                                                        <Trash size={14} />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                    </motion.tr>
+                                );
+                            })
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={10} className="text-center text-slate-400 py-8 bg-back2 font-medium">
+                                    No blogs found. Let's create one!
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </AnimatePresence>
+                </TableBody>
+            </Table>
 
             <DeleteConfirmationDialog
                 isOpen={!!deletingBlogId}

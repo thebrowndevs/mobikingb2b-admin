@@ -33,10 +33,14 @@ export default function CreateBlogPage() {
                         size="icon" 
                         onClick={() => router.push('/admin/blogs')}
                         title="Back to blogs list"
+                        className="bg-back2 hover:bg-slate-100 border border-bdr2 text-slate-750 shadow-none h-9 w-9 rounded-lg"
                     >
-                        <ArrowLeft size={16} />
+                        <ArrowLeft size={15} />
                     </Button>
-                    <h1 className="text-primary font-bold sm:text-2xl lg:text-3xl">Create New Blog Post</h1>
+                    <div>
+                        <h1 className="text-primary font-bold text-3xl tracking-tighter">Create New Blog Post</h1>
+                        <p className="text-sm text-slate-500 font-medium">Compose a new article and publish it to the customer storefront</p>
+                    </div>
                 </div>
             </div>
 

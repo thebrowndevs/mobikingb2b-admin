@@ -20,10 +20,6 @@ export default function SettingsPage() {
         androidAppLink: "",
         iosAppLink: "",
         logoImage: "",
-        paymentGatewaySettings: {
-            enableRazorpay: true,
-            enablePhonepe: true
-        }
     });
 
     useEffect(() => {
@@ -44,14 +40,19 @@ export default function SettingsPage() {
             if (res.ok) {
                 const data = await res.json();
                 if (data?.success && data?.data) {
-                    setCompanyDetails(prev => ({
-                        ...prev,
-                        ...data.data,
-                        paymentGatewaySettings: {
-                            enableRazorpay: data.data.paymentGatewaySettings?.enableRazorpay !== false,
-                            enablePhonepe: data.data.paymentGatewaySettings?.enablePhonepe !== false
-                        }
-                    }));
+                    setCompanyDetails({
+                        phoneNo: data.data.phoneNo || "",
+                        whatsappNo: data.data.whatsappNo || "",
+                        email: data.data.email || "",
+                        address: data.data.address || "",
+                        instaLink: data.data.instaLink || "",
+                        facebookLink: data.data.facebookLink || "",
+                        twitterLink: data.data.twitterLink || "",
+                        websiteLink: data.data.websiteLink || "",
+                        androidAppLink: data.data.androidAppLink || "",
+                        iosAppLink: data.data.iosAppLink || "",
+                        logoImage: data.data.logoImage || "",
+                    });
                 }
             }
         } catch (error) {
@@ -82,10 +83,12 @@ export default function SettingsPage() {
                 const data = await res.json();
                 if (data.success) {
                     toast.success("Settings saved successfully!");
-                    setCompanyDetails(prev => ({
-                        ...prev,
-                        ...data.data
-                    }));
+                    if (data.data) {
+                        setCompanyDetails(prev => ({
+                            ...prev,
+                            ...data.data
+                        }));
+                    }
                 } else {
                     toast.error(data.message || "Failed to save settings");
                 }
@@ -102,112 +105,72 @@ export default function SettingsPage() {
 
     if (loading) {
         return (
-            <div className="flex h-full items-center justify-center p-6">
-                <span className="text-gray-500 font-medium">Loading details...</span>
+            <div className="flex h-full items-center justify-center p-6 bg-back1">
+                <span className="text-slate-500 font-medium animate-pulse">Loading settings details...</span>
             </div>
         );
     }
 
     return (
-        <div className="p-6 max-w-4xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Company & Gateway Configuration</h1>
+        <div className="p-6 max-w-4xl mx-auto space-y-6">
+            <div className="flex justify-between items-center mb-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tighter">Settings</h1>
+                    <p className="text-sm text-slate-500">Configure company info and application platform links</p>
+                </div>
             </div>
 
             <form onSubmit={handleSave} className="space-y-6">
-                {/* Gateway Settings Section */}
-                <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                    <h2 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">
-                        Payment Gateway Toggles
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <label className="flex items-center space-x-3 cursor-pointer p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                            <input
-                                type="checkbox"
-                                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                checked={companyDetails.paymentGatewaySettings.enableRazorpay}
-                                onChange={(e) => setCompanyDetails(prev => ({
-                                    ...prev,
-                                    paymentGatewaySettings: {
-                                        ...prev.paymentGatewaySettings,
-                                        enableRazorpay: e.target.checked
-                                    }
-                                }))}
-                            />
-                            <div>
-                                <span className="font-medium text-gray-800 block">Enable Razorpay</span>
-                                <span className="text-sm text-gray-500">Allow customers to check out via Razorpay API overlays</span>
-                            </div>
-                        </label>
-
-                        <label className="flex items-center space-x-3 cursor-pointer p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                            <input
-                                type="checkbox"
-                                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                checked={companyDetails.paymentGatewaySettings.enablePhonepe}
-                                onChange={(e) => setCompanyDetails(prev => ({
-                                    ...prev,
-                                    paymentGatewaySettings: {
-                                        ...prev.paymentGatewaySettings,
-                                        enablePhonepe: e.target.checked
-                                    }
-                                }))}
-                            />
-                            <div>
-                                <span className="font-medium text-gray-800 block">Enable PhonePe</span>
-                                <span className="text-sm text-gray-500">Enable direct browser-based payment redirection using PhonePe PG</span>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
                 {/* Company Contact Details Section */}
-                <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 space-y-4">
-                    <h2 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-2">
-                        Contact Details
-                    </h2>
+                <div className="bg-back2 p-6 rounded-xl  border border-bdr2 space-y-5">
+                    <div className="border-b border-bdr2 pb-3">
+                        <h2 className="text-lg font-bold text-slate-800">
+                            Contact Details
+                        </h2>
+                        <p className="text-xs text-slate-400">Specify general contact parameters for support channels</p>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Phone Number</label>
                             <input
                                 type="text"
-                                className="w-full border rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-back1 border border-bdr2 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
                                 value={companyDetails.phoneNo || ""}
                                 onChange={(e) => setCompanyDetails(prev => ({ ...prev, phoneNo: e.target.value }))}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number</label>
+                            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">WhatsApp Number</label>
                             <input
                                 type="text"
-                                className="w-full border rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-back1 border border-bdr2 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
                                 value={companyDetails.whatsappNo || ""}
                                 onChange={(e) => setCompanyDetails(prev => ({ ...prev, whatsappNo: e.target.value }))}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Email Address</label>
                             <input
                                 type="email"
-                                className="w-full border rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-back1 border border-bdr2 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
                                 value={companyDetails.email || ""}
                                 onChange={(e) => setCompanyDetails(prev => ({ ...prev, email: e.target.value }))}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Website URL</label>
+                            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Website URL</label>
                             <input
                                 type="text"
-                                className="w-full border rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-back1 border border-bdr2 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
                                 value={companyDetails.websiteLink || ""}
                                 onChange={(e) => setCompanyDetails(prev => ({ ...prev, websiteLink: e.target.value }))}
                             />
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Office Address</label>
+                            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Office Address</label>
                             <textarea
-                                rows={2}
-                                className="w-full border rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                rows={3}
+                                className="w-full bg-back1 border border-bdr2 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200 resize-none"
                                 value={companyDetails.address || ""}
                                 onChange={(e) => setCompanyDetails(prev => ({ ...prev, address: e.target.value }))}
                             />
@@ -216,43 +179,46 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Social & App Links */}
-                <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 space-y-4">
-                    <h2 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-2">
-                        Social Networks & App Links
-                    </h2>
+                <div className="bg-back2 p-6 rounded-xl  border border-bdr2 space-y-5">
+                    <div className="border-b border-bdr2 pb-3">
+                        <h2 className="text-lg font-bold text-slate-800">
+                            Social Networks & App Links
+                        </h2>
+                        <p className="text-xs text-slate-400">Configure public listings and official storefront app downloads</p>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Instagram Link</label>
+                            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Instagram Link</label>
                             <input
                                 type="text"
-                                className="w-full border rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-back1 border border-bdr2 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
                                 value={companyDetails.instaLink || ""}
                                 onChange={(e) => setCompanyDetails(prev => ({ ...prev, instaLink: e.target.value }))}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Facebook Link</label>
+                            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Facebook Link</label>
                             <input
                                 type="text"
-                                className="w-full border rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-back1 border border-bdr2 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
                                 value={companyDetails.facebookLink || ""}
                                 onChange={(e) => setCompanyDetails(prev => ({ ...prev, facebookLink: e.target.value }))}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Android App Link</label>
+                            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Android App Link</label>
                             <input
                                 type="text"
-                                className="w-full border rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-back1 border border-bdr2 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
                                 value={companyDetails.androidAppLink || ""}
                                 onChange={(e) => setCompanyDetails(prev => ({ ...prev, androidAppLink: e.target.value }))}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">iOS App Link</label>
+                            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">iOS App Link</label>
                             <input
                                 type="text"
-                                className="w-full border rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-back1 border border-bdr2 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
                                 value={companyDetails.iosAppLink || ""}
                                 onChange={(e) => setCompanyDetails(prev => ({ ...prev, iosAppLink: e.target.value }))}
                             />
@@ -261,10 +227,10 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Save Button */}
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-2">
                     <LoaderButton
                         type="submit"
-                        className="bg-blue-600 text-white font-medium hover:bg-blue-700 px-6 py-2.5 rounded-lg shadow-sm"
+                        className="bg-primary-btn text-primary-btn-text font-semibold hover:bg-primary-btn-hover px-6 py-2.5 rounded-lg shadow-none transition-all duration-200"
                         isLoading={saving}
                     >
                         Save Configuration

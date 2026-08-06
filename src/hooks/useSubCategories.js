@@ -28,7 +28,7 @@ export const useSubCategories = () => {
         }
     });
 
-    const getSubServiceQuery = (slug) => useQuery({
+    const getSubServiceQuery = (slug, options = {}) => useQuery({
         queryKey: ['subService', slug],
         queryFn: async () => {
             const res = await api.get(`/categories/subCategories/details/${slug}`);
@@ -43,7 +43,8 @@ export const useSubCategories = () => {
         staleTime: 1000 * 60 * 5,
         onError: (err) => {
             toast.error(err?.response?.data?.message || 'Failed to fetch service');
-        }
+        },
+        ...options
     });
 
 

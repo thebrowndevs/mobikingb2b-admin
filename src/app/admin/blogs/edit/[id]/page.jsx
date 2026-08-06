@@ -40,20 +40,24 @@ export default function EditBlogPage() {
                         size="icon" 
                         onClick={() => router.push('/admin/blogs')}
                         title="Back to blogs list"
+                        className="bg-back2 hover:bg-slate-100 border border-bdr2 text-slate-750 shadow-none h-9 w-9 rounded-lg"
                     >
-                        <ArrowLeft size={16} />
+                        <ArrowLeft size={15} />
                     </Button>
-                    <h1 className="text-primary font-bold sm:text-2xl lg:text-3xl">Edit Blog Post</h1>
+                    <div>
+                        <h1 className="text-primary font-bold text-3xl tracking-tighter">Edit Blog Post</h1>
+                        <p className="text-sm text-slate-500 font-medium">Modify content, metadata, and FAQ parameters of this article</p>
+                    </div>
                 </div>
             </div>
 
             {isLoading ? (
-                <div className="flex justify-center items-center py-20 bg-white border rounded-lg shadow-sm">
-                    <Loader2 className="animate-spin h-8 w-8 text-primary" />
-                    <span className="ml-2 text-gray-500 font-medium">Loading blog details...</span>
+                <div className="flex justify-center items-center py-20 bg-back2 border border-bdr2 rounded-xl shadow-none">
+                    <Loader2 className="animate-spin h-6 w-6 text-indigo-600" />
+                    <span className="ml-2.5 text-slate-500 font-semibold text-sm">Loading blog details...</span>
                 </div>
             ) : error ? (
-                <div className="p-8 text-center border rounded-lg bg-red-50 border-red-200 text-red-700">
+                <div className="p-8 text-center border rounded-xl bg-red-50 border-red-200 text-red-700 font-medium">
                     Failed to load blog post. Please check the ID or try again.
                 </div>
             ) : (

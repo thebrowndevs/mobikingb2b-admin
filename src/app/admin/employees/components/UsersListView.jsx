@@ -13,9 +13,6 @@ export default function UsersListView({
     isLoading,
     error,
     users = [],
-    // page,
-    // pageCount,
-    // onPageChange,
     onEdit,
     onDelete,
     isDeleting,
@@ -45,94 +42,74 @@ export default function UsersListView({
 
     if (error)
         return (
-            <div className="text-red-600 p-4">
+            <div className="text-red-605 p-4 bg-back2 border border-bdr2 rounded-xl">
                 Error: {error.message || error}
             </div>
         )
 
     if (users.length === 0)
         return (
-            <div className="text-center text-gray-500 p-4">
-                No users found!
+            <div className="text-center text-slate-400 p-8 bg-back2 border border-bdr2 rounded-xl font-medium">
+                No users found.
             </div>
         )
 
     return (
-        <section className="space-y-4">
-            {/* Data Table */}
-            <div className="overflow-hidden rounded-md border border-gray-200">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>S. No.</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Phone No</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Joined Date</TableHead>
-                            <TableHead>Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {users.map((user, idx) => (
-                            <TableRow key={user._id}>
-                                <TableCell>{idx + 1}</TableCell>
-                                <TableCell>{user.name}</TableCell>
-                                <TableCell>{user.phoneNo}</TableCell>
-                                <TableCell>{user.email}</TableCell>
-                                <TableCell>
-                                    {format(new Date(user.createdAt), 'dd MMM yyyy, hh:mm a')}
-                                </TableCell>
-                                <TableCell className="flex justify-center gap-2">
-                                    {canEdit &&
+        <section className="w-full bg-back2 border border-bdr2 rounded-xl overflow-hidden shadow-none">
+            <Table containerClassName="border-0 bg-transparent" className="overflow-visible">
+                <TableHeader className="bg-slate-50/75">
+                    <TableRow className="border-b border-bdr2">
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-20">S. No.</TableHead>
+                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Name</TableHead>
+                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Phone No</TableHead>
+                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Email</TableHead>
+                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Joined Date</TableHead>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-32">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {users.map((user, idx) => (
+                        <TableRow 
+                            key={user._id}
+                            className="border-b border-bdr2 last:border-b-0 hover:bg-slate-50/40 transition-colors"
+                        >
+                            <TableCell className="text-center align-middle font-medium text-slate-400 py-3">{idx + 1}</TableCell>
+                            <TableCell className="text-left align-middle font-bold text-slate-800 py-3">{user.name}</TableCell>
+                            <TableCell className="text-left align-middle text-slate-600 py-3 font-semibold">{user.phoneNo}</TableCell>
+                            <TableCell className="text-left align-middle text-slate-600 py-3">{user.email}</TableCell>
+                            <TableCell className="text-left align-middle text-slate-500 py-3 text-xs font-medium">
+                                {format(new Date(user.createdAt), 'dd MMM yyyy, hh:mm a')}
+                            </TableCell>
+                            <TableCell className="text-center align-middle py-3">
+                                <div className="flex justify-center gap-1.5">
+                                    {canEdit && (
                                         <Button
-                                            size="icon"
-                                            variant="outline"
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-650 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 rounded-lg transition-all shadow-none"
                                             onClick={() => onEdit(user)}
                                         >
-                                            <Pencil size={16} />
+                                            <Pencil size={14} />
                                         </Button>
-                                    }
-                                    {canDelete &&
+                                    )}
+                                    {canDelete && (
                                         <Button
-                                            size="icon"
-                                            variant="destructive"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 w-8 p-0 text-slate-500 hover:text-red-650 hover:bg-red-50 border border-transparent hover:border-red-100 rounded-lg transition-all shadow-none"
                                             onClick={() => handleDeleteClick(user._id)}
                                             disabled={isDeleting}
                                         >
-                                            <Trash size={16} />
+                                            <Trash size={14} />
                                         </Button>
-                                    }
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
+                                    )}
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
 
-            {/* Pagination Controls */}
-            {/* <div className="flex items-center justify-between px-2">
-                <p className="text-sm text-muted-foreground">
-                    Page {page} of {pageCount}
-                </p>
-                <div className="space-x-2">
-                    <Button
-                        size="sm"
-                        disabled={page <= 1}
-                        onClick={() => onPageChange(page - 1)}
-                    >
-                        Previous
-                    </Button>
-                    <Button
-                        size="sm"
-                        disabled={page >= pageCount}
-                        onClick={() => onPageChange(page + 1)}
-                    >
-                        Next
-                    </Button>
-                </div>
-            </div> */}
-
-            {/* Delete Confirmation */}
             <DeleteConfirmationDialog
                 isOpen={!!deletingUserId}
                 onOpenChange={(open) => !open && setDeletingUserId(null)}

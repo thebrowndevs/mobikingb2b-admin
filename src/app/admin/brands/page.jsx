@@ -51,18 +51,25 @@ function page() {
 
     return (
         <InnerDashboardLayout>
-            <div className="w-full items-center justify-between">
-                <h1 className="text-primary font-bold sm:text-2xl lg:text-4xl mb-3">Brands</h1>
+            <div className="w-full mb-6">
+                <h1 className="text-primary font-bold text-3xl tracking-tighter">Brands</h1>
+                <p className="text-sm text-slate-500 font-medium">Manage corporate manufacturing brands and trademark labels</p>
             </div>
-            <div className="flex justify-between items-center mb-4 mt-4">
-                <Button variant="outline">
+            
+            <div className="flex justify-between items-center mb-5 mt-4">
+                <Button 
+                    variant="outline" 
+                    className="bg-back2 border-bdr2 text-slate-700 shadow-none font-semibold"
+                    disabled
+                >
                     Brands: {brandsQuery.data?.data?.length || 0}
                 </Button>
-                {/* {canAdd && */}
-                <Button onClick={handleAddClick}>
-                    <CirclePlus className="mr-2 h-4 w-4" /> Add New
+                <Button 
+                    onClick={handleAddClick}
+                    className="bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text shadow-none font-semibold"
+                >
+                    <CirclePlus className="mr-1.5 h-4 w-4" /> Add New
                 </Button>
-                {/* } */}
             </div>
 
             <BrandsListView

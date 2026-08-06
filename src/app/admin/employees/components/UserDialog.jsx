@@ -4,7 +4,13 @@ import { Eye, EyeOff } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -104,139 +110,141 @@ export default function UserDialog({ open, onOpenChange, selectedUser, onCreate,
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>{selectedUser ? "Update User Details" : "Add New User"}</DialogTitle>
-                    <DialogDescription>
-                        Create or update user and assign roles and permissions.
-                    </DialogDescription>
-                </DialogHeader>
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent className="w-full sm:max-w-[700px] bg-back1 border-l border-bdr2 shadow-none p-0 flex flex-col h-full gap-0">
+                <SheetHeader className="py-3.5 px-6 border-b border-bdr2 bg-back2 shrink-0">
+                    <SheetTitle className="text-lg font-bold text-slate-800 tracking-tighter">
+                        {selectedUser ? "Update User Details" : "Add New User"}
+                    </SheetTitle>
+                    <SheetDescription className="text-xs text-slate-455 font-medium">
+                        Configure administrators, personnel accounts, and security access levels.
+                    </SheetDescription>
+                </SheetHeader>
 
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    <div className="grid gap-4 py-4">
-                        {/* Name */}
-                        <div className="grid grid-cols-4 items-start gap-4">
-                            <Label htmlFor="name" className="text-right mt-2">
-                                Name<span className="text-red-500"> *</span>
-                            </Label>
-                            <div className="col-span-3">
+                <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col justify-between overflow-hidden">
+                    <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-back1">
+                        {/* Profile Info Details Card */}
+                        <div className="bg-back2 border border-bdr2 rounded-xl p-5 space-y-4 shadow-none">
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-bdr2 pb-2">Profile Information</h3>
+
+                            {/* Name */}
+                            <div className="flex flex-col gap-1.5">
+                                <Label htmlFor="name" className="text-xs font-bold text-slate-700">
+                                    Name<span className="text-red-500"> *</span>
+                                </Label>
                                 <Input
                                     id="name"
                                     {...register("name", { required: "Name is required" })}
-                                    className={clsx({ "border-red-500": errors.name })}
+                                    className={clsx("w-full bg-back1 border-bdr2 text-slate-855 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-none", { "border-red-500": errors.name })}
                                     placeholder="John Doe"
                                 />
                                 {errors.name && (
-                                    <p className="text-sm text-red-500 mt-1">
+                                    <p className="text-[11px] text-red-500 font-medium">
                                         {errors.name.message}
                                     </p>
                                 )}
                             </div>
-                        </div>
 
-                        {/* Phone Number */}
-                        <div className="grid grid-cols-4 items-start gap-4">
-                            <Label htmlFor="phone" className="text-right mt-2">
-                                Unique ID <span className="text-red-500"> *</span>
-                            </Label>
-                            <div className="col-span-3">
-                                <Input
-                                    id="phoneNo"
-                                    type="tel"
-                                    {...register("phoneNo", {
-                                        required: "Phone number is required",
-                                        pattern: {
-                                            value: /^[0-9]{10}$/,
-                                            message: "Phone number must be exactly 10 digits"
-                                        }
-                                    })}
-                                    className={clsx({ "border-red-500": errors.phone })}
-                                    placeholder="10 Digit Unique ID"
-                                />
-                                {errors.phone && (
-                                    <p className="text-sm text-red-500 mt-1">
-                                        {errors.phone.message}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Email */}
-                        <div className="grid grid-cols-4 items-start gap-4">
-                            <Label htmlFor="email" className="text-right mt-2">
-                                Email<span className="text-red-500"> *</span>
-                            </Label>
-                            <div className="col-span-3">
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    {...register("email", {
-                                        required: "Email is required",
-                                        pattern: {
-                                            value: /^\S+@\S+\.\S+$/,
-                                            message: "Invalid email format"
-                                        }
-                                    })}
-                                    className={clsx({ "border-red-500": errors.email })}
-                                    placeholder="john@example.com"
-                                />
-                                {errors.email && (
-                                    <p className="text-sm text-red-500 mt-1">
-                                        {errors.email.message}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Password */}
-                        {!selectedUser &&
-                            <div className="grid grid-cols-4 items-start gap-4">
-                                <Label htmlFor="password" className="text-right mt-2">
-                                    Password<span className="text-red-500"> *</span>
-                                </Label>
-                                <div className="col-span-3 relative">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Phone Number */}
+                                <div className="flex flex-col gap-1.5">
+                                    <Label htmlFor="phoneNo" className="text-xs font-bold text-slate-700">
+                                        Unique ID <span className="text-red-500"> *</span>
+                                    </Label>
                                     <Input
-                                        id="password"
-                                        type={showPassword ? "text" : "password"}
-                                        {...register("password")}
-                                        placeholder="Password"
-                                        className={clsx({ "border-red-500": errors.password })}
+                                        id="phoneNo"
+                                        type="tel"
+                                        autoComplete="new-password"
+                                        {...register("phoneNo", {
+                                            required: "Phone number is required",
+                                            pattern: {
+                                                value: /^[0-9]{10}$/,
+                                                message: "Phone number must be exactly 10 digits"
+                                            }
+                                        })}
+                                        className={clsx("w-full bg-back1 border-bdr2 text-slate-855 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-none", { "border-red-500": errors.phone })}
+                                        placeholder="10 Digit Unique ID"
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600"
-                                    >
-                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                    </button>
-                                    {errors.password && (
-                                        <p className="text-sm text-red-500 mt-1">
-                                            {errors.password.message}
+                                    {errors.phone && (
+                                        <p className="text-[11px] text-red-500 font-medium">
+                                            {errors.phone.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Email */}
+                                <div className="flex flex-col gap-1.5">
+                                    <Label htmlFor="email" className="text-xs font-bold text-slate-700">
+                                        Email<span className="text-red-500"> *</span>
+                                    </Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        {...register("email", {
+                                            required: "Email is required",
+                                            pattern: {
+                                                value: /^\S+@\S+\.\S+$/,
+                                                message: "Invalid email format"
+                                            }
+                                        })}
+                                        className={clsx("w-full bg-back1 border-bdr2 text-slate-855 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-none", { "border-red-500": errors.email })}
+                                        placeholder="john@example.com"
+                                    />
+                                    {errors.email && (
+                                        <p className="text-[11px] text-red-500 font-medium">
+                                            {errors.email.message}
                                         </p>
                                     )}
                                 </div>
                             </div>
-                        }
 
-                        {/* Role */}
-                        <div className="grid grid-cols-4 items-start gap-4">
-                            <Label htmlFor="role" className="text-right mt-2">
-                                Role<span className="text-red-500"> *</span>
-                            </Label>
-                            <div className="col-span-3">
+                            {/* Password */}
+                            {!selectedUser && (
+                                <div className="flex flex-col gap-1.5">
+                                    <Label htmlFor="password" className="text-xs font-bold text-slate-700">
+                                        Password<span className="text-red-500"> *</span>
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="password"
+                                            type={showPassword ? "text" : "password"}
+                                            autoComplete="new-password"
+                                            {...register("password")}
+                                            placeholder="Password"
+                                            className={clsx("w-full bg-back1 border-bdr2 text-slate-855 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-none", { "border-red-500": errors.password })}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
+                                    </div>
+                                    {errors.password && (
+                                        <p className="text-[11px] text-red-500 font-medium">
+                                            {errors.password.message}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Role */}
+                            <div className="flex flex-col gap-1.5">
+                                <Label htmlFor="role" className="text-xs font-bold text-slate-700">
+                                    Role<span className="text-red-500"> *</span>
+                                </Label>
                                 <select
                                     id="role"
                                     {...register("role", { required: "Role is required" })}
-                                    className={clsx("w-full border px-3 py-2 rounded", {
+                                    className={clsx("w-full bg-back1 border border-bdr2 text-slate-700 rounded-lg px-3 py-2 text-sm shadow-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all focus:outline-none", {
                                         "border-red-500": errors.role,
                                     })}
                                 >
-                                    {/* <option value="user">User</option> */}
                                     <option value="employee">Employee</option>
                                 </select>
                                 {errors.role && (
-                                    <p className="text-sm text-red-500 mt-1">
+                                    <p className="text-[11px] text-red-500 font-medium">
                                         {errors.role.message}
                                     </p>
                                 )}
@@ -245,124 +253,125 @@ export default function UserDialog({ open, onOpenChange, selectedUser, onCreate,
 
                         {/* Permissions (only for sub-admin) */}
                         {watchRole === "employee" && (
-                            <div className="grid grid-cols-4 items-start gap-4">
-                                <Label className="text-right mt-2">Permissions</Label>
-                                <div className="col-span-3">
-                                    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                                        {permissionSections.map((section) => (
-                                            <div
-                                                key={section.id}
-                                                className="border rounded-lg p-4 bg-white transition-all hover:border-gray-400"
-                                            >
-                                                <h4 className="font-medium text-gray-700 mb-3 flex items-center">
-                                                    <div className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></div>
-                                                    {section.name}
-                                                </h4>
-                                                <div className="grid grid-cols-4 gap-2">
-                                                    {permissionTypes.map((type) => {
-                                                        if (section.id === 'refund' && type.id !== 'add') {
-                                                            return null;
+                            <div className="bg-back2 border border-bdr2 rounded-xl p-5 space-y-4 shadow-none">
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-bdr2 pb-2">Assign Permissions</h3>
+
+                                <div className="space-y-4">
+                                    {permissionSections.map((section) => (
+                                        <div
+                                            key={section.id}
+                                            className="border border-bdr2 rounded-xl p-4 bg-back2 transition-all hover:border-slate-350 shadow-none"
+                                        >
+                                            <h4 className="font-bold text-sm text-slate-700 mb-3 flex items-center">
+                                                <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full mr-2"></div>
+                                                {section.name}
+                                            </h4>
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                                {permissionTypes.map((type) => {
+                                                    if (section.id === 'refund' && type.id !== 'add') {
+                                                        return null;
+                                                    }
+                                                    const labelText = (section.id === 'refund' && type.id === 'add')
+                                                        ? "Process Refund"
+                                                        : type.label;
+
+                                                    // Color mapping for each permission type
+                                                    const colorMap = {
+                                                        view: {
+                                                            bg: 'bg-blue-50/50',
+                                                            border: 'border-blue-150',
+                                                            text: 'text-blue-700',
+                                                            checkbox: 'data-[state=checked]:bg-blue-600 border-blue-300'
+                                                        },
+                                                        add: {
+                                                            bg: 'bg-emerald-50/50',
+                                                            border: 'border-emerald-150',
+                                                            text: 'text-emerald-700',
+                                                            checkbox: 'data-[state=checked]:bg-emerald-600 border-emerald-300'
+                                                        },
+                                                        edit: {
+                                                            bg: 'bg-amber-50/50',
+                                                            border: 'border-amber-150',
+                                                            text: 'text-amber-700',
+                                                            checkbox: 'data-[state=checked]:bg-amber-600 border-amber-300'
+                                                        },
+                                                        delete: {
+                                                            bg: 'bg-rose-50/50',
+                                                            border: 'border-rose-150',
+                                                            text: 'text-rose-700',
+                                                            checkbox: 'data-[state=checked]:bg-rose-600 border-rose-300'
                                                         }
-                                                        const labelText = (section.id === 'refund' && type.id === 'add')
-                                                            ? "Process Refund"
-                                                            : type.label;
+                                                    };
 
-                                                        // Color mapping for each permission type
-                                                        const colorMap = {
-                                                            view: {
-                                                                bg: 'bg-blue-50',
-                                                                border: 'border-blue-200',
-                                                                text: 'text-blue-700',
-                                                                checkbox: 'data-[state=checked]:bg-blue-600 border-blue-300'
-                                                            },
-                                                            add: {
-                                                                bg: 'bg-green-50',
-                                                                border: 'border-green-200',
-                                                                text: 'text-green-700',
-                                                                checkbox: 'data-[state=checked]:bg-green-600 border-green-300'
-                                                            },
-                                                            edit: {
-                                                                bg: 'bg-yellow-50',
-                                                                border: 'border-yellow-200',
-                                                                text: 'text-yellow-700',
-                                                                checkbox: 'data-[state=checked]:bg-yellow-600 border-yellow-300'
-                                                            },
-                                                            delete: {
-                                                                bg: 'bg-red-50',
-                                                                border: 'border-red-200',
-                                                                text: 'text-red-700',
-                                                                checkbox: 'data-[state=checked]:bg-red-600 border-red-300'
-                                                            }
-                                                        };
+                                                    const colors = colorMap[type.id] || {};
+                                                    const isChecked = !!watchPermissions[section.id]?.[type.id];
 
-                                                        const colors = colorMap[type.id] || {};
-                                                        const isChecked = !!watchPermissions[section.id]?.[type.id];
-
-                                                        return (
-                                                            <div
-                                                                key={type.id}
+                                                    return (
+                                                        <div
+                                                            key={type.id}
+                                                            className={clsx(
+                                                                "flex items-center gap-2 p-2 rounded-lg transition-all border border-transparent",
+                                                                isChecked
+                                                                    ? `${colors.bg} ${colors.border}`
+                                                                    : "hover:bg-slate-50"
+                                                            )}
+                                                        >
+                                                            <Checkbox
+                                                                id={`${section.id}-${type.id}`}
+                                                                checked={isChecked}
+                                                                onCheckedChange={(checked) =>
+                                                                    handlePermissionChange(section.id, type.id, checked)
+                                                                }
                                                                 className={clsx(
-                                                                    "flex items-center gap-2 p-2 rounded transition-all",
-                                                                    isChecked
-                                                                        ? `${colors.bg} ${colors.border} border`
-                                                                        : "hover:bg-gray-50"
+                                                                    "h-4 w-4 rounded border-slate-350 shadow-none",
+                                                                    colors.checkbox
+                                                                )}
+                                                            />
+
+                                                            <Label
+                                                                htmlFor={`${section.id}-${type.id}`}
+                                                                className={clsx(
+                                                                    "text-xs cursor-pointer select-none font-semibold",
+                                                                    isChecked ? colors.text : "text-slate-500"
                                                                 )}
                                                             >
-                                                                <Checkbox
-                                                                    id={`${section.id}-${type.id}`}
-                                                                    checked={isChecked}
-                                                                    onCheckedChange={(checked) =>
-                                                                        handlePermissionChange(section.id, type.id, checked)
-                                                                    }
-                                                                    className={clsx(
-                                                                        "h-5 w-5 rounded",
-                                                                        colors.checkbox
-                                                                    )}
-                                                                />
-
-                                                                <Label
-                                                                    htmlFor={`${section.id}-${type.id}`}
-                                                                    className={clsx(
-                                                                        "text-sm cursor-pointer select-none",
-                                                                        isChecked ? `${colors.text} font-medium` : "text-gray-600"
-                                                                    )}
-                                                                >
                                                                     {labelText}
-                                                                </Label>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
+                                                            </Label>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
-                                        ))}
-                                    </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {error && <p className="text-red-600 mb-5 text-sm">Error: {error}</p>}
+                    {error && <p className="text-red-655 px-6 pb-2 text-xs font-semibold">Error: {error}</p>}
 
-                    <DialogFooter>
-                        {onlyAdmin && selectedUser &&
-                            <Button variant={"outline"} type="button" disabled={isSubmitting} onClick={() => setPwdDialogOpen(true)}>
+                    <div className="sticky bottom-0 bg-back2 border-t border-bdr2 p-4 flex items-center justify-end gap-2.5 shrink-0 z-20 shadow-none">
+                        {onlyAdmin && selectedUser && (
+                            <Button 
+                                variant="outline" 
+                                type="button" 
+                                disabled={isSubmitting} 
+                                onClick={() => setPwdDialogOpen(true)}
+                                className="bg-back2 border-bdr2 text-slate-700 hover:bg-slate-50 font-semibold shadow-none text-xs h-9"
+                            >
                                 Update Password
                             </Button>
+                        )}
 
-                        }
-
-                        {selectedUser ?
-                            <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting && <Loader2 className="animate-spin mr-1" />}
-                                Update
-                            </Button>
-                            : <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting && <Loader2 className="animate-spin mr-1" />}
-                                Create
-                            </Button>
-                        }
-
-                    </DialogFooter>
+                        <Button 
+                            type="submit" 
+                            disabled={isSubmitting}
+                            className="bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text font-semibold shadow-none text-xs h-9 px-5"
+                        >
+                            {isSubmitting && <Loader2 className="animate-spin mr-1.5 h-3.5 w-3.5" />}
+                            {selectedUser ? "Update Details" : "Create Account"}
+                        </Button>
+                    </div>
                 </form>
 
                 <PasswordDialog
@@ -370,8 +379,7 @@ export default function UserDialog({ open, onOpenChange, selectedUser, onCreate,
                     onOpenChange={setPwdDialogOpen}
                     userId={selectedUser?._id}
                 />
-
-            </DialogContent>
-        </Dialog>
+            </SheetContent>
+        </Sheet>
     );
-} 
+}

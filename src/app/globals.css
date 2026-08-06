@@ -21,11 +21,20 @@ html {
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
+
+  /* Custom Global Palette variables for theme integrity */
+  --color-back1: var(--back1);
+  --color-back2: var(--back2);
+  --color-back3: var(--back3);
+  --color-bdr2: var(--bdr2);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+
+  /* Button Action Theme Tokens */
+  --color-primary-btn: var(--primary-btn);
+  --color-primary-btn-hover: var(--primary-btn-hover);
+  --color-primary-btn-text: var(--primary-btn-text);
+
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -49,75 +58,66 @@ html {
 }
 
 :root {
-  /* --radius: 0.1rem; */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(60.662% 0.00007 271.152);
-  --ring: oklch(0% 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.4rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+  /* Hex color definitions */
+  --background: #f8fafc;
+  /* Hex value of light bg */
+  --foreground: #0f172a;
+  /* Hex value of dark text */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
+  --primary: #1e293b;
+  --primary-foreground: #ffffff;
 
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
+
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  --accent: #f1f5f9;
+  --accent-foreground: #1e293b;
+
+  --destructive: #ef4444;
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --ring: #94a3b8;
+
+  --radius: 0.5rem;
+
+  /* Custom Theme Integrator Variables */
+  --back1: #f8fafc;
+  --back3: #f2f9ff;
+  /* Primary background of dashboard main content */
+  --back2: #ffffff;
+  /* Sidebar background / Card background */
+  --bdr2: #e2e8f0;
+  /* Premium light border for sections and dividers */
+  --sidebar-hover: #f1f5f9;
+  /* Inactive link hover bg */
+  --sidebar-active: #eef2ff;
+  /* Active link bg */
+
+  /* Button Brand Action Tokens */
+  --primary-btn: #4f46e5;
+  /* Indigo-600 default button background */
+  --primary-btn-hover: #4338ca;
+  /* Indigo-700 hover background */
+  --primary-btn-text: #ffffff;
+  /* Button label text color */
+
+  /* Sidebar configuration variables */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #334155;
+  --sidebar-primary: #4f46e5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #1e293b;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #6366f1;
+}
 
 @layer base {
   * {
@@ -167,16 +167,15 @@ button {
 ::-webkit-scrollbar-track {
   background: transparent;
   border-radius: 4px;
-
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #222235;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #94a3b8;
 }
 
 /* Hide scrollbar but allow horizontal scroll */

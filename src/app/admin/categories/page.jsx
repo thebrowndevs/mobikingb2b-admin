@@ -88,25 +88,26 @@ export default function Page() {
 
     return (
         <InnerDashboardLayout>
-            <div className="w-full items-center justify-between">
-                <h1 className="text-primary font-bold sm:text-2xl lg:text-4xl mb-3">Categories</h1>
+            <div className="w-full mb-6">
+                <h1 className="text-primary font-bold text-3xl tracking-tighter">Categories</h1>
+                <p className="text-sm text-slate-500 font-medium">Manage and organize product grouping categories</p>
             </div>
 
             <div>
-                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-4 mt-4">
+                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-5 mt-4">
                     <div className="flex items-center gap-3 flex-1">
                         <div className="relative w-full">
-                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                             <Input
                                 placeholder="Search categories by name or slug..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 pr-8 text-sm bg-white"
+                                className="pl-9 pr-8 text-sm bg-back2 border-bdr2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-none"
                             />
                             {searchTerm && (
                                 <button
                                     onClick={() => setSearchTerm('')}
-                                    className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
+                                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-650 transition-colors"
                                     title="Clear search"
                                 >
                                     <X className="h-4 w-4" />
@@ -118,7 +119,7 @@ export default function Page() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setSearchTerm('')}
-                                className="h-9 text-xs text-gray-500 hover:text-gray-900 gap-1.5 shrink-0"
+                                className="h-9 text-xs text-slate-500 hover:text-slate-900 gap-1.5 shrink-0 bg-transparent hover:bg-slate-100/50 shadow-none border-0"
                             >
                                 <RotateCcw className="w-3.5 h-3.5" />
                                 Reset
@@ -127,12 +128,19 @@ export default function Page() {
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0">
-                        <Button variant="outline" className="shrink-0">
+                        <Button 
+                            variant="outline" 
+                            className="shrink-0 bg-back2 border-bdr2 text-slate-700 shadow-none font-semibold"
+                            disabled
+                        >
                             Total: {activeCategoriesQuery.data?.data?.length || 0}
                         </Button>
                         {canAdd &&
-                            <Button onClick={handleAddClick} className="shrink-0">
-                                <CirclePlus className="mr-2 h-4 w-4" /> Add New
+                            <Button 
+                                onClick={handleAddClick} 
+                                className="shrink-0 bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text shadow-none font-semibold"
+                            >
+                                <CirclePlus className="mr-1.5 h-4 w-4" /> Add New
                             </Button>
                         }
                     </div>

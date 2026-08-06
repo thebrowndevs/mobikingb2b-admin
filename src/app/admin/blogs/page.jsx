@@ -8,7 +8,6 @@ import { useCategories } from '@/hooks/useCategories';
 import TableSkeleton from '@/components/custom/TableSkeleton';
 import BlogsListView from './components/BlogsListView';
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import NotAuthorizedPage from '@/components/notAuthorized';
 import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -94,67 +93,71 @@ export default function BlogsPage() {
         <InnerDashboardLayout>
             <div className="w-full flex flex-col gap-4 pb-4">
                 <div className='flex items-center justify-between w-full mb-3'>
-                    <h1 className="text-primary font-bold sm:text-2xl lg:text-3xl">Blogs Management</h1>
+                    <div>
+                        <h1 className="text-primary font-bold text-3xl tracking-tighter">Blogs Management</h1>
+                        <p className="text-sm text-slate-500 font-medium">Publish, edit, and categorize marketing news and articles</p>
+                    </div>
                     {canAdd && (
                         <Button
                             onClick={() => {
                                 router.push('/admin/blogs/create');
                             }}
+                            className="bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text shadow-none font-semibold"
                         >
                             Add New Blog
                         </Button>
                     )}
                 </div>
 
-                {/* Toolbar Filters */}
-                <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-                    <div className="flex flex-col md:flex-row items-end gap-3 w-full">
+                {/* Toolbar Filters - Shadow removed, styled with back2 & bdr2 */}
+                <div className="bg-back2 p-5 rounded-xl border border-bdr2">
+                    <div className="flex flex-col md:flex-row items-end gap-4 w-full">
                         {/* Search Bar */}
-                        <div className="flex flex-col gap-1 flex-1 min-w-[200px] w-full md:w-auto">
-                            <label className="text-xs font-semibold text-gray-500">Text Search</label>
+                        <div className="flex flex-col gap-1.5 flex-1 min-w-[200px] w-full md:w-auto">
+                            <label className="text-xs font-semibold text-slate-500">Text Search</label>
                             <Input
                                 placeholder="Search title or summary..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-white border-gray-200"
+                                className="w-full bg-back1 border-bdr2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
                             />
                         </div>
 
                         {/* From Date */}
-                        <div className="flex flex-col gap-1 w-full md:w-[150px] shrink-0">
-                            <label className="text-xs font-semibold text-gray-500">From Date</label>
+                        <div className="flex flex-col gap-1.5 w-full md:w-[160px] shrink-0">
+                            <label className="text-xs font-semibold text-slate-500">From Date</label>
                             <Input
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className="bg-white border-gray-200 text-sm w-full"
+                                className="bg-back1 border-bdr2 text-slate-800 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
                             />
                         </div>
 
                         {/* To Date */}
-                        <div className="flex flex-col gap-1 w-full md:w-[150px] shrink-0">
-                            <label className="text-xs font-semibold text-gray-500">To Date</label>
+                        <div className="flex flex-col gap-1.5 w-full md:w-[160px] shrink-0">
+                            <label className="text-xs font-semibold text-slate-500">To Date</label>
                             <Input
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
-                                className="bg-white border-gray-200 text-sm w-full"
+                                className="bg-back1 border-bdr2 text-slate-800 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
                             />
                         </div>
 
                         {/* Reset & Count Buttons */}
-                        <div className="flex items-center gap-2 w-full md:w-auto shrink-0 justify-end">
-                            <Button variant="outline" className="pointer-events-none bg-gray-50 border-gray-200 shrink-0 justify-center">
+                        <div className="flex items-center gap-3 w-full md:w-auto shrink-0 justify-end">
+                            <span className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg bg-back1 border border-bdr2 text-slate-600 shrink-0">
                                 Total: {totalCount}
-                            </Button>
+                            </span>
                             <Button
                                 type="button"
-                                variant="secondary"
+                                variant="outline"
                                 onClick={handleResetFilters}
                                 title="Reset all filters"
-                                className="shrink-0"
+                                className="shrink-0 bg-back2 hover:bg-slate-100 border border-bdr2 text-slate-700 font-semibold"
                             >
-                                <RotateCcw size={16} className="mr-1" /> Reset
+                                <RotateCcw size={15} className="mr-1.5" /> Reset
                             </Button>
                         </div>
                     </div>
@@ -188,13 +191,14 @@ export default function BlogsPage() {
                         setFeaturedFilter={setFeaturedFilter}
                     />
 
-                    {/* Pagination Controls */}
-                    <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 rounded-md shadow-sm">
+                    {/* Pagination Controls - Shadow removed, styled with back2 & bdr2 */}
+                    <div className="flex items-center justify-between border border-bdr2 bg-back2 px-5 py-4 rounded-xl">
                         <div className="flex flex-1 justify-between sm:hidden">
                             <Button
                                 onClick={() => setPage(p => Math.max(1, p - 1))}
                                 disabled={page === 1}
                                 variant="outline"
+                                className="bg-back2 border-bdr2 text-slate-700"
                             >
                                 Previous
                             </Button>
@@ -202,14 +206,15 @@ export default function BlogsPage() {
                                 onClick={() => setPage(p => p + 1)}
                                 disabled={!hasMore}
                                 variant="outline"
+                                className="bg-back2 border-bdr2 text-slate-700"
                             >
                                 Next
                             </Button>
                         </div>
                         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                             <div>
-                                <p className="text-sm text-gray-700">
-                                    Showing page <span className="font-semibold text-gray-900">{page}</span> (
+                                <p className="text-sm text-slate-500 font-medium">
+                                    Showing page <span className="font-semibold text-slate-800">{page}</span> (
                                     {page === 1 ? '30' : '10'} limit per page)
                                 </p>
                             </div>
@@ -219,9 +224,9 @@ export default function BlogsPage() {
                                     disabled={page === 1}
                                     variant="outline"
                                     size="sm"
-                                    className="flex items-center gap-1.5"
+                                    className="flex items-center gap-1.5 bg-back2 border-bdr2 text-slate-700 hover:bg-slate-50 font-semibold"
                                 >
-                                    <ArrowLeft size={16} />
+                                    <ArrowLeft size={14} />
                                     Previous
                                 </Button>
                                 <Button
@@ -229,10 +234,10 @@ export default function BlogsPage() {
                                     disabled={!hasMore}
                                     variant="outline"
                                     size="sm"
-                                    className="flex items-center gap-1.5"
+                                    className="flex items-center gap-1.5 bg-back2 border-bdr2 text-slate-700 hover:bg-slate-50 font-semibold"
                                 >
                                     Next
-                                    <ArrowRight size={16} />
+                                    <ArrowRight size={14} />
                                 </Button>
                             </div>
                         </div>
