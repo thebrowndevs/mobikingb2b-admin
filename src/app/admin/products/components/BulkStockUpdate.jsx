@@ -74,7 +74,7 @@ function BulkStockUpdate({ open, onOpenChange, product, productId }) {
   React.useEffect(() => {
     if (open) {
       const initialUpdates = (product?.variants || []).map(v => ({
-        variantId: v.id,
+        variantId: v._id || v.id,
         variantName: v.name,
         selected: false,
         quantity: 0,
