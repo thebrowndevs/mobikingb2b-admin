@@ -63,6 +63,12 @@ export const ADMIN_SIDEBAR_LINKS = [
     href: "/admin/orders",
     icon: <FaShoppingCart />,
   },
+    {
+    key: "quotations",
+    label: "Order Requests",
+    href: "/admin/quotations",
+    icon: <FaFileInvoiceDollar />,
+  },
   {
     key: "return-requests",
     label: "Return Requests",
