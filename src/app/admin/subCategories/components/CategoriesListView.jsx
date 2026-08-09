@@ -61,8 +61,6 @@ export default function CategoriesListView({
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-16">#</TableHead>
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-28">Image</TableHead>
                         <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Name</TableHead>
-                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-32">Upper Banner</TableHead>
-                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-32">Lower Banner</TableHead>
                         <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-44">Parent Category</TableHead>
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-40">Status</TableHead>
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-40">Products</TableHead>
@@ -93,32 +91,6 @@ export default function CategoriesListView({
                             </TableCell>
 
                             <TableCell className="text-left align-middle font-bold text-slate-800 py-3">{item.name}</TableCell>
-
-                            <TableCell className="py-2 align-middle">
-                                <div className="flex items-center justify-center">
-                                    <Image
-                                        src={item?.upperBanner || '/not-found-img-h.png'}
-                                        alt={item.name}
-                                        width={64}
-                                        height={36}
-                                        quality={100}
-                                        className="object-cover rounded-md border border-bdr2"
-                                    />
-                                </div>
-                            </TableCell>
-
-                            <TableCell className="py-2 align-middle">
-                                <div className="flex items-center justify-center">
-                                    <Image
-                                        src={item.lowerBanner || '/not-found-img-h.png'}
-                                        alt={item.name}
-                                        width={64}
-                                        height={36}
-                                        quality={100}
-                                        className="object-cover rounded-md border border-bdr2"
-                                    />
-                                </div>
-                            </TableCell>
 
                             <TableCell className="text-left align-middle py-3">
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-650 border border-bdr2">
