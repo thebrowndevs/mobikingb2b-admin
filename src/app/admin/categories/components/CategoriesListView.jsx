@@ -29,7 +29,9 @@ export default function CategoriesListView({
     isDeleting,
     deleteError,
     canEdit,
-    canDelete
+    canDelete,
+    page = 1,
+    limit = 10
 }) {
     const [deletingCategoryId, setDeletingCategoryId] = useState(null);
     const [selectedCategoryForSub, setSelectedCategoryForSub] = useState(null);
@@ -87,7 +89,9 @@ export default function CategoriesListView({
                                     transition={{ duration: 0.2 }}
                                     className="border-b border-bdr2 last:border-b-0 hover:bg-slate-50/40 transition-colors"
                                 >
-                                    <TableCell className="text-center align-middle font-medium text-slate-400 py-3.5">{index + 1}</TableCell>
+                                    <TableCell className="text-center align-middle font-medium text-slate-400 py-3.5">
+                                        {(page - 1) * limit + index + 1}
+                                    </TableCell>
                                     <TableCell className="text-center align-middle py-3.5">
                                         <div className="flex justify-center">
                                             <Image

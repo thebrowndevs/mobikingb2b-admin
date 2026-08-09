@@ -119,14 +119,20 @@ export const ADMIN_SIDEBAR_LINKS = [
   },
   {
     key: "design-studio",
-    label: "Design Studio",
+    label: "Groups",
     href: "/admin/design-studio",
     icon: <FaCamera />,
   },
   {
-    key: "homeLayout",
-    label: "Home Layout",
-    href: "/admin/home-layout",
+    key: "websiteLayout",
+    label: "Website Layout",
+    href: "/admin/website-layout",
+    icon: <FaHome />,
+  },
+  {
+    key: "appLayout",
+    label: "App Layout",
+    href: "/admin/app-layout",
     icon: <FaHome />,
   },
   {

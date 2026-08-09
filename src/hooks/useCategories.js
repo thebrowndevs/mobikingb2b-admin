@@ -26,6 +26,15 @@ export const useCategories = () => {
         }
     });
 
+    const categoriesPaginationQuery = ({ page = 1, limit = 10, searchQuery = "" }) => useQuery({
+        queryKey: ['categories', 'paginatedList', page, limit, searchQuery],
+        enabled: canView,
+        queryFn: () => api.get('/categories', {
+            params: { page, limit, searchQuery }
+        }).then(res => res.data?.data || {}),
+        staleTime: 1000 * 10,
+    });
+
     // Create Category mutation
     const createCategory = useMutation({
         mutationFn: ({ data }) => api.post('/categories/createCategory', data),
@@ -67,7 +76,7 @@ export const useCategories = () => {
 
     return {
         // categoriesQuery, createCategory, deleteCategory,
-        categoriesQuery, deleteCategory, updateCategory, createCategory,
+        categoriesQuery, categoriesPaginationQuery, deleteCategory, updateCategory, createCategory,
         permissions: {
             canView,
             canAdd,

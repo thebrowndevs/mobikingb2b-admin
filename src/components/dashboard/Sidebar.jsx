@@ -5,7 +5,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
-import { LogOut, LayoutGrid, ShoppingBag, FolderCog } from "lucide-react";
+import { LogOut, LayoutGrid, ShoppingBag, FolderCog, Paintbrush } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, } from "@/components/ui/dialog";
 import { IMAGES } from "@/lib/constants/assets";
@@ -20,17 +20,22 @@ const GROUPS = [
     {
         title: "Overview & Sales",
         icon: <ShoppingBag className="w-4 h-4 text-indigo-500" />,
-        keys: ["dashboard", "pos", "posOrders", "manual-order", "orders", "return-requests", "partial-return-requests", "cancel-requests", "payment-links"]
+        keys: ["dashboard", "pos", "posOrders", "manual-order", "orders", "return-requests", "partial-return-requests", "cancel-requests", "queries", "payment-links"]
     },
     {
-        title: "Catalog & Studio",
+        title: "Catalog",
         icon: <LayoutGrid className="w-4 h-4 text-emerald-600" />,
-        keys: ["categories", "subCategories", "products", "brands", "design-studio", "homeLayout", "couponCodes"]
+        keys: ["categories", "subCategories", "products", "brands", "couponCodes"]
+    },
+    {
+        title: "Design & Layouts",
+        icon: <Paintbrush className="w-4 h-4 text-pink-500" />,
+        keys: ["design-studio", "websiteLayout", "appLayout"]
     },
     {
         title: "Operations & Config",
         icon: <FolderCog className="w-4 h-4 text-violet-600" />,
-        keys: ["customers", "employees", "queries", "notifications", "reports", "policies", "blogs", "settings"]
+        keys: ["customers", "employees", "notifications", "reports", "policies", "blogs", "settings"]
     }
 ];
 

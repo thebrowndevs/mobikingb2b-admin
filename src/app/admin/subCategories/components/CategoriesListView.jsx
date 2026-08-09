@@ -30,7 +30,9 @@ export default function CategoriesListView({
     deleteError,
     canEdit,
     canDelete,
-    onEdit
+    onEdit,
+    page = 1,
+    limit = 10
 }) {
 
     const { updateSubCategoryStatus } = useSubCategories();
@@ -73,7 +75,9 @@ export default function CategoriesListView({
                             key={item._id}
                             className="border-b border-bdr2 last:border-b-0 hover:bg-slate-50/40 transition-colors"
                         >
-                            <TableCell className="text-center align-middle font-medium text-slate-400 py-3">{idx + 1}</TableCell>
+                            <TableCell className="text-center align-middle font-medium text-slate-400 py-3">
+                                {(page - 1) * limit + idx + 1}
+                            </TableCell>
 
                             <TableCell className="py-2 align-middle">
                                 <div className="flex items-center justify-center">

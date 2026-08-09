@@ -1,479 +1,463 @@
-"use client"
+"use client";
 
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2 } from 'lucide-react';
+import { Loader2, UploadCloud, X, Laptop, Smartphone } from 'lucide-react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import { useSubCategories } from '@/hooks/useSubCategories';
-import { uploadImage3 } from '@/lib/services/uploadImage2'; // <-- changed to uploadImage3
-import { useCategories } from '@/hooks/useCategories';
-import { Badge } from '@/components/ui/badge';
+import { uploadImage3 } from '@/lib/services/uploadImage2';
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 const formSchema = z.object({
-    name: z.string().min(1, "Name is required"),
-    sequenceNo: z.number().optional().nullable(),
-    active: z.boolean().optional(),
-    isBannerVisble: z.boolean().optional(),
+    heading: z.string().min(1, "Heading is required"),
+    slug: z.string().min(1, "Slug is required"),
+    groupType: z.enum(['categories', 'subcategories', 'products'], {
+        required_error: "Group Type is required"
+    }),
+    placement: z.enum(['grid', 'scroll']).default('scroll'),
+    active: z.boolean().default(true),
+
+    // Web Customization
+    webBanner: z.string().optional().nullable(),
+    isWebBannerVisible: z.boolean().default(false),
+    webBackgroundColor: z.string().optional().nullable(),
+    isWebBgColorVisible: z.boolean().default(false),
+
+    // App Customization
+    appBanner: z.string().optional().nullable(),
+    isAppBannerVisible: z.boolean().default(false),
+    appBackgroundColor: z.string().optional().nullable(),
+    isAppBgColorVisible: z.boolean().default(false),
+
     bannerLink: z.string().optional().nullable(),
-    isBackgroundColorVisible: z.boolean().optional(),
-    banner: z.string().nullable().optional(),
-    backgroundColor: z.string().optional().nullable(),
-    categories: z.array(z.string()).nullable().optional(),
-    parentCategories: z.array(z.string()).nullable().optional(),
+
+    categories: z.array(z.string()).default([]),
+    parentCategories: z.array(z.string()).default([]),
 });
 
-function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, isSubmitting, error, hideCategoriesSelect = false }) {
-
-    const { subCategoriesQuery } = useSubCategories();
-    const activeSubCategoriesQuery = subCategoriesQuery();
-    const subCategoriesData = activeSubCategoriesQuery?.data?.data || [];
-
-    const { categoriesQuery } = useCategories();
-    const categoriesRaw = categoriesQuery()?.data?.data || [];
-    const categoriesData = categoriesRaw?.filter(i => i.active === true)
-
-    const initialCategories = selectedGroup?.categories?.map(s => s?._id || s)
-    const initialParentCategories = selectedGroup?.parentCategories?.map(s => s?._id || s)
+function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, isSubmitting, error }) {
 
     const form = useForm({
         resolver: zodResolver(formSchema),
-        mode: 'onSubmit',
-        defaultValues: selectedGroup || {
-            name: "",
-            sequenceNo: 0,
+        mode: 'onChange',
+        defaultValues: {
+            heading: "",
+            slug: "",
+            groupType: "products",
+            placement: "scroll",
             active: true,
-            banner: "",
-            bannerLink: "", // <-- default
-            isBannerVisble: false,
-            isBackgroundColorVisible: false,
-            backgroundColor: "#ffffff",
-            categories: initialCategories ?? [],
-            parentCategories: initialParentCategories ?? [],
+            webBanner: "",
+            isWebBannerVisible: false,
+            webBackgroundColor: "#ffffff",
+            isWebBgColorVisible: false,
+            appBanner: "",
+            isAppBannerVisible: false,
+            appBackgroundColor: "#ffffff",
+            isAppBgColorVisible: false,
+            bannerLink: "",
+            categories: [],
+            parentCategories: [],
         }
     });
-    const { watch, setValue, control, reset } = form;
+
+    const { setValue, control, reset, watch, formState: { isValid } } = form;
+    const groupType = watch('groupType');
+    const headingVal = watch('heading');
+
+    // Autofill slug from heading
+    useEffect(() => {
+        if (!selectedGroup && headingVal) {
+            const generated = headingVal
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '');
+            setValue('slug', generated, { shouldValidate: true });
+        }
+    }, [headingVal, setValue, selectedGroup]);
 
     useEffect(() => {
         if (selectedGroup) {
             reset({
-                name: selectedGroup.name,
-                sequenceNo: selectedGroup.sequenceNo,
-                active: selectedGroup.active,
-                banner: selectedGroup.banner,
-                bannerLink: selectedGroup.bannerLink || "", // <-- reset value from selectedGroup
-                isBannerVisble: selectedGroup.isBannerVisble,
-                isBackgroundColorVisible: selectedGroup.isBackgroundColorVisible,
-                backgroundColor: selectedGroup?.backgroundColor || "#ffffff",
-                categories: initialCategories ?? [],
-                parentCategories: initialParentCategories ?? [],
+                heading: selectedGroup.heading || "",
+                slug: selectedGroup.slug || "",
+                groupType: selectedGroup.groupType || "products",
+                placement: selectedGroup.placement || "scroll",
+                active: selectedGroup.active !== undefined ? selectedGroup.active : true,
+
+                webBanner: selectedGroup.webBanner || "",
+                isWebBannerVisible: !!selectedGroup.isWebBannerVisible,
+                webBackgroundColor: selectedGroup.webBackgroundColor || "#ffffff",
+                isWebBgColorVisible: !!selectedGroup.isWebBgColorVisible,
+
+                appBanner: selectedGroup.appBanner || "",
+                isAppBannerVisible: !!selectedGroup.isAppBannerVisible,
+                appBackgroundColor: selectedGroup.appBackgroundColor || "#ffffff",
+                isAppBgColorVisible: !!selectedGroup.isAppBgColorVisible,
+
+                bannerLink: selectedGroup.bannerLink || "",
+                categories: selectedGroup.categories?.map(c => c._id || c) || [],
+                parentCategories: selectedGroup.parentCategories?.map(c => c._id || c) || [],
             });
         } else {
             reset({
-                name: "",
-                sequenceNo: 0,
+                heading: "",
+                slug: "",
+                groupType: "products",
+                placement: "scroll",
                 active: true,
-                banner: "",
-                bannerLink: "", // <-- reset default for new
-                isBannerVisble: false,
-                isBackgroundColorVisible: false,
-                backgroundColor: "#ffffff",
+                webBanner: "",
+                isWebBannerVisible: false,
+                webBackgroundColor: "#ffffff",
+                isWebBgColorVisible: false,
+                appBanner: "",
+                isAppBannerVisible: false,
+                appBackgroundColor: "#ffffff",
+                isAppBgColorVisible: false,
+                bannerLink: "",
                 categories: [],
                 parentCategories: [],
             });
         }
     }, [selectedGroup, reset, open]);
 
-    const bannerRef = useRef(null)
-    const onBannerClick = () => bannerRef.current?.click()
+    const [uploadingField, setUploadingField] = useState(null);
 
-    const [isUploading, setIsUploading] = useState(false)
-    const [uploadProgress, setUploadProgress] = useState(0) // 0..100
+    const handleFileUpload = async (e, fieldName) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-    const onBannerChange = async (e) => {
-        const file = e.target.files?.[0]
-        if (!file) return
-
-        const toastId = toast.loading('Uploading...')
+        const toastId = toast.loading(`Uploading ${fieldName}...`);
         try {
-            setIsUploading(true)
-            setUploadProgress(0)
-
-            // uploadImage3 supports a progress callback (progress: 0..1)
-            const url = await uploadImage3(file, (progressFraction) => {
-                const pct = Math.round((progressFraction ?? 0) * 100)
-                setUploadProgress(pct)
-            })
-
-            setValue('banner', url, { shouldValidate: true })
-            toast.success('Banner Uploaded', { id: toastId })
+            setUploadingField(fieldName);
+            const url = await uploadImage3(file);
+            setValue(fieldName, url, { shouldValidate: true, shouldDirty: true });
+            toast.success("Uploaded successfully", { id: toastId });
         } catch (err) {
-            console.error(err)
-            toast.error('Error uploading banner', { id: toastId })
+            console.error(err);
+            toast.error("Upload failed", { id: toastId });
         } finally {
-            setIsUploading(false)
-            // small delay so the user sees 100%
-            setTimeout(() => setUploadProgress(0), 600)
-            if (e.target) e.target.value = ""
+            setUploadingField(null);
         }
-    }
+    };
 
-    const selectedIds = watch('categories') || [];
-    const selectedParentIds = watch('parentCategories') || [];
-
-    const selectedSubCategoryName = subCategoriesData.find(sub => selectedIds.includes(sub._id))?.name || ''
-    const selectedParentCategoryNames = categoriesData
-        .filter(cat => selectedParentIds.includes(cat._id))
-        .map(cat => cat.name)
-
-    async function onSubmit(values) {
+    const onSubmit = async (values) => {
         try {
+            const dataToSubmit = {
+                ...values,
+                name: values.heading
+            };
             if (selectedGroup?._id) {
-                await onUpdate({ id: selectedGroup._id, data: values })
-                onOpenChange(false)
+                await onUpdate({ id: selectedGroup._id, data: dataToSubmit });
             } else {
-                await onCreate(values)
-                onOpenChange(false)
+                await onCreate(dataToSubmit);
             }
+            onOpenChange(false);
         } catch (err) {
-            console.error("Submit error:", err)
+            console.error("Submit error:", err);
         }
-    }
+    };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className=" max-h-[95vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>
-                        {selectedGroup?._id ? "Edit Product Group" : "Add Product Group"}
-                    </DialogTitle>
-                </DialogHeader>
-
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent className="w-[100vw] sm:max-w-2xl overflow-y-auto bg-back1 text-slate-800 border-l border-bdr2 p-6 flex flex-col justify-between">
                 <div>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-                            {/* Section 1: General Info */}
-                            <div className="space-y-4 p-4 border border-gray-200 rounded-lg bg-gray-100">
-                                <h3 className="font-semibold text-sm text-gray-800 border-b pb-1.5">General Information</h3>
+                    <SheetHeader className="mb-5 space-y-1 p-0 gap-0">
+                        <SheetTitle className="text-2xl font-bold tracking-tighter text-slate-900">
+                            {selectedGroup?._id ? "Edit Group" : "Create Group"}
+                        </SheetTitle>
+                        <SheetDescription className="text-slate-500 text-xs">
+                            Configure responsive styles, visibility rules, and layouts.
+                        </SheetDescription>
+                    </SheetHeader>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {/* Name */}
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-6">
+
+                            {/* SECTION 1: GENERAL INFO */}
+                            <div className="bg-back2 border border-bdr2 rounded-xl p-5 space-y-4 shadow-none">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-450 border-b border-slate-100 pb-2">
+                                    1. Basic Info
+                                </h3>
+
+                                {/* Row 1: Heading */}
+                                <div className="grid grid-cols-1 gap-4">
                                     <FormField
-                                        control={form.control}
-                                        name="name"
+                                        control={control}
+                                        name="heading"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Name<span className="text-red-500"> *</span></FormLabel>
+                                                <FormLabel className="text-slate-700 font-semibold text-xs">Display Heading *</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="JBL Smartwatch" {...field} />
+                                                    <Input placeholder="e.g. Headphones & Wearables" className="bg-back1 border-bdr2 text-sm" {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
                                     />
-
-                                    {/* Sub-Category dropdown select */}
-                                    {!hideCategoriesSelect && (
-                                        <FormField
-                                            control={control}
-                                            name="categories"
-                                            render={({ field }) => {
-                                                const currentVal = field.value?.[0] || "";
-                                                return (
-                                                    <FormItem>
-                                                        <FormLabel>Sub-Category</FormLabel>
-                                                        <Select
-                                                            onValueChange={(val) => setValue('categories', val ? [val] : [], { shouldDirty: true })}
-                                                            value={currentVal}
-                                                        >
-                                                            <FormControl>
-                                                                <SelectTrigger className="bg-white">
-                                                                    <SelectValue placeholder="Select sub-category" />
-                                                                </SelectTrigger>
-                                                            </FormControl>
-                                                            <SelectContent>
-                                                                {subCategoriesData.map(sub => (
-                                                                    <SelectItem key={sub._id} value={sub._id}>
-                                                                        {sub.name}
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                );
-                                            }}
-                                        />
-                                    )}
                                 </div>
 
-                                {/* Active */}
-                                <FormField
-                                    control={form.control}
-                                    name="active"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center justify-between rounded border border-gray-200 bg-white p-3">
-                                            <div className="space-y-0.5">
-                                                <FormLabel className="text-sm font-medium">Active</FormLabel>
-                                                <DialogDescription className="text-xs">Visible to users on application</DialogDescription>
-                                            </div>
-                                            <FormControl>
-                                                <Input
-                                                    type="checkbox"
-                                                    className="w-5 h-5 cursor-pointer accent-blue-600"
-                                                    checked={field.value}
-                                                    onChange={field.onChange}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                {/* Row 2: Slug */}
+                                <div className="grid grid-cols-1 gap-4">
+                                    <FormField
+                                        control={control}
+                                        name="slug"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-slate-700 font-semibold text-xs">Slug *</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="e.g. headphones-and-wearables" className="bg-back1 border-bdr2 text-sm" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+
+                                {/* Row 3: Group Type, View Type, Active switch */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <FormField
+                                        control={control}
+                                        name="groupType"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-slate-700 font-semibold text-xs">Group Type</FormLabel>
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger className="bg-back1 border-bdr2 text-sm h-10">
+                                                            <SelectValue placeholder="Select type" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent className="bg-white text-slate-800">
+                                                        <SelectItem value="products">Product Cards Grid</SelectItem>
+                                                        <SelectItem value="subcategories">Sub-Categories Grid</SelectItem>
+                                                        <SelectItem value="categories">Categories Grid</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={control}
+                                        name="placement"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-slate-700 font-semibold text-xs">View Type</FormLabel>
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger className="bg-back1 border-bdr2 text-sm h-10">
+                                                            <SelectValue placeholder="Select placement" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent className="bg-white">
+                                                        <SelectItem value="scroll">Horizontal Scroll</SelectItem>
+                                                        <SelectItem value="grid">Responsive Grid</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={control}
+                                        name="active"
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-col space-y-2.5">
+                                                <FormLabel className="text-slate-700 font-semibold text-xs">Active Status</FormLabel>
+                                                <FormControl>
+                                                    <div className="flex items-center h-4">
+                                                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                                        <span className="text-xs font-medium text-slate-500 ml-2">
+                                                            {field.value ? "Visible to users" : "Hidden"}
+                                                        </span>
+                                                    </div>
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
                             </div>
 
-                            {/* Section 2: Banner Settings */}
-                            <div className="space-y-4 p-4 border border-gray-200 rounded-lg bg-gray-100">
-                                <h3 className="font-semibold text-sm text-gray-800 border-b pb-1.5">Banner Settings</h3>
+                            {/* SECTION 2: WEB CUSTOMIZATION CARD */}
+                            <div className="bg-back2 border border-bdr2 rounded-xl p-5 space-y-4 shadow-none">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-500 border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                                    <Laptop size={14} /> 2. Web Configuration
+                                </h3>
 
-                                {/* Banner Upload */}
-                                <input
-                                    type="file"
-                                    accept="image/*,.gif"
-                                    ref={bannerRef}
-                                    className="hidden"
-                                    onChange={onBannerChange}
-                                />
-                                <FormField
-                                    control={control}
-                                    name="banner"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Group Banner (1920px * 600px)</FormLabel>
-
-                                            {!field.value ? (
-                                                <div
-                                                    className="border-2 border-dashed border-gray-300 rounded-lg h-28 flex items-center justify-center cursor-pointer bg-white hover:border-blue-400 transition-colors"
-                                                    onClick={onBannerClick}
-                                                >
-                                                    <span className="text-gray-500 text-sm">Click to select Banner image</span>
-                                                </div>
-                                            ) : (
-                                                <div className="relative w-full aspect-[720/256] border rounded-lg overflow-hidden bg-white">
-                                                    <Image
-                                                        src={field.value}
-                                                        alt="image"
-                                                        fill
-                                                        className="object-contain"
-                                                    />
-
-                                                    {/* overlay progress when uploading */}
-                                                    {isUploading && (
-                                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                                            <div className="text-white text-sm">
-                                                                Uploading... {uploadProgress}%
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                {/* Web Banner */}
+                                <div className="space-y-2 border border-bdr2 rounded-lg p-3 bg-back1">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-bold text-slate-700">Web Banner Image</span>
+                                        <FormField
+                                            control={control}
+                                            name="isWebBannerVisible"
+                                            render={({ field }) => (
+                                                <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-500">
+                                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                                    <span>Visible</span>
+                                                </label>
                                             )}
+                                        />
+                                    </div>
+                                    <div className="relative">
+                                        <input type="file" id="webBannerFile" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'webBanner')} />
+                                        {watch('webBanner') ? (
+                                            <div className="relative h-24 w-full border border-bdr2 rounded-lg overflow-hidden bg-white">
+                                                <Image src={watch('webBanner')} alt="web banner" fill className="object-contain" />
+                                                <button type="button" onClick={() => setValue('webBanner', '')} className="absolute right-1 top-1 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200"><X size={12} /></button>
+                                            </div>
+                                        ) : (
+                                            <label htmlFor="webBannerFile" className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer bg-white hover:border-slate-350 transition-all">
+                                                {uploadingField === 'webBanner' ? <Loader2 className="animate-spin text-primary" /> : <UploadCloud size={20} className="text-slate-400" />}
+                                                <span className="text-[11px] text-slate-400 mt-1">Upload Web Banner</span>
+                                            </label>
+                                        )}
+                                    </div>
+                                </div>
 
-                                            {field.value && (
-                                                <div className="flex items-center gap-3">
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        onClick={onBannerClick}
-                                                        className="mt-1"
-                                                        disabled={isUploading}
-                                                    >
-                                                        Change Banner
-                                                    </Button>
-                                                    {isUploading && (
-                                                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                            <Loader2 className="animate-spin" />
-                                                            <span>{uploadProgress}%</span>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                {/* Web Background Color */}
+                                <div className="space-y-2 border border-bdr2 rounded-lg p-3 bg-back1">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-bold text-slate-700">Web Background Color</span>
+                                        <FormField
+                                            control={control}
+                                            name="isWebBgColorVisible"
+                                            render={({ field }) => (
+                                                <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-500">
+                                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                                    <span>Visible</span>
+                                                </label>
                                             )}
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                        />
+                                    </div>
+                                    <FormField
+                                        control={control}
+                                        name="webBackgroundColor"
+                                        render={({ field }) => (
+                                            <div className="flex gap-3 items-center">
+                                                <input type="color" className="h-9 w-12 border rounded cursor-pointer shrink-0" {...field} />
+                                                <Input className="bg-white border-bdr2 font-mono text-sm" {...field} />
+                                            </div>
+                                        )}
+                                    />
+                                </div>
+                            </div>
 
-                                {/* Banner Link */}
+                            {/* SECTION 3: APP CUSTOMIZATION CARD */}
+                            <div className="bg-back2 border border-bdr2 rounded-xl p-5 space-y-4 shadow-none">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600 border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                                    <Smartphone size={14} /> 3. Mobile App Configuration
+                                </h3>
+
+                                {/* App Banner */}
+                                <div className="space-y-2 border border-bdr2 rounded-lg p-3 bg-back1">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-bold text-slate-700">App Banner Image</span>
+                                        <FormField
+                                            control={control}
+                                            name="isAppBannerVisible"
+                                            render={({ field }) => (
+                                                <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-500">
+                                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                                    <span>Visible</span>
+                                                </label>
+                                            )}
+                                        />
+                                    </div>
+                                    <div className="relative">
+                                        <input type="file" id="appBannerFile" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'appBanner')} />
+                                        {watch('appBanner') ? (
+                                            <div className="relative h-24 w-full border border-bdr2 rounded-lg overflow-hidden bg-white">
+                                                <Image src={watch('appBanner')} alt="app banner" fill className="object-contain" />
+                                                <button type="button" onClick={() => setValue('appBanner', '')} className="absolute right-1 top-1 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200"><X size={12} /></button>
+                                            </div>
+                                        ) : (
+                                            <label htmlFor="appBannerFile" className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer bg-white hover:border-slate-350 transition-all">
+                                                {uploadingField === 'appBanner' ? <Loader2 className="animate-spin text-primary" /> : <UploadCloud size={20} className="text-slate-400" />}
+                                                <span className="text-[11px] text-slate-400 mt-1">Upload App Banner</span>
+                                            </label>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* App Background Color */}
+                                <div className="space-y-2 border border-bdr2 rounded-lg p-3 bg-back1">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-bold text-slate-700">App Background Color</span>
+                                        <FormField
+                                            control={control}
+                                            name="isAppBgColorVisible"
+                                            render={({ field }) => (
+                                                <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-500">
+                                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                                    <span>Visible</span>
+                                                </label>
+                                            )}
+                                        />
+                                    </div>
+                                    <FormField
+                                        control={control}
+                                        name="appBackgroundColor"
+                                        render={({ field }) => (
+                                            <div className="flex gap-3 items-center">
+                                                <input type="color" className="h-9 w-12 border rounded cursor-pointer shrink-0" {...field} />
+                                                <Input className="bg-white border-bdr2 font-mono text-sm" {...field} />
+                                            </div>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* SECTION 5: BANNERS REDIRECT LINK */}
+                            <div className="bg-back2 border border-bdr2 rounded-xl p-5 space-y-4 shadow-none">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-450 border-b border-slate-100 pb-2">
+                                    5. Banners Redirect Link
+                                </h3>
                                 <FormField
                                     control={control}
                                     name="bannerLink"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Banner Link</FormLabel>
+                                            <FormLabel className="text-slate-700 font-semibold text-xs">Redirect Destination URL</FormLabel>
                                             <FormControl>
-                                                <Input
-                                                    placeholder="https://example.com/product-page"
-                                                    className="bg-white"
-                                                    {...field}
-                                                />
+                                                <Input placeholder="e.g. /category/electronics" className="bg-back1 border-bdr2 text-sm" {...field} />
                                             </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {/* Show Banner checkbox (Moved to bottom of Banner Settings) */}
-                                <FormField
-                                    control={form.control}
-                                    name="isBannerVisble"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center justify-between rounded border border-gray-200 bg-white p-3">
-                                            <div className="space-y-0.5">
-                                                <FormLabel className="text-sm font-medium">Show Banner</FormLabel>
-                                                <DialogDescription className="text-xs">Display the group banner in App</DialogDescription>
-                                            </div>
-                                            <FormControl>
-                                                <Input
-                                                    type="checkbox"
-                                                    className="w-5 h-5 cursor-pointer accent-blue-600"
-                                                    checked={field.value}
-                                                    onChange={field.onChange}
-                                                />
-                                            </FormControl>
+                                            <FormDescription className="text-[10px] text-slate-400">Destination link when users click on the banners.</FormDescription>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
                             </div>
 
-                            {/* Section 3: Color Settings */}
-                            <div className="space-y-4 p-4 border border-gray-200 rounded-lg bg-gray-100">
-                                <h3 className="font-semibold text-sm text-gray-800 border-b pb-1.5">Style Settings</h3>
-
-                                {/* Background color */}
-                                <FormField
-                                    control={control}
-                                    name="backgroundColor"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Background Color</FormLabel>
-                                            <FormControl>
-                                                <div className="flex gap-4 items-center">
-                                                    <input
-                                                        type="color"
-                                                        className="h-9 w-1/2 p-0.5 border rounded cursor-pointer bg-white shrink-0"
-                                                        {...field}
-                                                    />
-                                                    <Input
-                                                        type="text"
-                                                        value={field.value}
-                                                        onChange={field.onChange}
-                                                        className="h-9 w-1/2 font-mono bg-white"
-                                                    />
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {/* Show Background Color checkbox (Moved to bottom of Style Settings) */}
-                                <FormField
-                                    control={control}
-                                    name="isBackgroundColorVisible"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center justify-between rounded border border-gray-200 bg-white p-3">
-                                            <div className="space-y-0.5">
-                                                <FormLabel className="text-sm font-medium">Show Background Color</FormLabel>
-                                                <DialogDescription className="text-xs">Display background color in App</DialogDescription>
-                                            </div>
-                                            <FormControl>
-                                                <Input
-                                                    type="checkbox"
-                                                    className="w-5 h-5 cursor-pointer accent-blue-600"
-                                                    checked={field.value}
-                                                    onChange={field.onChange}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            {/* Section 4: Parent Association */}
-                            <div className="space-y-4 p-4 border border-gray-200 rounded-lg bg-gray-100">
-                                <h3 className="font-semibold text-sm text-gray-800 border-b pb-1.5">Parent Categories Association</h3>
-
-                                <FormField
-                                    control={control}
-                                    name="parentCategories"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Parent Categories</FormLabel>
-                                            <FormDescription className={'-mt-2'}>Categories to show under this group.</FormDescription>
-                                            <div className="flex flex-wrap gap-1 mb-2 mt-1">
-                                                <span className="text-[11px] text-gray-500 self-center">Selected:</span>
-                                                {selectedParentCategoryNames.length > 0 ? (
-                                                    selectedParentCategoryNames.map((name, i) => (
-                                                        <Badge key={i} variant="secondary" className="rounded-sm font-semibold text-[11px] px-2 py-0.5">
-                                                            {name}
-                                                        </Badge>
-                                                    ))
-                                                ) : (
-                                                    <span className="text-[11px] text-gray-400 italic self-center">None</span>
-                                                )}
-                                            </div>
-                                            <FormControl>
-                                                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border rounded bg-white">
-                                                    {categoriesData.map(sub => (
-                                                        <label key={sub._id} className="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer">
-                                                            <input
-                                                                type="checkbox"
-                                                                value={sub._id}
-                                                                checked={selectedParentIds.includes(sub._id)}
-                                                                onChange={e => {
-                                                                    const checked = e.target.checked;
-                                                                    if (checked) {
-                                                                        setValue('parentCategories', [...selectedParentIds, sub._id], { shouldDirty: true });
-                                                                    } else {
-                                                                        setValue(
-                                                                            'parentCategories',
-                                                                            selectedParentIds.filter(id => id !== sub._id),
-                                                                            { shouldDirty: true }
-                                                                        );
-                                                                    }
-                                                                }}
-                                                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                                            />
-                                                            <span>{sub.name}</span>
-                                                        </label>
-                                                    ))}
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            <DialogFooter>
-                                <Button type="submit" disabled={isSubmitting || isUploading} className="w-full sm:w-auto">
-                                    {isSubmitting && <Loader2 className="animate-spin mr-1" />}
-                                    {selectedGroup?._id ? "Update Group" : "Create Group"}
-                                </Button>
-                            </DialogFooter>
                         </form>
                     </Form>
                 </div>
-            </DialogContent>
-        </Dialog>
-    )
+
+                <SheetFooter className="border-t border-bdr2 pt-4 bg-back2 -mx-6 -mb-6 p-6 shrink-0">
+                    <Button
+                        type="button"
+                        onClick={form.handleSubmit(onSubmit)}
+                        disabled={!isValid || isSubmitting || !!uploadingField}
+                        className="w-full bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text shadow-none py-3 font-semibold rounded-lg"
+                    >
+                        {isSubmitting && <Loader2 className="animate-spin mr-1.5 h-4 w-4" />}
+                        {selectedGroup?._id ? "Update Layout Group" : "Create Layout Group"}
+                    </Button>
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
+    );
 }
 
-export default GroupDialog
+export default GroupDialog;

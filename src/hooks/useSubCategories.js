@@ -28,6 +28,15 @@ export const useSubCategories = () => {
         }
     });
 
+    const subCategoriesPaginationQuery = ({ page = 1, limit = 10, searchQuery = "", parentCategory = "" }) => useQuery({
+        queryKey: ['subCategories', 'paginatedList', page, limit, searchQuery, parentCategory],
+        enabled: canView,
+        queryFn: () => api.get('/categories/subCategories', {
+            params: { page, limit, searchQuery, parentCategory }
+        }).then(res => res.data?.data || {}),
+        staleTime: 1000 * 10,
+    });
+
     const getSubServiceQuery = (slug, options = {}) => useQuery({
         queryKey: ['subService', slug],
         queryFn: async () => {
@@ -102,7 +111,7 @@ export const useSubCategories = () => {
     });
 
     return {
-        subCategoriesQuery, deleteSubCategory, updateSubCategory, updateSubCategoryStatus, createSubCategory, getSubServiceQuery,
+        subCategoriesQuery, subCategoriesPaginationQuery, deleteSubCategory, updateSubCategory, updateSubCategoryStatus, createSubCategory, getSubServiceQuery,
         permissions: {
             canView,
             canAdd,

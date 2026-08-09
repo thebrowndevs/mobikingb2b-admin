@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { MoreHorizontal, Eye, Pencil, Trash } from 'lucide-react';
+import { Pencil, Trash, Laptop, Smartphone } from 'lucide-react';
 import {
     Table,
     TableHeader,
@@ -10,10 +9,8 @@ import {
     TableHead,
     TableBody,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import Loader from '@/components/Loader';
 import TableSkeleton from '@/components/custom/TableSkeleton';
 import { useGroups } from '@/hooks/useGroups';
 import { toast } from 'react-hot-toast';
@@ -28,17 +25,12 @@ export default function GroupsTable({
     canDelete,
     canEdit,
     onEdit,
-    setGroupForProducts,
-    setPrdouctsSheet,
-    isLoading
+    onEditItems,
+    isLoading,
+    page = 1,
+    limit = 10
 }) {
     const { updateGroupStatus } = useGroups();
-
-    // const {
-    //     mutateAsync: updateGroupAsync,
-    //     isPending: updating,
-    // } = updateGroupStatus;
-
     const groupsData = Array.isArray(groups) ? groups : (groups?.data || []);
     const [deletingId, setDeletingId] = useState(null);
 
@@ -50,151 +42,169 @@ export default function GroupsTable({
 
     if (isLoading) return <TableSkeleton showHeader={false} />;
     if (error) return <div className="text-red-600 p-4">Error: {error.message}</div>;
-    // console.log(groupsData)
+
     return (
         <section className="w-full">
-            <div className="overflow-x-auto rounded-md border border-gray-200 shadow-sm">
+            <div className="overflow-x-auto rounded-xl border border-bdr2 bg-back2">
                 <Table className="w-full">
                     <TableHeader>
-                        <TableRow className="bg-gray-50 text-gray-700">
-                            <TableHead className="w-[50px]">#</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Sub-Category</TableHead>
-                            <TableHead>Banner</TableHead>
-                            <TableHead>Banner Visible</TableHead>
-                            <TableHead>BG Color</TableHead>
-                            <TableHead>BG Color Visible</TableHead>
-                            <TableHead>Products</TableHead>
-                            <TableHead className="text-center">Status</TableHead>
-                            <TableHead className="text-center">Actions</TableHead>
+                        <TableRow className="bg-back1 border-b border-bdr2 text-slate-700">
+                            <TableHead className="w-[50px] font-semibold text-xs text-slate-500">#</TableHead>
+                            <TableHead className="font-semibold text-xs text-slate-500">Heading</TableHead>
+                            <TableHead className="font-semibold text-xs text-slate-500">Slug</TableHead>
+                            <TableHead className="font-semibold text-xs text-slate-500">Type</TableHead>
+                            <TableHead className="font-semibold text-xs text-slate-500">Web Configuration</TableHead>
+                            <TableHead className="font-semibold text-xs text-slate-500">App Configuration</TableHead>
+                            <TableHead className="font-semibold text-xs text-slate-500 text-center">Items</TableHead>
+                            <TableHead className="font-semibold text-xs text-slate-500 text-center">Status</TableHead>
+                            <TableHead className="font-semibold text-xs text-slate-500 text-center">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {groupsData.map((group, index) => (
-                            <TableRow key={group._id || index} className="even:bg-gray-50/50 hover:bg-gray-100/70 transition">
-                                <TableCell>{index + 1}</TableCell>
-                                
-                                {/* Group Name */}
-                                <TableCell className="font-semibold text-gray-800">{group.name}</TableCell>
+                        {groupsData.map((group, index) => {
+                            const getItemsCount = () => {
+                                if (group.groupType === 'products') return group.products?.length || 0;
+                                if (group.groupType === 'subcategories') return group.categories?.length || 0;
+                                if (group.groupType === 'categories') return group.parentCategories?.length || 0;
+                                return 0;
+                            };
 
-                                {/* Sub-Category */}
-                                <TableCell className="font-medium text-blue-800">
-                                    {group.categories && group.categories.length > 0 ? (
-                                        group.categories.map(c => c.name || c).join(', ')
-                                    ) : (
-                                        <span className="text-gray-400 italic text-xs">None</span>
-                                    )}
-                                </TableCell>
+                            return (
+                                <TableRow key={group._id || index} className="hover:bg-slate-50/50 border-b border-bdr2 transition">
+                                    <TableCell className="text-xs font-medium text-slate-500">
+                                        {(page - 1) * limit + index + 1}
+                                    </TableCell>
 
-                                {/* Banner Image */}
-                                <TableCell>
-                                    {group.banner ? (
-                                        <img
-                                            src={group.banner}
-                                            alt={group.name}
-                                            className="w-12 h-8 object-cover rounded border border-gray-100"
-                                        />
-                                    ) : (
-                                        <span className="text-gray-400 italic text-xs">-</span>
-                                    )}
-                                </TableCell>
+                                    {/* Heading */}
+                                    <TableCell className="font-semibold text-slate-800 text-sm">{group.heading}</TableCell>
 
-                                {/* Banner Visible badge */}
-                                <TableCell>
-                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${group.isBannerVisble ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'}`}>
-                                        {group.isBannerVisble ? 'Visible' : 'Not Visible'}
-                                    </span>
-                                </TableCell>
+                                    {/* Slug */}
+                                    <TableCell className="font-mono text-xs text-slate-500">{group.slug || '-'}</TableCell>
 
-                                {/* Background Color Indicator */}
-                                <TableCell>
-                                    {group.backgroundColor ? (
-                                        <div
-                                            className="w-14 h-6 rounded border border-gray-400"
-                                            style={{ backgroundColor: group.backgroundColor }}
-                                        />
-                                    ) : (
-                                        <span className="text-gray-400 italic text-xs">-</span>
-                                    )}
-                                </TableCell>
+                                    {/* Type */}
+                                    <TableCell className="text-xs">
+                                        <span className="px-2 py-0.5 rounded-full font-medium bg-slate-100 text-slate-700 capitalize">
+                                            {group.groupType}
+                                        </span>
+                                    </TableCell>
 
-                                {/* Background Color Visible badge */}
-                                <TableCell>
-                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${group.isBackgroundColorVisible ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'}`}>
-                                        {group.isBackgroundColorVisible ? 'Visible' : 'Not Visible'}
-                                    </span>
-                                </TableCell>
+                                    {/* Web Config */}
+                                    <TableCell className="text-xs space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <Laptop size={12} className="text-slate-400" />
+                                            {group.webBanner ? (
+                                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${group.isWebBannerVisible ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400 line-through'}`}>
+                                                    Banner
+                                                </span>
+                                            ) : (
+                                                <span className="text-slate-400 italic text-[10px]">No Banner</span>
+                                            )}
+                                            {group.webBackgroundColor ? (
+                                                <div className="flex items-center gap-1">
+                                                    <div className="w-3.5 h-3.5 rounded border border-bdr2" style={{ backgroundColor: group.webBackgroundColor }} />
+                                                    <span className={`text-[10px] font-semibold ${group.isWebBgColorVisible ? 'text-slate-650' : 'text-slate-400 line-through'}`}>
+                                                        BG Color
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-slate-400 italic text-[10px]">No BG Color</span>
+                                            )}
+                                        </div>
+                                    </TableCell>
 
-                                {/* Products count and pencil edit */}
-                                <TableCell>
-                                    <div className="flex items-center gap-2">
-                                        <Button variant="outline" size="sm" className="h-8">
-                                            {group.products?.length || 0}
-                                        </Button>
-                                        {canEdit && (
-                                            <Pencil
-                                                size={14}
-                                                className="hover:text-primary text-gray-400 cursor-pointer transition-colors"
-                                                onClick={() => {
-                                                    setPrdouctsSheet(true);
-                                                    setGroupForProducts(group);
+                                    {/* App Config */}
+                                    <TableCell className="text-xs space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <Smartphone size={12} className="text-slate-400" />
+                                            {group.appBanner ? (
+                                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${group.isAppBannerVisible ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400 line-through'}`}>
+                                                    Banner
+                                                </span>
+                                            ) : (
+                                                <span className="text-slate-400 italic text-[10px]">No Banner</span>
+                                            )}
+                                            {group.appBackgroundColor ? (
+                                                <div className="flex items-center gap-1">
+                                                    <div className="w-3.5 h-3.5 rounded border border-bdr2" style={{ backgroundColor: group.appBackgroundColor }} />
+                                                    <span className={`text-[10px] font-semibold ${group.isAppBgColorVisible ? 'text-slate-650' : 'text-slate-400 line-through'}`}>
+                                                        BG Color
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-slate-400 italic text-[10px]">No BG Color</span>
+                                            )}
+                                        </div>
+                                    </TableCell>
+
+                                    {/* Items Count */}
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            <span className="font-semibold text-slate-700 text-xs bg-back1 border border-bdr2 px-2 py-0.5 rounded-lg">
+                                                {getItemsCount()}
+                                            </span>
+                                            {canEdit && (
+                                                <Pencil
+                                                    size={13}
+                                                    className="hover:text-indigo-600 text-slate-400 cursor-pointer transition-colors"
+                                                    onClick={() => onEditItems && onEditItems(group)}
+                                                />
+                                            )}
+                                        </div>
+                                    </TableCell>
+
+                                    {/* Active Status Switch */}
+                                    <TableCell className="align-middle">
+                                        <div className="flex justify-center">
+                                            <Switch
+                                                checked={group.active}
+                                                disabled={updateGroupStatus.isPending}
+                                                onCheckedChange={async checked => {
+                                                    const toastId = toast.loading('Updating status…');
+                                                    try {
+                                                        await updateGroupStatus.mutateAsync({ id: group._id, data: { active: checked } });
+                                                    } catch (e) {
+                                                    } finally {
+                                                        toast.dismiss(toastId);
+                                                    }
                                                 }}
                                             />
-                                        )}
-                                    </div>
-                                </TableCell>
+                                        </div>
+                                    </TableCell>
 
-                                {/* Active Status Switch */}
-                                <TableCell className="align-middle">
-                                    <div className="flex justify-center">
-                                        <Switch
-                                            checked={group.active}
-                                            disabled={updateGroupStatus.isPending}
-                                            onCheckedChange={async checked => {
-                                                const toastId = toast.loading('Updating status…');
-                                                try {
-                                                    await updateGroupStatus.mutateAsync({ id: group._id, data: { active: checked } });
-                                                } catch (e) {
-                                                } finally {
-                                                    toast.dismiss(toastId);
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                </TableCell>
+                                    {/* Actions */}
+                                    <TableCell>
+                                        <div className="flex items-center justify-center gap-2">
+                                            {canEdit && (
+                                                <Button
+                                                    size="icon"
+                                                    variant="outline"
+                                                    className="h-8 w-8 text-slate-600 hover:text-slate-900 border-bdr2 hover:bg-slate-50 shadow-none"
+                                                    onClick={() => onEdit(group)}
+                                                >
+                                                    <Pencil size={13} />
+                                                </Button>
+                                            )}
+                                            {canDelete && (
+                                                <Button
+                                                    size="icon"
+                                                    variant="destructive"
+                                                    className="h-8 w-8 shadow-none bg-red-650 hover:bg-red-700"
+                                                    onClick={() => handleDeleteClick(group._id)}
+                                                >
+                                                    <Trash size={13} />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
 
-                                {/* Actions */}
-                                <TableCell>
-                                    <div className="flex items-center justify-center gap-2">
-                                        {canEdit && (
-                                            <Button 
-                                                size="icon" 
-                                                variant="outline" 
-                                                className="h-8 w-8 text-gray-600 hover:text-gray-900"
-                                                onClick={() => onEdit(group)}
-                                            >
-                                                <Pencil size={14} />
-                                            </Button>
-                                        )}
-                                        {canDelete && (
-                                            <Button
-                                                size="icon"
-                                                variant="destructive"
-                                                className="h-8 w-8"
-                                                onClick={() => handleDeleteClick(group._id)}
-                                            >
-                                                <Trash size={14} />
-                                            </Button>
-                                        )} 
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ))}
                     </TableBody>
                 </Table>
             </div>
 
-           <DeleteConfirmationDialog
+            <DeleteConfirmationDialog
                 isOpen={!!deletingId}
                 onOpenChange={open => open || setDeletingId(null)}
                 onConfirm={handleDeleteConfirm}
