@@ -701,17 +701,24 @@ const GSTBill = ({ data }) => {
 // Download button component remains the same ...
 
 // Download button component
-const GSTBillDownloadV2 = ({ billData }) => {
+const GSTBillDownloadV2 = ({ billData, paymentData }) => {
     const [isLoading, setIsLoading] = useState(false)
 
     const handleDownload = async () => {
         setIsLoading(true)
         try {
-            const blob = await pdf(<GSTBill data={billData} />).toBlob()
+            const combinedData = paymentData ? {
+                ...billData,
+                paidAmount: paymentData.amount,
+                orderId: `${billData.orderId}-${paymentData._id.substring(paymentData._id.length - 4).toUpperCase()}`,
+                createdAt: paymentData.paidAt || paymentData.createdAt
+            } : billData;
+
+            const blob = await pdf(<GSTBill data={combinedData} />).toBlob()
             const url = URL.createObjectURL(blob)
             const link = document.createElement('a')
             link.href = url
-            link.download = `GST_${billData.orderId}.pdf`
+            link.download = paymentData ? `Receipt_${billData.orderId}_${paymentData._id.substring(paymentData._id.length - 4).toUpperCase()}.pdf` : `GST_${billData.orderId}.pdf`
             document.body.appendChild(link)
             link.click()
             link.remove()
@@ -726,7 +733,7 @@ const GSTBillDownloadV2 = ({ billData }) => {
     return (
         <div>
             <MiniLoaderButton onClick={handleDownload} loading={isLoading} variant={'outline'}>
-                <Download />
+                <Download className="h-3.5 w-3.5" />
             </MiniLoaderButton>
         </div>
     )

@@ -18,6 +18,7 @@ import { format } from 'date-fns'
 import api from '@/lib/api'
 import { useQuotations } from '@/hooks/useQuotations'
 import { toast } from 'sonner'
+import LoaderButton from '@/components/custom/LoaderButton'
 
 const STATUS_CLASSES = {
     New: 'bg-blue-100 text-blue-800 border-blue-200',
@@ -82,6 +83,13 @@ export default function QuotationDetailsPage() {
         { amount: '', method: 'COD', status: 'Pending', notes: '' }
     ])
 
+    const [bookingPaymentMode, setBookingPaymentMode] = useState("complete")
+    const [bookingPaymentMethod, setBookingPaymentMethod] = useState("COD")
+    const [bookingLength, setBookingLength] = useState(19)
+    const [bookingBreadth, setBookingBreadth] = useState(16)
+    const [bookingHeight, setBookingHeight] = useState(6)
+    const [bookingWeight, setBookingWeight] = useState(0.5)
+
     // Load quotation values into edit states on load
     useEffect(() => {
         if (quotation) {
@@ -96,6 +104,13 @@ export default function QuotationDetailsPage() {
             setEditComments(quotation.comments || '')
             setEditDeliveryCharge(quotation.deliveryCharge || 0)
             setEditDiscount(quotation.discount || 0)
+
+            setBookingLength(quotation.length || 19)
+            setBookingBreadth(quotation.breadth || 16)
+            setBookingHeight(quotation.height || 6)
+            setBookingWeight(quotation.weight || 0.5)
+            setBookingPaymentMode(quotation.paymentMode || "complete")
+            setBookingPaymentMethod(quotation.method || "COD")
 
             const discounts = {}
                 ; (quotation.items || []).forEach(it => {
@@ -241,21 +256,14 @@ export default function QuotationDetailsPage() {
     };
 
     const handleBookingSubmit = async () => {
-        const orderAmount = quotation.orderAmount
-        const sum = stages.reduce((acc, curr) => acc + Number(curr.amount || 0), 0)
-        if (Math.abs(sum - orderAmount) > 1) {
-            alert(`Error: The sum of stage payments (₹${sum.toLocaleString()}) must match the total order request value (₹${orderAmount.toLocaleString()}).`);
-            return;
-        }
-
         await bookQuotation.mutateAsync({
             quotationId: quotation._id,
-            stages: stages.map(s => ({
-                amount: Number(s.amount),
-                method: s.method,
-                status: s.status,
-                notes: s.notes
-            }))
+            paymentMode: bookingPaymentMode,
+            method: bookingPaymentMethod,
+            length: Number(bookingLength),
+            breadth: Number(bookingBreadth),
+            height: Number(bookingHeight),
+            weight: Number(bookingWeight)
         })
         setBookingDialogOpen(false)
         router.push("/admin/orders")
@@ -320,21 +328,23 @@ export default function QuotationDetailsPage() {
                         {isActionable && (
                             <>
                                 {quotation.status !== 'Accepted' && (
-                                    <Button
+                                    <LoaderButton
+                                        loading={updateQuotationStatus.isPending}
                                         onClick={() => updateQuotationStatus.mutate({ quotationId: quotation._id, status: 'Accepted' })}
                                         className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm"
                                     >
                                         Accept Request
-                                    </Button>
+                                    </LoaderButton>
                                 )}
 
                                 {quotation.status !== 'Hold' && (
-                                    <Button
+                                    <LoaderButton
+                                        loading={updateQuotationStatus.isPending}
                                         onClick={() => updateQuotationStatus.mutate({ quotationId: quotation._id, status: 'Hold' })}
                                         className="bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-sm"
                                     >
                                         Place on Hold
-                                    </Button>
+                                    </LoaderButton>
                                 )}
 
                                 <Button
@@ -356,13 +366,14 @@ export default function QuotationDetailsPage() {
                                 >
                                     Book Order
                                 </Button>
-                                <Button
+                                <LoaderButton
+                                    loading={updateQuotationStatus.isPending}
                                     onClick={() => updateQuotationStatus.mutate({ quotationId: quotation._id, status: 'Cancelled' })}
                                     variant="outline"
                                     className="border-rose-200 hover:bg-rose-50 text-rose-600 font-semibold"
                                 >
                                     Cancel Quotation
-                                </Button>
+                                </LoaderButton>
                             </>
                         )}
                     </div>
@@ -430,9 +441,13 @@ export default function QuotationDetailsPage() {
                                             <Button variant="ghost" onClick={() => setIsEditingCustomer(false)} className="text-slate-400 hover:bg-slate-100">
                                                 Discard
                                             </Button>
-                                            <Button onClick={handleSaveCustomer} className="bg-slate-900 hover:bg-slate-800 text-white font-semibold">
+                                            <LoaderButton
+                                                loading={updateQuotation.isPending}
+                                                onClick={handleSaveCustomer}
+                                                className="bg-slate-900 hover:bg-slate-800 text-white font-semibold"
+                                            >
                                                 Save Customer Details
-                                            </Button>
+                                            </LoaderButton>
                                         </div>
                                     </div>
                                 ) : (
@@ -455,6 +470,20 @@ export default function QuotationDetailsPage() {
                                                 {quotation.address2 && <span>{quotation.address2}</span>}
                                                 <span>{quotation.city}, {quotation.state} - {quotation.pincode}</span>
                                                 <span>{quotation.country}</span>
+                                                {quotation.latitude && quotation.longitude && (
+                                                    <div className="mt-2 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+                                                        <span className="text-[11px] text-slate-400 font-semibold uppercase">Coordinates</span>
+                                                        <span className="text-xs font-mono text-slate-600">Lat: {quotation.latitude}, Lng: {quotation.longitude}</span>
+                                                        <a
+                                                            href={`https://www.google.com/maps/search/?api=1&query=${quotation.latitude},${quotation.longitude}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="mt-1 w-fit inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 transition-colors"
+                                                        >
+                                                            <MapPin className="w-3.5 h-3.5" /> Show in Map
+                                                        </a>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
@@ -710,9 +739,13 @@ export default function QuotationDetailsPage() {
 
                                 {isEditingItems && (
                                     <div className="flex flex-col gap-2 mt-4">
-                                        <Button onClick={handleSaveCharges} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold">
+                                        <LoaderButton
+                                            loading={updateQuotation.isPending}
+                                            onClick={handleSaveCharges}
+                                            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold"
+                                        >
                                             Save Pricing & Charges
-                                        </Button>
+                                        </LoaderButton>
                                         <Button onClick={() => setIsEditingItems(false)} variant="ghost" className="w-full hover:bg-slate-100 text-slate-400">
                                             Done Editing
                                         </Button>
@@ -746,9 +779,14 @@ export default function QuotationDetailsPage() {
                         <Button variant="ghost" onClick={() => setRejectDialogOpen(false)} className="text-slate-400 hover:bg-slate-100">
                             Cancel
                         </Button>
-                        <Button variant="destructive" onClick={handleRejectSubmit} className="font-semibold">
+                        <LoaderButton
+                            variant="destructive"
+                            loading={updateQuotationStatus.isPending}
+                            onClick={handleRejectSubmit}
+                            className="font-semibold"
+                        >
                             Confirm Reject
-                        </Button>
+                        </LoaderButton>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -768,104 +806,92 @@ export default function QuotationDetailsPage() {
                             <span className="font-bold text-slate-900 text-lg">₹{quotation.orderAmount?.toLocaleString()}</span>
                         </div>
 
-                        {/* Stages Selector */}
-                        <div className="flex flex-col gap-1.5">
-                            <span className="text-xs text-slate-400 font-bold">NUMBER OF INSTALLMENTS / STAGE PAYMENTS</span>
-                            <Select onValueChange={(val) => setNumberOfStages(Number(val))} defaultValue="1">
-                                <SelectTrigger className="border-slate-200 h-9">
-                                    <SelectValue placeholder="1 Stage (Full payment)" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="1">1 Stage (Full payment)</SelectItem>
-                                    <SelectItem value="2">2 Stages (Bi-parcel)</SelectItem>
-                                    <SelectItem value="3">3 Stages</SelectItem>
-                                    <SelectItem value="4">4 Stages</SelectItem>
-                                    <SelectItem value="5">5 Stages</SelectItem>
-                                </SelectContent>
-                            </Select>
+                        {/* B2B Order Options */}
+                        <div className="grid grid-cols-2 gap-3 bg-indigo-50/55 p-3 rounded-lg border border-indigo-100/50 mb-1">
+                            <div className="flex flex-col gap-1">
+                                <span className="text-xs text-indigo-900 font-bold">PAYMENT MODE</span>
+                                <Select onValueChange={(val) => setBookingPaymentMode(val)} defaultValue={bookingPaymentMode}>
+                                    <SelectTrigger className="border-slate-200 h-9 bg-white">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="complete">Complete</SelectItem>
+                                        <SelectItem value="parcel">Parcel</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <span className="text-xs text-indigo-900 font-bold">PAYMENT METHOD</span>
+                                <Select onValueChange={(val) => setBookingPaymentMethod(val)} defaultValue={bookingPaymentMethod}>
+                                    <SelectTrigger className="border-slate-200 h-9 bg-white">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="COD">COD</SelectItem>
+                                        <SelectItem value="Online">Online</SelectItem>
+                                        <SelectItem value="UPI">UPI</SelectItem>
+                                        <SelectItem value="Cash">Cash</SelectItem>
+                                        <SelectItem value="Mixed">Mixed</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
 
-                        {/* Dynamic installments input */}
-                        <div className="flex flex-col gap-3 mt-2">
-                            <span className="text-xs text-slate-400 font-bold">CONFIGURE STAGE PAYMENTS</span>
-                            {stages.map((stg, idx) => (
-                                <div key={idx} className="bg-slate-50/50 p-3 rounded-lg border border-slate-100/80 flex flex-col sm:flex-row gap-3">
-                                    <div className="flex flex-col gap-1 w-full sm:w-28">
-                                        <span className="text-xs text-slate-400 font-semibold">Amount (₹)</span>
-                                        <Input
-                                            type="number"
-                                            value={stg.amount}
-                                            onChange={(e) => {
-                                                const updated = [...stages]
-                                                updated[idx].amount = e.target.value
-                                                setStages(updated)
-                                            }}
-                                            className="h-8 border-slate-200"
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-1 w-full sm:w-32">
-                                        <span className="text-xs text-slate-400 font-semibold">Payment Method</span>
-                                        <Select
-                                            onValueChange={(val) => {
-                                                const updated = [...stages]
-                                                updated[idx].method = val
-                                                setStages(updated)
-                                            }}
-                                            defaultValue={stg.method}
-                                        >
-                                            <SelectTrigger className="border-slate-200 h-8 text-xs">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="COD">COD</SelectItem>
-                                                <SelectItem value="Online">Online</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="flex flex-col gap-1 w-full sm:w-32">
-                                        <span className="text-xs text-slate-400 font-semibold">Status</span>
-                                        <Select
-                                            onValueChange={(val) => {
-                                                const updated = [...stages]
-                                                updated[idx].status = val
-                                                setStages(updated)
-                                            }}
-                                            defaultValue={stg.status}
-                                        >
-                                            <SelectTrigger className="border-slate-200 h-8 text-xs">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="Pending">Pending</SelectItem>
-                                                <SelectItem value="Paid">Paid</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="flex flex-col gap-1 w-full">
-                                        <span className="text-xs text-slate-400 font-semibold">Notes / Description</span>
-                                        <Input
-                                            type="text"
-                                            value={stg.notes}
-                                            onChange={(e) => {
-                                                const updated = [...stages]
-                                                updated[idx].notes = e.target.value
-                                                setStages(updated)
-                                            }}
-                                            placeholder="Installment notes"
-                                            className="h-8 border-slate-200"
-                                        />
-                                    </div>
+                        {/* Dimensions Fields */}
+                        <div className="bg-slate-50/50 p-3 rounded-lg border border-slate-100 flex flex-col gap-2">
+                            <span className="text-xs text-slate-400 font-bold">ORDER PACKAGING DIMENSIONS</span>
+                            <div className="grid grid-cols-4 gap-2">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] text-slate-400 font-semibold">Length (cm)</span>
+                                    <Input
+                                        type="number"
+                                        value={bookingLength}
+                                        onChange={(e) => setBookingLength(e.target.value)}
+                                        className="h-8 border-slate-200 text-xs bg-white"
+                                    />
                                 </div>
-                            ))}
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] text-slate-400 font-semibold">Breadth (cm)</span>
+                                    <Input
+                                        type="number"
+                                        value={bookingBreadth}
+                                        onChange={(e) => setBookingBreadth(e.target.value)}
+                                        className="h-8 border-slate-200 text-xs bg-white"
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] text-slate-400 font-semibold">Height (cm)</span>
+                                    <Input
+                                        type="number"
+                                        value={bookingHeight}
+                                        onChange={(e) => setBookingHeight(e.target.value)}
+                                        className="h-8 border-slate-200 text-xs bg-white"
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] text-slate-400 font-semibold">Weight (kg)</span>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        value={bookingWeight}
+                                        onChange={(e) => setBookingWeight(e.target.value)}
+                                        className="h-8 border-slate-200 text-xs bg-white"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <DialogFooter className="gap-2 sm:gap-0 mt-4">
                         <Button variant="ghost" onClick={() => setBookingDialogOpen(false)} className="text-slate-400 hover:bg-slate-100">
                             Cancel
                         </Button>
-                        <Button onClick={handleBookingSubmit} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
-                            Book Order & Save Stages
-                        </Button>
+                        <LoaderButton
+                            loading={bookQuotation.isPending}
+                            onClick={handleBookingSubmit}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
+                        >
+                            Book Order
+                        </LoaderButton>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

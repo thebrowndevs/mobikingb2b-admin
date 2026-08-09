@@ -23,8 +23,8 @@ const TABS = [
     { key: 'all', label: 'ALL REQUESTS' },
     { key: 'web', label: 'WEBSITE REQUESTS' },
     { key: 'app', label: 'APP REQUESTS' },
-    // { key: 'pos', label: 'POS REQUESTS' },
-    // { key: 'abandoned', label: 'ABANDONED REQUESTS' },
+    { key: 'pos', label: 'POS REQUESTS' },
+    { key: 'manual', label: 'MANUAL REQUESTS' },
 ]
 
 const STATUS_CARDS = [
@@ -113,8 +113,8 @@ export default function QuotationsListPage() {
                     <button
                         onClick={() => { setActiveStatus('all'); setCurrentPage(1); }}
                         className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-all ${activeStatus === 'all'
-                                ? 'bg-slate-900 border-slate-950 text-white shadow-sm'
-                                : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50'
+                            ? 'bg-slate-900 border-slate-950 text-white shadow-sm'
+                            : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50'
                             }`}
                     >
                         All ({counts.all || 0})
@@ -124,8 +124,8 @@ export default function QuotationsListPage() {
                             key={status}
                             onClick={() => { setActiveStatus(status); setCurrentPage(1); }}
                             className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-all ${activeStatus === status
-                                    ? 'bg-slate-900 border-slate-950 text-white shadow-sm'
-                                    : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50'
+                                ? 'bg-slate-900 border-slate-950 text-white shadow-sm'
+                                : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50'
                                 }`}
                         >
                             {status} ({statusesCounts[status] || 0})
@@ -140,11 +140,11 @@ export default function QuotationsListPage() {
                             key={tab.key}
                             onClick={() => { setActiveTab(tab.key); setCurrentPage(1); }}
                             className={`pb-3 font-semibold text-sm transition-all duration-200 border-b-2 -mb-[2px] ${activeTab === tab.key
-                                    ? 'border-slate-900 text-slate-900'
-                                    : 'border-transparent text-slate-400 hover:text-slate-600'
+                                ? 'border-slate-900 text-slate-900'
+                                : 'border-transparent text-slate-400 hover:text-slate-600'
                                 }`}
                         >
-                            {tab.label}
+                            {tab.label} ({counts[tab.key] || 0})
                         </button>
                     ))}
                 </div>

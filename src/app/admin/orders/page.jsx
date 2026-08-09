@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { CSVLink } from 'react-csv'
 import InnerDashboardLayout from '@/components/dashboard/InnerDashboardLayout'
@@ -11,8 +11,7 @@ import DateRangeSelector from '@/components/custom/DateRangeSelector'
 import { format, startOfMonth, startOfToday, subDays } from 'date-fns'
 import { Separator } from '@/components/ui/separator'
 import AmountCards from './components/AmountCards'
-import { ChevronDown, Loader2 } from 'lucide-react'
-import { LayoutGroup, motion } from 'framer-motion'
+import { ChevronDown, Loader2, Search, ShoppingBag, ChevronRight } from 'lucide-react'
 import PosButton from '@/components/custom/PosButton'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -36,11 +35,11 @@ import { useReports } from '@/hooks/useReports'
 import { exportToExcel } from '@/lib/exportToExcel'
 
 const TABS = [
-    { key: 'all', label: 'ALL ORDERS' },
-    { key: 'web', label: 'WEBSITE ORDERS' },
-    { key: 'app', label: 'APP ORDERS' },
-    { key: 'pos', label: 'POS ORDERS' },
-    { key: 'abandoned', label: 'ABANDONED CHECKOUT ORDERS' },
+    { key: 'all', label: 'All Orders' },
+    { key: 'web', label: 'Website Orders' },
+    { key: 'app', label: 'App Orders' },
+    { key: 'pos', label: 'POS Orders' },
+    { key: 'manual', label: 'Manual Orders' },
 ]
 
 const STATUS_CARDS = [
@@ -53,28 +52,16 @@ const STATUS_CARDS = [
     'Hold'
 ]
 
-const STATUS_BORDER = {
-    New: 'border-indigo-500',
-    Accepted: 'border-green-500',
-    Rejected: 'border-red-500',
-    Shipped: 'border-yellow-500',
-    Delivered: 'border-teal-500',
-    Cancelled: 'border-red-500',
-    Returned: 'border-indigo-500',
-    Replaced: 'border-purple-500',
-    Hold: 'border-purple-500',
-}
-
-const STATUS_BG = {
-    New: 'bg-indigo-500',
-    Accepted: 'bg-green-500',
-    Rejected: 'bg-red-500',
-    Shipped: 'bg-yellow-500',
-    Delivered: 'bg-teal-500',
-    Cancelled: 'bg-red-500',
-    Returned: 'bg-indigo-500',
-    Replaced: 'bg-purple-500',
-    Hold: 'bg-purple-500',
+const STATUS_CLASSES = {
+    New: 'bg-blue-100 text-blue-800 border-blue-200',
+    Accepted: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    Rejected: 'bg-rose-100 text-rose-800 border-rose-200',
+    Shipped: 'bg-amber-100 text-amber-800 border-amber-200',
+    Delivered: 'bg-teal-100 text-teal-800 border-teal-200',
+    Cancelled: 'bg-slate-100 text-slate-800 border-slate-200',
+    Hold: 'bg-purple-100 text-purple-800 border-purple-200',
+    Returned: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    Replaced: 'bg-violet-100 text-violet-800 border-violet-200',
 }
 
 // For flattening the order data to make it exportable as csv
@@ -246,6 +233,7 @@ export default function Page() {
         websiteOrderCount,
         appOrderCount,
         posOrderCount,
+        manualOrderCount,
         abandonedOrderCount
     } = customOrdersData || {};
 
@@ -264,6 +252,7 @@ export default function Page() {
         web: websiteOrderCount,
         app: appOrderCount,
         pos: posOrderCount,
+        manual: manualOrderCount,
         abandoned: abandonedOrderCount
     };
 
@@ -289,7 +278,7 @@ export default function Page() {
     const handleExportData = async () => {
         const toastId = toast.loading("Exporting...");
         try {
-            console.log("📤 Sending request to backend:", {
+            console.log("ðŸ“¤ Sending request to backend:", {
                 startDate,
                 endDate,
                 url: `${process.env.NEXT_PUBLIC_BACKEND_URL}/orders/custom`
@@ -305,7 +294,7 @@ export default function Page() {
                 }
             );
 
-            console.log("✅ Received response from backend:", res);
+            console.log("âœ… Received response from backend:", res);
 
             // Trigger browser download
             const blob = new Blob([res.data], { type: res.headers["content-type"] });
@@ -314,15 +303,15 @@ export default function Page() {
             link.download = `orders_${startDate}_to_${endDate}.xlsx`;
             link.click();
 
-            toast.success("Export completed ✅");
+            toast.success("Export completed âœ…");
         } catch (err) {
-            console.error("❌ Failed to export:", err);
+            console.error("âŒ Failed to export:", err);
             toast.error(err?.message || err?.response?.data?.message);
         } finally {
             toast.dismiss(toastId);
         }
     };
-    
+
     const handleDownloadTodayLabels = async () => {
         const todayStr = format(new Date(), 'yyyy-MM-dd');
         const columns = [
@@ -399,29 +388,29 @@ export default function Page() {
 
     return (
         <InnerDashboardLayout>
-            {/* Header */}
-            <div className="w-full flex items-center justify-between gap-4 border-b border-gray-500 pb-4">
-                <div>
-                    <h1 className="text-primary font-semibold sm:text-2xl lg:text-4xl">
-                        Orders
-                    </h1>
-                    <p className='text-xs text-gray-600 mt-2'>Showing Summary: <strong>{formattedStart}</strong> - <strong>{formattedEnd}</strong></p>
-                </div>
-                <div className="space-x-1 flex">
-                    {/* button to open and collapse amount cards */}
-                    <Button variant="outline" onClick={() => setShowAmountCards(prev => !prev)}>
-                        <ChevronDown className={`transition-transform duration-300 ${showAmountCards ? '' : 'rotate-180'}`} />
-                    </Button>
+            <div className="flex flex-col gap-6 p-6">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+                            <ShoppingBag className="w-8 h-8 text-slate-800" />
+                            Orders
+                        </h1>
+                        <p className="text-slate-500 mt-1">Showing Summary: <strong>{formattedStart}</strong> - <strong>{formattedEnd}</strong></p>
+                    </div>
+                    <div className="flex gap-2 flex-wrap self-start md:self-auto">
+                        {/* Toggle amount cards */}
+                        <Button variant="outline" onClick={() => setShowAmountCards(prev => !prev)} className="border-slate-200 hover:bg-slate-50">
+                            <ChevronDown className={`transition-transform duration-300 ${showAmountCards ? '' : 'rotate-180'}`} />
+                        </Button>
 
-                    {/* Export Data */}
-                    {
-                        onlyAdmin() &&
-                        (
+                        {/* Export Data */}
+                        {onlyAdmin() && (
                             <>
                                 <Button variant="outline"
                                     disabled={reportMutation.isPending}
                                     onClick={handleDownloadTodayLabels}
-                                    className="border-primary text-primary hover:bg-primary/10"
+                                    className="border-slate-200 hover:bg-slate-50 text-slate-700"
                                 >
                                     {reportMutation.isPending ? <Loader2 className="animate-spin mr-2" /> : null}
                                     Download Today's Labels
@@ -429,212 +418,194 @@ export default function Page() {
                                 <Button variant="outline"
                                     disabled={isLoading}
                                     onClick={handleExportData}
+                                    className="border-slate-200 hover:bg-slate-50 text-slate-700"
                                 >
                                     Export as CSV
                                 </Button>
                             </>
-                        )
-                    }
+                        )}
 
-                    <CSVLink
-                        data={csvData}
-                        filename={`order-items-${startDate}-${endDate}.csv`}
-                        className="hidden"
-                        ref={csvLinkRef}
-                        target="_blank"
-                    />
+                        <CSVLink
+                            data={csvData}
+                            filename={`order-items-${startDate}-${endDate}.csv`}
+                            className="hidden"
+                            ref={csvLinkRef}
+                            target="_blank"
+                        />
 
-                    <RefreshButton
-                        queryPrefix='orders'
-                    />
+                        <RefreshButton queryPrefix='orders' />
 
-                    <DateRangeSelector onChange={(selected) => {
-                        setRange(selected)
-                        setPage(1)
-                    }
-                    } defaultRange={initialRange} />
-                </div>
-            </div>
-
-            {/* Amount Cards */}
-            <div
-                className={`transition-all mb-6 duration-500 overflow-hidden ${showAmountCards ? 'max-h-[1000px] opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'}`}
-            >
-                {showAmountCards && (
-                    isSalesFetching ? (
-                        <div className="flex justify-center p-6">
-                            <Loader2 className="animate-spin" size={28} />
-                        </div>
-                    ) : (
-                        <AmountCards data={salesCountData} />
-                    )
-                )}
-            </div>
-
-            {/* STATUS CARDS */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6 mt-6">
-                {STATUS_CARDS.map((statusFilter) => (
-                    <div
-                        key={statusFilter}
-                        className={`
-        cursor-pointer 
-        ${status === statusFilter ? `${STATUS_BG[statusFilter]} text-white` : 'bg-white'}
-        ${STATUS_BORDER[statusFilter] || 'border-gray-300'} 
-        border 
-        rounded-lg 
-        p-2 lg:p-4
-        text-center 
-        hover:shadow-sm 
-        transition-all duration-300
-      `}
-                        onClick={() => {
-                            setStatus(prev => prev === statusFilter ? null : statusFilter)
-                            setPage(1);
-                        }}
-                    >
-                        {isLoading
-                            ? <div className='flex items-center justify-center mb-2'><Loader2 size={24} className='animate-spin' /></div>
-                            : <h2 className="text-2xl font-bold">
-                                {STATUS_COUNT_MAP[statusFilter] ?? 0}
-                            </h2>
-                        }
-                        <p className={`text-xs lg:text-sm ${status === statusFilter ? 'text-white' : 'text-gray-600'}`}>
-                            {statusFilter}
-                        </p>
+                        <DateRangeSelector onChange={(selected) => {
+                            setRange(selected)
+                            setPage(1)
+                        }} defaultRange={initialRange} />
                     </div>
-                ))}
-            </div>
-
-
-            {/* Search & filter */}
-            <div className='flex items-center gap-3 mb-3 '>
-                {/* filter by */}
-                <Select value={queryParameter} onValueChange={(val) => { setQueryParameter(val); setPage(1) }}>
-                    <SelectTrigger className="min-w-[150px] border-gray-300">
-                        <SelectValue placeholder="Filter by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="customer">Customer</SelectItem>
-                        <SelectItem value="order">Order</SelectItem>
-                    </SelectContent>
-                </Select>
-
-                {/* Search bar */}
-                <Input
-                    type={'text'}
-                    placeholder="Search"
-                    className={'border-gray-300'}
-                    // value={searchQuery}
-                    onChange={(e) => {
-                        const val = e.target.value
-                        if (val && val?.length >= 2)
-                            handleDebouncedSearch(val)
-                        else return;
-                    }}
-                />
-                <Button
-                    onClick={
-                        () => handleDebouncedSearch("")
-                    }
-                    variant={isLoading ? 'secondary' : 'default'}
-                    disabled={isLoading}
-                >
-                    Reset
-                </Button>
-            </div>
-
-            {/* Tab bar */}
-            <LayoutGroup>
-                <div className="flex gap-2 mb-0 overflow-x-auto bg-white scrollbar-hide relative">
-                    {TABS.map(({ key, label }) => {
-                        const isActive = orderType === key
-                        return (
-                            <button
-                                key={key}
-                                onClick={() => {
-                                    setOrderType(key)
-                                    setPage(1)
-                                }}
-                                className={`
-            relative px-4 py-6 text-sm font-medium transition-all duration-300 flex gap-1 w-full min-w-fit items-center justify-center
-            ${isActive ? 'font-bold text-black' : 'text-gray-600'}
-          `}
-                            >
-                                <span>{label}</span>
-                                <span>({TABS_COUNT_MAP[key]})</span>
-
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="tab-indicator"
-                                        className="absolute bottom-0 left-0 right-0 h-1 bg-black rounded-full"
-                                    />
-                                )}
-                            </button>
-                        )
-                    })}
                 </div>
-            </LayoutGroup>
-            {/* Table */}
-            {
-                isLoading ?
+
+                {/* Amount Cards */}
+                <div className={`transition-all duration-500 overflow-hidden ${showAmountCards ? 'max-h-[1000px] opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'}`}>
+                    {showAmountCards && (
+                        isSalesFetching ? (
+                            <div className="flex justify-center p-6">
+                                <Loader2 className="animate-spin" size={28} />
+                            </div>
+                        ) : (
+                            <AmountCards data={salesCountData} />
+                        )
+                    )}
+                </div>
+
+                {/* Status Filter Cards - Slate pill buttons */}
+                <div className="flex flex-wrap gap-2">
+                    <button
+                        onClick={() => { setStatus(null); setPage(1); }}
+                        className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-all ${status === null
+                            ? 'bg-slate-900 border-slate-950 text-white shadow-sm'
+                            : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50'
+                            }`}
+                    >
+                        All ({totalCount || 0})
+                    </button>
+                    {STATUS_CARDS.map((statusFilter) => (
+                        <button
+                            key={statusFilter}
+                            onClick={() => {
+                                setStatus(prev => prev === statusFilter ? null : statusFilter)
+                                setPage(1);
+                            }}
+                            className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-all ${status === statusFilter
+                                ? 'bg-slate-900 border-slate-950 text-white shadow-sm'
+                                : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50'
+                                }`}
+                        >
+                            {statusFilter} ({STATUS_COUNT_MAP[statusFilter] ?? 0})
+                        </button>
+                    ))}
+                </div>
+
+                {/* Tabs - Clean underline style */}
+                <div className="flex border-b border-slate-200 gap-6">
+                    {TABS.map(({ key, label }) => (
+                        <button
+                            key={key}
+                            onClick={() => {
+                                setOrderType(key)
+                                setPage(1)
+                            }}
+                            className={`pb-3 font-semibold text-sm transition-all duration-200 border-b-2 -mb-[2px] ${orderType === key
+                                    ? 'border-slate-900 text-slate-900'
+                                    : 'border-transparent text-slate-400 hover:text-slate-600'
+                                }`}
+                        >
+                            {label} ({TABS_COUNT_MAP[key] ?? 0})
+                        </button>
+                    ))}
+                </div>
+
+                {/* Search & Filter */}
+                <div className="flex items-center gap-3">
+                    <Select value={queryParameter} onValueChange={(val) => { setQueryParameter(val); setPage(1) }}>
+                        <SelectTrigger className="min-w-[150px] border-slate-200">
+                            <SelectValue placeholder="Filter by" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="customer">Customer</SelectItem>
+                            <SelectItem value="order">Order</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <div className="relative max-w-md w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                        <Input
+                            type={'text'}
+                            placeholder="Search orders..."
+                            className={'pl-10 border-slate-200 focus-visible:ring-slate-900'}
+                            onChange={(e) => {
+                                const val = e.target.value
+                                if (val && val?.length >= 2)
+                                    handleDebouncedSearch(val)
+                                else return;
+                            }}
+                        />
+                    </div>
+                    <Button
+                        onClick={() => handleDebouncedSearch("")}
+                        variant="outline"
+                        className="border-slate-200 hover:bg-slate-50 text-slate-700"
+                        disabled={isLoading}
+                    >
+                        Reset
+                    </Button>
+                </div>
+
+                {/* Table */}
+                {isLoading ? (
                     <TableSkeleton showHeader={false} />
-                    : <OrdersListView
+                ) : orders.length === 0 ? (
+                    <div className="bg-white border border-slate-100 rounded-xl p-12 text-center flex flex-col items-center justify-center shadow-sm">
+                        <ShoppingBag className="w-12 h-12 text-slate-300 mb-4" />
+                        <h3 className="text-lg font-bold text-slate-700">No orders found</h3>
+                        <p className="text-slate-400 text-sm mt-1">We couldn't find any orders matching your criteria.</p>
+                    </div>
+                ) : (
+                    <OrdersListView
                         orders={orders}
                         canEdit={canEdit}
                         orderType={orderType}
                     />
-            }
+                )}
 
-            {/* Pagination */}
-            <div className="flex w-full justify-end gap-2 items-center mt-3 pb-8">
-                <Select value={String(limit)} onValueChange={(val) => { setPage(1); setLimit(Number(val)) }}>
-                    <SelectTrigger className="w-[120px]">
-                        <SelectValue placeholder="Items per page" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {[1, 5, 10, 20, 50].map((n) => (
-                            <SelectItem key={n} value={String(n)}>
-                                {n} / page
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                {/* Pagination */}
+                <div className="flex w-full justify-end gap-2 items-center pb-8">
+                    <Select value={String(limit)} onValueChange={(val) => { setPage(1); setLimit(Number(val)) }}>
+                        <SelectTrigger className="w-[120px] border-slate-200">
+                            <SelectValue placeholder="Items per page" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {[1, 5, 10, 20, 50].map((n) => (
+                                <SelectItem key={n} value={String(n)}>
+                                    {n} / page
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
 
-                <Pagination className={'inline justify-end mx-1 w-fit'}>
-                    <PaginationContent>
-                        {page > 1 && (
-                            <PaginationItem>
-                                <PaginationPrevious href="#" onClick={() => setPage((p) => p - 1)} />
-                            </PaginationItem>
-                        )}
+                    <Pagination className={'inline justify-end mx-1 w-fit'}>
+                        <PaginationContent>
+                            {page > 1 && (
+                                <PaginationItem>
+                                    <PaginationPrevious href="#" onClick={() => setPage((p) => p - 1)} />
+                                </PaginationItem>
+                            )}
 
-                        {paginationRange.map((p, i) => (
-                            <PaginationItem key={i}>
-                                {p === 'ellipsis-left' || p === 'ellipsis-right' ? (
-                                    <PaginationEllipsis />
-                                ) : (
-                                    <PaginationLink
-                                        href="#"
-                                        isActive={p === page}
-                                        onClick={(e) => {
-                                            e.preventDefault()
-                                            setPage(p)
-                                        }}
-                                    >
-                                        {p}
-                                    </PaginationLink>
-                                )}
-                            </PaginationItem>
-                        ))}
+                            {paginationRange.map((p, i) => (
+                                <PaginationItem key={i}>
+                                    {p === 'ellipsis-left' || p === 'ellipsis-right' ? (
+                                        <PaginationEllipsis />
+                                    ) : (
+                                        <PaginationLink
+                                            href="#"
+                                            isActive={p === page}
+                                            onClick={(e) => {
+                                                e.preventDefault()
+                                                setPage(p)
+                                            }}
+                                        >
+                                            {p}
+                                        </PaginationLink>
+                                    )}
+                                </PaginationItem>
+                            ))}
 
-                        {page < totalPages && (
-                            <PaginationItem>
-                                <PaginationNext href="#" onClick={() => setPage((p) => p + 1)} />
-                            </PaginationItem>
-                        )}
-                    </PaginationContent>
-                </Pagination>
+                            {page < totalPages && (
+                                <PaginationItem>
+                                    <PaginationNext href="#" onClick={() => setPage((p) => p + 1)} />
+                                </PaginationItem>
+                            )}
+                        </PaginationContent>
+                    </Pagination>
+                </div>
             </div>
-        </InnerDashboardLayout >
+        </InnerDashboardLayout>
     )
 }

@@ -68,8 +68,8 @@ export const useQuotations = () => {
 
   // Mutation to book quotation (convert to physical order)
   const bookQuotationMutation = useMutation({
-    mutationFn: ({ quotationId, stages }) =>
-      api.post("/quotations/book", { quotationId, stages }).then((res) => res.data),
+    mutationFn: (data) =>
+      api.post("/quotations/book", data).then((res) => res.data),
     onSuccess: (data, variables) => {
       toast.success("Order booked successfully. Physical order created.");
       queryClient.invalidateQueries(["quotations"]);

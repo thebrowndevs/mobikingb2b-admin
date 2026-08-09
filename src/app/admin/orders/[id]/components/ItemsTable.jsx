@@ -1,5 +1,4 @@
-import React, { useState } from "react"
-import PCard from "@/components/custom/PCard"
+import React from "react"
 import {
     Table,
     TableBody,
@@ -8,76 +7,26 @@ import {
     TableHeader,
     TableRow
 } from "@/components/ui/table"
-import { Minus, Plus } from "lucide-react"
-import MiniLoaderButton from "@/components/custom/MiniLoaderButton"
-import { useOrders } from "@/hooks/useOrders"
-import { Button } from "@/components/ui/button"
-import AddItemDialog from './AddItemDialog';
-import OrderChargesDetailsDialog from "./OrderChargesDetailsDialog"
 
 function ItemsTable({ order, isNewOrder, canEdit }) {
     const items = order?.items || []
-    const { addItemInOrder, removeItemFromOrder } = useOrders()
-
-    const [addingItem, setAddingItem] = useState(false)
-    const [loadingItemId, setLoadingItemId] = useState(null)
-    const [open, setOpen] = useState(false)
-
-    async function handleIncrement(item) {
-        const data = {
-            orderId: order?._id,
-            productId: item?.productId?._id,
-            variantName: item?.variantName,
-        }
-
-        setLoadingItemId(`${data?.productId}-${data?.variantName}-inc`)
-        try {
-            await addItemInOrder.mutateAsync({ ...data })
-        } catch (error) {
-            console.log(error)
-        } finally {
-            setLoadingItemId(null)
-        }
-    }
-
-    async function handleDecrement(item) {
-        const data = {
-            orderId: order?._id,
-            productId: item?.productId?._id,
-            variantName: item?.variantName,
-        }
-        setLoadingItemId(`${data?.productId}-${data?.variantName}-dec`)
-        try {
-            await removeItemFromOrder.mutateAsync({ ...data })
-        } catch (error) {
-            console.log(error)
-        } finally {
-            setLoadingItemId(null)
-        }
-    }
 
     return (
-        <PCard className="p-4">
-            <div className="flex items-center justify-between w-full">
-                <h2 className="mb-0 text-lg font-semibold text-gray-700">Items</h2>
-                {isNewOrder() && order?.method === 'COD' && order?.paymentStatus !== 'Paid' && canEdit &&
-                    <Button onClick={() => setAddingItem(true)} variant={'outline'}>Add Items</Button>
-                }
+        <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-6">
+            <div className="flex items-center justify-between w-full pb-1">
+                <h2 className="text-lg font-bold text-slate-800">Items List</h2>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-xl border border-slate-100">
                 <Table>
-                    <TableHeader>
+                    <TableHeader className="bg-slate-50/50">
                         <TableRow>
-                            <TableHead>Image</TableHead>
-                            <TableHead>Product</TableHead>
-                            <TableHead>Variant</TableHead>
-                            <TableHead>Qty</TableHead>
-                            <TableHead>Selling Price</TableHead>
-                            <TableHead>Total Price</TableHead>
-                            {isNewOrder() && order?.method === 'COD' &&
-                                <TableHead>Actions</TableHead>
-                            }
+                            <TableHead className="font-semibold text-slate-700">Image</TableHead>
+                            <TableHead className="font-semibold text-slate-700">Product</TableHead>
+                            <TableHead className="font-semibold text-slate-700">Variant</TableHead>
+                            <TableHead className="font-semibold text-slate-700 text-center">Qty</TableHead>
+                            <TableHead className="font-semibold text-slate-700 text-right">Selling Price</TableHead>
+                            <TableHead className="font-semibold text-slate-700 text-right">Total Price</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -90,109 +39,65 @@ function ItemsTable({ order, isNewOrder, canEdit }) {
                             const sellingPrice = item?.price
                             const totalPrice = sellingPrice * quantity
 
-                            const incKey = `${product?._id}-${variant}-inc`
-                            const decKey = `${product?._id}-${variant}-dec`
-
                             return (
-                                <TableRow key={idx}>
+                                <TableRow key={idx} className="hover:bg-slate-50/50">
                                     <TableCell>
                                         <img
                                             src={image}
                                             alt={name}
-                                            className="h-12 w-12 rounded-md object-cover border"
+                                            className="w-12 h-12 object-cover rounded-lg border border-slate-100"
                                         />
                                     </TableCell>
-                                    <TableCell className="max-w-[200px]">
-                                        <div className="flex items-center gap-1.5 font-medium text-sm text-wrap">
-                                            <span>{name}</span>
-                                            {item?.isScratchy && (
-                                                <span className="bg-green-100 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded leading-none">
-                                                    Scratchy
-                                                </span>
-                                            )}
-                                        </div>
+                                    <TableCell className="font-semibold text-slate-800 max-w-[250px] truncate" title={name}>
+                                        {name}
                                     </TableCell>
-                                    <TableCell>{variant}</TableCell>
-                                    <TableCell>{quantity}</TableCell>
-                                    <TableCell>₹{sellingPrice}</TableCell>
-                                    <TableCell>₹{totalPrice}</TableCell>
-                                    {isNewOrder() && order?.method === 'COD' &&
-                                        <TableCell>
-                                            {canEdit ?
-                                                <div className="flex gap-2">
-                                                    <MiniLoaderButton
-                                                        variant={'outline'}
-                                                        onClick={() => handleIncrement(item)}
-                                                        loading={loadingItemId === incKey}
-                                                    >
-                                                        <Plus className="cursor-pointer hover:text-green-600 transition-all duration-200 ease-in-out" />
-                                                    </MiniLoaderButton>
-
-                                                    <MiniLoaderButton
-                                                        variant={'outline'}
-                                                        onClick={() => handleDecrement(item)}
-                                                        loading={loadingItemId === decKey}
-                                                    >
-                                                        <Minus className="cursor-pointer hover:text-red-600 transition-all duration-200 ease-in-out" />
-                                                    </MiniLoaderButton>
-                                                </div>
-                                                : <div>-</div>}
-                                        </TableCell>
-                                    }
+                                    <TableCell className="text-slate-600 font-mono text-xs">{variant}</TableCell>
+                                    <TableCell className="text-center font-bold text-slate-800">{quantity}</TableCell>
+                                    <TableCell className="text-right text-slate-600 font-medium">₹{sellingPrice?.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-bold text-slate-800">₹{totalPrice?.toLocaleString()}</TableCell>
                                 </TableRow>
                             )
                         })}
                     </TableBody>
                 </Table>
+            </div>
 
-                {/* Summary */}
-                <div className="flex flex-col gap-3 mt-8">
-
-                    {isNewOrder() && order?.method === 'COD' && order?.paymentStatus !== 'Paid' && canEdit &&
-                        <Button
-                            className='self-end'
-                            onClick={() => setOpen(true)} variant={'outline'}>Edit</Button>
-                    }
-
-                    {/* Order Amount Details */}
-                    <div className="flex flex-col sm:flex-row justify-end gap-3">
-                        <div className="flex items-center justify-between sm:min-w-[200px] border rounded-md p-3 shadow-sm bg-muted/50">
-                            <span className="text-sm text-gray-600">Subtotal:</span>
-                            <span className="font-medium">₹{order?.subtotal}</span>
-                        </div>
-                        <div className="flex items-center justify-between sm:min-w-[200px] border rounded-md p-3 shadow-sm bg-muted/50">
-                            <span className="text-sm text-gray-600">Discount:</span>
-                            <span className="font-medium">₹{order?.discount}</span>
-                        </div>
-                        <div className="flex items-center justify-between sm:min-w-[200px] border rounded-md p-3 shadow-sm bg-muted/50">
-                            <span className="text-sm text-gray-600">Delivery Charges:</span>
-                            <span className="font-medium">₹{order?.deliveryCharge}</span>
-                        </div>
-                        <div className="flex items-center justify-between sm:min-w-[200px] border rounded-md p-3 shadow bg-primary/10">
-                            <span className="text-sm font-semibold text-primary">Total Amount:</span>
-                            <span className="font-bold text-primary">₹{order?.orderAmount}</span>
-                        </div>
+            {/* Pricing Summary */}
+            <div className="flex justify-end pt-4 border-t border-slate-100">
+                <div className="w-full sm:w-80 space-y-2.5 text-sm">
+                    <div className="flex justify-between text-slate-500 font-semibold">
+                        <span>Subtotal</span>
+                        <span>₹{order?.subtotal?.toLocaleString() ?? "0"}</span>
                     </div>
+                    {order?.discount > 0 && (
+                        <div className="flex justify-between text-emerald-600 font-semibold">
+                            <span>Discount</span>
+                            <span>-₹{order?.discount?.toLocaleString()}</span>
+                        </div>
+                    )}
+                    <div className="flex justify-between text-slate-500 font-semibold">
+                        <span>Delivery Charge</span>
+                        <span>₹{order?.deliveryCharge?.toLocaleString() ?? "0"}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-800 font-bold text-base pt-2 border-t border-slate-100">
+                        <span>Total Amount</span>
+                        <span>₹{order?.orderAmount?.toLocaleString() ?? "0"}</span>
+                    </div>
+                    {order?.amountPaid > 0 && (
+                        <div className="flex justify-between text-slate-500 font-semibold text-xs pt-1">
+                            <span>Amount Paid</span>
+                            <span>₹{order?.amountPaid?.toLocaleString()}</span>
+                        </div>
+                    )}
+                    {order?.remainingAmount > 0 && (
+                        <div className="flex justify-between text-rose-600 font-bold text-xs">
+                            <span>Remaining Balance</span>
+                            <span>₹{order?.remainingAmount?.toLocaleString()}</span>
+                        </div>
+                    )}
                 </div>
             </div>
-            {
-                addingItem &&
-                <AddItemDialog
-                    open={addingItem}
-                    onOpenChange={setAddingItem}
-                    orderId={order?._id}
-                />
-            }
-
-            {
-                open &&
-                <OrderChargesDetailsDialog
-                    open={open}
-                    onOpenChange={setOpen}
-                    user={order}
-                />
-            }
-        </PCard>
+        </div>
     )
 }
 

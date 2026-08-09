@@ -24,11 +24,13 @@ import { Button } from './ui/button';
 function PaymentMethodDialog({ open, onOpenChange, order }) {
     // const [status, setStatus] = useState(order?.paymentStatus || "")
     const [method, setMethod] = useState(order?.method || "")
+    const [paymentMode, setPaymentMode] = useState(order?.paymentMode || "")
 
     // keep state synced when order changes
     useEffect(() => {
         // setStatus(order?.paymentStatus || "")
         setMethod(order?.method || "")
+        setPaymentMode(order?.paymentMode || "")
     }, [order])
 
     const { updateOrder } = useOrders()
@@ -40,6 +42,7 @@ function PaymentMethodDialog({ open, onOpenChange, order }) {
                 data: {
                     // paymentStatus: status,
                     method: method,
+                    paymentMode: paymentMode
                 },
             })
             onOpenChange(false)
@@ -79,7 +82,7 @@ function PaymentMethodDialog({ open, onOpenChange, order }) {
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="overflow-y-auto max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>Update Payment Status</DialogTitle>
+                    <DialogTitle>Update Payment Method / Mode</DialogTitle>
                 </DialogHeader>
 
                 {/* Order details summary */}
@@ -171,6 +174,29 @@ function PaymentMethodDialog({ open, onOpenChange, order }) {
                                         <span>COD</span>
                                     </div>
                                 </SelectItem>
+                                <SelectItem value="Mixed">
+                                    <div className="flex items-center gap-2">
+                                        <BsCashCoin className="w-4 h-4 text-gray-600" />
+                                        <span>Mixed</span>
+                                    </div>
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Payment Mode */}
+                    <div>
+                        <div className="mb-1 text-sm font-medium text-gray-700">Payment Mode</div>
+                        <Select
+                            value={paymentMode}
+                            onValueChange={(val) => setPaymentMode(val)}
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select payment mode" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="complete">Complete</SelectItem>
+                                <SelectItem value="parcel">Parcel</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
