@@ -38,7 +38,7 @@ function ShippingDetails({ order }) {
     ]
 
     return (
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-4">
+        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
             <div className="flex w-full justify-between items-center pb-1">
                 <h2 className="text-lg font-bold text-slate-800">Shipping Details</h2>
             </div>

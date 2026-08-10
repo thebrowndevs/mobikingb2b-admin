@@ -96,14 +96,11 @@ export default function PartialReturnRequestsPage() {
 
     return (
         <InnerDashboardLayout>
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5 mb-6">
+            <div className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-primary mb-5">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                        Partial Return Requests
-                    </h1>
-                    <p className="text-slate-500 mt-1">
-                        Showing requests from <span className="font-bold text-slate-700">{format(range.from, 'dd MMM yyyy')}</span> to <span className="font-bold text-slate-700">{format(range.to, 'dd MMM yyyy')}</span>
+                    <h1 className="font-bold sm:text-2xl lg:text-4xl">Partial Return Requests</h1>
+                    <p className="text-xs text-gray-500 mt-1">
+                        Showing requests from <strong>{format(range.from, 'dd MMM yyyy')}</strong> to <strong>{format(range.to, 'dd MMM yyyy')}</strong>
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -113,7 +110,7 @@ export default function PartialReturnRequestsPage() {
                         size="sm"
                         onClick={() => refetch()}
                         disabled={isFetching}
-                        className="h-9 px-3 border-gray-200 text-gray-700 bg-white hover:bg-gray-50 gap-1.5 shrink-0 shadow-sm"
+                        className="h-9 px-3 border-gray-200 text-gray-700 bg-white hover:bg-gray-50 gap-1.5 shrink-0"
                     >
                         <RotateCcw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
                         <span>Refresh</span>
@@ -124,11 +121,11 @@ export default function PartialReturnRequestsPage() {
             {/* Status counts cards */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6 mt-6">
                 {[
-                    { key: 'all', label: 'All Requests', count: totalCount, activeClass: 'border-l-indigo-600 bg-indigo-50/20 text-indigo-900 border-l-4' },
-                    { key: 'Pending', label: 'Pending', count: pendingCount, activeClass: 'border-l-amber-500 bg-amber-50/20 text-amber-900 border-l-4' },
-                    { key: 'Accepted', label: 'Accepted', count: acceptedCount, activeClass: 'border-l-emerald-600 bg-emerald-50/20 text-emerald-900 border-l-4' },
-                    { key: 'Rejected', label: 'Rejected', count: rejectedCount, activeClass: 'border-l-rose-600 bg-rose-50/20 text-rose-900 border-l-4' },
-                    { key: 'Hold', label: 'On Hold', count: holdCount, activeClass: 'border-l-purple-600 bg-purple-50/20 text-purple-900 border-l-4' },
+                    { key: 'all', label: 'All Requests', count: totalCount, bg: 'bg-indigo-500', border: 'border-indigo-500' },
+                    { key: 'Pending', label: 'Pending', count: pendingCount, bg: 'bg-yellow-500', border: 'border-yellow-500' },
+                    { key: 'Accepted', label: 'Accepted', count: acceptedCount, bg: 'bg-green-500', border: 'border-green-500' },
+                    { key: 'Rejected', label: 'Rejected', count: rejectedCount, bg: 'bg-red-500', border: 'border-red-500' },
+                    { key: 'Hold', label: 'On Hold', count: holdCount, bg: 'bg-blue-500', border: 'border-blue-500' },
                 ].map((card) => {
                     const isSelected = statusFilter === card.key;
                     return (
@@ -138,26 +135,26 @@ export default function PartialReturnRequestsPage() {
                                 setStatusFilter(card.key);
                                 setPage(1);
                             }}
-                            className={`cursor-pointer p-4 rounded-xl border border-slate-100 shadow-sm transition-all flex flex-col justify-between h-24 ${isSelected
-                                ? `${card.activeClass} shadow-md scale-[1.01]`
-                                : 'bg-white text-slate-700 hover:border-slate-200 hover:bg-slate-50/50'
+                            className={`cursor-pointer p-4 rounded-xl border-2 transition-all flex flex-col justify-between h-24 ${isSelected
+                                ? `${card.bg} text-white border-transparent shadow-lg scale-[1.02]`
+                                : 'bg-white text-gray-700 border-gray-150 hover:border-gray-300'
                                 }`}
                         >
-                            <span className={`text-[10px] font-bold uppercase tracking-wider ${isSelected ? 'text-slate-500' : 'text-slate-400'}`}>
+                            <span className={`text-xs font-semibold uppercase ${isSelected ? 'text-white/80' : 'text-gray-500'}`}>
                                 {card.label}
                             </span>
-                            <span className="text-2xl font-bold text-slate-800">{card.count}</span>
+                            <span className="text-2xl font-bold">{card.count}</span>
                         </div>
                     );
                 })}
             </div>
 
             {/* Controls Bar */}
-            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-6 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-4">
                 <div className="flex items-center gap-3 flex-1">
                     {/* Search Bar */}
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                         <Input
                             placeholder="Search partial return requests by Order ID, phone or reason..."
                             value={searchTerm}
@@ -165,7 +162,7 @@ export default function PartialReturnRequestsPage() {
                                 setSearchTerm(e.target.value);
                                 setPage(1);
                             }}
-                            className="pl-9 pr-8 text-sm bg-white border-slate-200 focus:border-slate-400"
+                            className="pl-9 pr-8 text-sm bg-white border-gray-200"
                         />
                         {searchTerm && (
                             <button
@@ -173,7 +170,7 @@ export default function PartialReturnRequestsPage() {
                                     setSearchTerm('');
                                     setPage(1);
                                 }}
-                                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 transition-colors"
+                                className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
                                 title="Clear search"
                             >
                                 <X className="h-4 w-4" />
@@ -181,12 +178,14 @@ export default function PartialReturnRequestsPage() {
                         )}
                     </div>
 
+
+
                     {isFiltered && (
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={handleResetFilters}
-                            className="h-9 text-xs text-slate-500 hover:text-slate-900 gap-1.5 shrink-0"
+                            className="h-9 text-xs text-gray-500 hover:text-gray-900 gap-1.5 shrink-0"
                         >
                             <RotateCcw className="w-3.5 h-3.5" />
                             Reset
@@ -195,12 +194,12 @@ export default function PartialReturnRequestsPage() {
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
-                    <Button variant="outline" className="shrink-0 text-xs border-slate-200 text-slate-700 h-9">
+                    <Button variant="outline" className="shrink-0 text-xs">
                         Total: {totalCount}
                     </Button>
                     <Button
                         onClick={() => setCreateDialogOpen(true)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 text-xs font-semibold h-9 shadow-sm"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 text-xs font-semibold"
                     >
                         Raise Request
                     </Button>

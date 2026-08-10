@@ -35,7 +35,7 @@ function PaymentDetails({ order }) {
     ]
 
     return (
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-4">
+        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
             <h2 className="text-lg font-bold text-slate-800">Order Details</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

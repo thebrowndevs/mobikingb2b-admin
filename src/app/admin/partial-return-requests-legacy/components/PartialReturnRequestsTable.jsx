@@ -52,20 +52,20 @@ export default function PartialReturnRequestsTable({ error, requests = [] }) {
     };
 
     return (
-        <section className="w-full bg-back2 border border-bdr2 rounded-xl overflow-hidden shadow-none">
-            <Table containerClassName="border-0 bg-transparent" className="overflow-visible text-xs">
-                <TableHeader className="bg-slate-50/75 border-b border-bdr2">
-                    <TableRow>
-                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-10">#</TableHead>
-                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Order ID</TableHead>
-                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Customer Name</TableHead>
-                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Phone Number</TableHead>
-                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Order Amount</TableHead>
-                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Payment Method</TableHead>
-                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-28">Items</TableHead>
-                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-36">Status</TableHead>
-                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Raised At</TableHead>
-                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-24">Actions</TableHead>
+        <div className="bg-white border overflow-hidden">
+            <Table className="p-4">
+                <TableHeader>
+                    <TableRow className="bg-gray-50/80 hover:bg-gray-50">
+                        <TableHead className="w-[50px]">#</TableHead>
+                        <TableHead>Order ID</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Method</TableHead>
+                        <TableHead>Items Count</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Raised At</TableHead>
+                        <TableHead className="text-center">Action</TableHead>
                     </TableRow>
                 </TableHeader>
 
@@ -78,6 +78,7 @@ export default function PartialReturnRequestsTable({ error, requests = [] }) {
                             const itemsCount = req.items?.length || 0;
                             const hasChat = req.replies && req.replies.length > 0;
 
+                            // console.log("RETURN: ", returnOrder);
                             return (
                                 <motion.tr
                                     key={req._id || i}
@@ -86,57 +87,57 @@ export default function PartialReturnRequestsTable({ error, requests = [] }) {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
                                     transition={{ duration: 0.2 }}
-                                    onClick={() => handleViewDetails(req)}
-                                    className="border-b border-bdr2 last:border-b-0 hover:bg-slate-50/40 transition-colors cursor-pointer"
+                                    className="hover:bg-gray-50/80 transition-colors"
                                 >
-                                    <TableCell className="text-center text-slate-450 font-medium py-3.5">{i + 1}</TableCell>
+                                    <TableCell className="text-xs text-gray-500">{i + 1}</TableCell>
 
-                                    <TableCell className="font-mono font-bold text-xs text-indigo-600 align-middle">
+                                    <TableCell className="font-mono font-bold text-xs text-primary">
                                         {order?.orderId || "—"}
                                     </TableCell>
 
-                                    <TableCell className="text-xs font-bold text-slate-800 align-middle">
+                                    <TableCell className="text-xs font-semibold text-gray-900">
                                         {customerName}
                                     </TableCell>
 
-                                    <TableCell className="text-xs text-slate-600 font-mono align-middle" onClick={(e) => e.stopPropagation()}>
+                                    <TableCell className="text-xs text-gray-600 font-mono">
                                         <div className="flex items-center space-x-2">
                                             <span>{order?.phoneNo || order?.userId?.phone || "—"}</span>
                                             {(order?.phoneNo || order?.userId?.phone) && (
                                                 <FaWhatsapp
                                                     className="cursor-pointer text-green-500 hover:text-green-600"
-                                                    size={14}
+                                                    size={16}
                                                     onClick={() => openWhatsApp(order?.phoneNo || order?.userId?.phone)}
                                                 />
                                             )}
                                         </div>
                                     </TableCell>
 
-                                    <TableCell className="text-xs font-bold text-slate-800 align-middle">
+                                    <TableCell className="text-xs font-semibold text-gray-900">
                                         ₹{order?.orderAmount ? order.orderAmount.toFixed(2) : "0.00"}
                                     </TableCell>
 
-                                    <TableCell className="text-xs text-slate-550 font-medium capitalize align-middle">
+                                    <TableCell className="text-xs text-gray-600 capitalize">
                                         {order?.method || "—"}
                                     </TableCell>
 
-                                    <TableCell className="text-center align-middle">
-                                        <Badge variant="outline" className="bg-slate-50 border-slate-200 text-slate-700 font-medium">
+                                    <TableCell className="text-xs font-semibold">
+                                        <Badge variant="outline" className="bg-gray-50 text-gray-700">
                                             {itemsCount} item{itemsCount > 1 ? 's' : ''}
                                         </Badge>
                                     </TableCell>
 
-                                    <TableCell className="text-center align-middle">
-                                        <div className="flex flex-col gap-1 items-center">
+                                    <TableCell>
+                                        <div className="flex flex-col gap-1">
                                             <Badge
-                                                className={`text-[10px] font-bold uppercase border ${req.status === "Accepted"
-                                                        ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                                className={
+                                                    req.status === "Accepted"
+                                                        ? "bg-emerald-100 text-emerald-800 border-emerald-300"
                                                         : req.status === "Rejected"
-                                                            ? "bg-rose-50 text-rose-800 border-rose-200"
-                                                            : req.status === "Hold"
-                                                                ? "bg-blue-50 text-blue-800 border-blue-200"
-                                                                : "bg-amber-50 text-amber-800 border-amber-200"
-                                                    }`}
+                                                            ? "bg-rose-100 text-rose-800 border-rose-300"
+                                                            : req.status === "Hold" ?
+                                                                "bg-vlue-100 text-blue-800 border-blue-300"
+                                                                : "bg-amber-100 text-amber-800 border-amber-300"
+                                                }
                                             >
                                                 {
                                                     req.status === "Hold"
@@ -155,7 +156,7 @@ export default function PartialReturnRequestsTable({ error, requests = [] }) {
                                                 }
                                             </Badge>
                                             {req.status === "Accepted" && returnOrder?.status !== "Returned" && (
-                                                <span className="text-[9px] text-slate-450 font-semibold uppercase tracking-wide block mt-0.5">
+                                                <span className="text-[10px] text-gray-500 font-medium whitespace-nowrap block mt-0.5">
                                                     {returnOrder?.pickupScheduled
                                                         ? "Pickup Scheduled"
                                                         : (returnOrder?.awbCode && returnOrder?.courierName && returnOrder?.courierAssignedAt)
@@ -169,21 +170,21 @@ export default function PartialReturnRequestsTable({ error, requests = [] }) {
                                         </div>
                                     </TableCell>
 
-                                    <TableCell className="text-xs text-slate-500 whitespace-nowrap align-middle">
+                                    <TableCell className="text-xs text-gray-500 whitespace-nowrap">
                                         {req.createdAt ? format(new Date(req.createdAt), "dd MMM yyyy, hh:mm a") : "—"}
                                     </TableCell>
 
-                                    <TableCell className="text-center align-middle" onClick={(e) => e.stopPropagation()}>
+                                    <TableCell className="text-center">
                                         <Button
                                             size="sm"
                                             variant="ghost"
                                             onClick={() => handleViewDetails(req)}
-                                            className="h-8 px-2.5 text-xs text-indigo-600 hover:text-indigo-800 hover:bg-slate-100/50 gap-1.5 font-semibold"
+                                            className="h-8 px-2.5 text-xs text-primary hover:bg-blue-50 gap-1.5"
                                         >
                                             <Eye className="w-3.5 h-3.5" />
-                                            Details
+                                            View Details
                                             {hasChat && (
-                                                <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse shrink-0" title="Has messages" />
+                                                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" title="Has messages" />
                                             )}
                                         </Button>
                                     </TableCell>
@@ -205,6 +206,6 @@ export default function PartialReturnRequestsTable({ error, requests = [] }) {
                     request={selectedRequest}
                 />
             )}
-        </section>
+        </div>
     );
 }

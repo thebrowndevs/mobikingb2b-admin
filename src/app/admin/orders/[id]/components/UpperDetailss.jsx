@@ -21,14 +21,14 @@ export default function UpperDetailss({ order, admin, canEdit }) {
 
     return (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-col justify-between">
+            <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col justify-between">
                 <div className="flex flex-col">
                     <span className="text-xs font-semibold uppercase text-slate-400">Order ID</span>
                     <span className="mt-2 text-lg font-bold text-slate-800">{order?.orderId}</span>
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-col justify-between">
+            <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col justify-between">
                 <div className="flex flex-col">
                     <span className="text-xs font-semibold uppercase text-slate-400">Order Status</span>
                     <span className="mt-2 text-lg font-bold text-slate-800">
@@ -42,7 +42,7 @@ export default function UpperDetailss({ order, admin, canEdit }) {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-col justify-between">
+            <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col justify-between">
                 <div className="flex flex-col">
                     <span className="text-xs font-semibold uppercase text-slate-400">Type</span>
                     <span className="mt-2 text-lg font-bold text-slate-800">{order?.type}</span>
@@ -52,7 +52,7 @@ export default function UpperDetailss({ order, admin, canEdit }) {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-col justify-between">
+            <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col justify-between">
                 <div className="flex flex-col">
                     <div className='flex items-center justify-between w-full'>
                         <span className="text-xs font-semibold uppercase text-slate-400">Payment Method</span>
@@ -70,7 +70,7 @@ export default function UpperDetailss({ order, admin, canEdit }) {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-col justify-between">
+            <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col justify-between">
                 <div className="flex flex-col">
                     <div className='flex items-center justify-between w-full'>
                         <span className="text-xs font-semibold uppercase text-slate-400">Payment Status</span>
@@ -88,7 +88,7 @@ export default function UpperDetailss({ order, admin, canEdit }) {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-col justify-between">
+            <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col justify-between">
                 <div className="flex flex-col">
                     <span className="text-xs font-semibold uppercase text-slate-400">Order Amount</span>
                     <span className="mt-2 text-lg font-bold text-slate-800">₹{order?.orderAmount?.toLocaleString()}</span>

@@ -319,6 +319,8 @@ export const useOrders = () => {
       toast.success("Order updated successfully.");
       queryClient.invalidateQueries({ queryKey: ["order"] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["partialReturnRequest"] });
+      queryClient.invalidateQueries({ queryKey: ["partialReturnRequests"] });
     },
     onError: (err) => {
       toast.error(err?.response?.data?.message || "Failed to update order");

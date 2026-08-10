@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import api from '@/lib/api';
 import {
     Sheet,
     SheetContent,
@@ -15,14 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { usePartialReturnRequests } from "@/hooks/usePartialReturnRequests";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useOrders } from "@/hooks/useOrders";
-import UpperDetailss from "@/app/admin/orders/[id]/components/UpperDetailss";
-import PersonalDetails from "@/app/admin/orders/[id]/components/PersonalDetails";
-import PaymentDetails from "@/app/admin/orders/[id]/components/PaymentDetails";
-import ItemsTable from "@/app/admin/orders/[id]/components/ItemsTable";
-import ShippingDetails from "@/app/admin/orders/[id]/components/ShippingDetails";
-import ReturnShippingDetails from "@/app/admin/orders/[id]/components/ReturnShippingDetails";
-import OrderTimeline from "@/components/OrderTimeline";
+import OrderOfQuery from "@/app/admin/queries/components/OrderOfQuery";
 import Scans from "@/app/admin/orders/[id]/components/Scans";
 import PartialReturnCourierDialog from "./PartialReturnCourierDialog";
 import {
@@ -59,7 +50,6 @@ export default function PartialReturnSheet({ open, onOpenChange, request: _reque
 
     const { checkEdit, onlyAdmin } = usePermissions();
     const canEdit = checkEdit('partial-return-requests') || onlyAdmin();
-    const { permissions: { canEdit: canEditOrder } } = useOrders();
 
     const { data: fullRequestData, isLoading: isRequestLoading } = getPartialReturnRequestById(_request?._id, open);
     const partialRequest = fullRequestData || _request;
@@ -73,15 +63,6 @@ export default function PartialReturnSheet({ open, onOpenChange, request: _reque
     const order = partialRequest?.orderRef;
     const returnOrder = partialRequest?.returnOrderRef;
 
-    const displayOrder = activeOrderView === "return" ? returnOrder : order;
-
-    const { data: paymentsRes } = useQuery({
-        queryKey: ["orderPayments", displayOrder?._id],
-        queryFn: () => api.get(`/orders/payments/list/${displayOrder?._id}`).then(res => res.data),
-        enabled: !!displayOrder?._id
-    });
-    const paymentsList = paymentsRes?.data || [];
-
     React.useEffect(() => {
         if (partialRequest) {
             if (partialRequest.status === "Accepted" && partialRequest.returnOrderRef) {
@@ -91,6 +72,8 @@ export default function PartialReturnSheet({ open, onOpenChange, request: _reque
             }
         }
     }, [partialRequest]);
+
+    const displayOrder = activeOrderView === "return" ? returnOrder : order;
 
     const handleSendMessage = async () => {
         if (!message.trim() || !partialRequest?._id) return;
@@ -168,7 +151,7 @@ export default function PartialReturnSheet({ open, onOpenChange, request: _reque
     return (
         <>
             <Sheet open={open} onOpenChange={onOpenChange}>
-                <SheetContent side="right" className="w-full sm:min-w-screen flex flex-col sm:max-h-screen sm:overflow-hidden overflow-auto p-0 bg-slate-50">
+                <SheetContent side="right" className="w-full sm:min-w-screen flex flex-col sm:max-h-screen sm:overflow-hidden overflow-auto p-0 bg-white">
                     <SheetTitle className="hidden">Partial Return Request Sheet</SheetTitle>
 
                     {isRequestLoading ? (
@@ -178,11 +161,11 @@ export default function PartialReturnSheet({ open, onOpenChange, request: _reque
                     ) : (
                         <div className="flex flex-col-reverse sm:flex-row h-full">
                             {/* Left Pane: Order Summary, Items & Logistics Action Buttons */}
-                            <div className="w-full flex-1 sm:h-screen sm:overflow-y-auto bg-slate-50 p-4 border-r border-slate-100">
-                                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-100 bg-white p-4 rounded-xl">
+                            <div className="w-full flex-1 sm:h-screen sm:overflow-y-auto bg-gray-100 p-4 border-r">
+                                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b bg-white p-3 rounded-lg shadow-sm">
                                     <div>
-                                        <h1 className="font-bold text-lg text-slate-900">
-                                            {activeOrderView === "return" ? "Return Order Details" : "Original Order Details"}: <span className="font-mono text-indigo-600">{displayOrder?.orderId || "—"}</span>
+                                        <h1 className="font-bold text-lg text-gray-900">
+                                            {activeOrderView === "return" ? "Return Order Details" : "Original Order Details"}: <span className="font-mono text-primary">{displayOrder?.orderId || "—"}</span>
                                         </h1>
                                         <p className="text-xs text-gray-500">
                                             Type: {displayOrder?.type || "Regular"} | Total: ₹{displayOrder?.orderAmount ?? displayOrder?.totalAmount ?? displayOrder?.subtotal ?? displayOrder?.subTotal ?? 0}
@@ -315,72 +298,7 @@ export default function PartialReturnSheet({ open, onOpenChange, request: _reque
                                     </div>
                                 </div>
 
-                                {displayOrder && (
-                                    <div className="space-y-4">
-                                        <UpperDetailss order={displayOrder} admin={false} canEdit={false} />
-                                        <PaymentDetails order={displayOrder} />
-                                        {displayOrder?.returnData && (
-                                            <ReturnShippingDetails order={displayOrder} />
-                                        )}
-                                        {(displayOrder?.shipmentId || displayOrder?.shippingType === "Manual") && (
-                                            <ShippingDetails order={displayOrder} />
-                                        )}
-                                        <PersonalDetails order={displayOrder} canEdit={false} />
-                                        <ItemsTable
-                                            order={displayOrder}
-                                            isNewOrder={() => false}
-                                            canEdit={false}
-                                        />
-
-                                        {/* Payment Transactions List without Add/Edit/Download buttons */}
-                                        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <h2 className="text-lg font-bold text-slate-800">Payment Transactions</h2>
-                                            </div>
-                                            {paymentsList.length === 0 ? (
-                                                <div className="text-center py-6 text-slate-400 text-sm italic">
-                                                    No payment transactions recorded for this order.
-                                                </div>
-                                            ) : (
-                                                <div className="overflow-x-auto rounded-xl border border-slate-200">
-                                                    <table className="min-w-full divide-y divide-slate-100 text-sm">
-                                                        <thead>
-                                                            <tr className="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] tracking-wider text-left">
-                                                                <th className="p-3">Date</th>
-                                                                <th className="p-3">Amount</th>
-                                                                <th className="p-3">Method</th>
-                                                                <th className="p-3">Status</th>
-                                                                <th className="p-3">Notes</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody className="divide-y divide-slate-100 text-slate-700 font-semibold">
-                                                            {paymentsList.map((payment) => (
-                                                                <tr key={payment._id} className="hover:bg-slate-50/50">
-                                                                    <td className="p-3 whitespace-nowrap">
-                                                                        {payment.paidAt ? format(new Date(payment.paidAt), 'dd MMM yyyy, hh:mm a') : format(new Date(payment.createdAt), 'dd MMM yyyy, hh:mm a')}
-                                                                    </td>
-                                                                    <td className="p-3 text-slate-900 font-bold whitespace-nowrap">
-                                                                        ₹{payment.amount?.toLocaleString()}
-                                                                    </td>
-                                                                    <td className="p-3 whitespace-nowrap">{payment.method}</td>
-                                                                    <td className="p-3 whitespace-nowrap">
-                                                                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${payment.status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                                                                            {payment.status}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="p-3 max-w-[200px] truncate" title={payment.notes}>
-                                                                        {payment.notes || "—"}
-                                                                    </td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
+                                {displayOrder && <OrderOfQuery order={displayOrder} />}
                                 {activeOrderView === "return" && displayOrder && (
                                     <div className="mt-4">
                                         <Scans order={displayOrder} />
@@ -389,65 +307,66 @@ export default function PartialReturnSheet({ open, onOpenChange, request: _reque
                             </div>
 
                             {/* Right Pane: Request Info, Selected Items & Live Chat Thread */}
-                            <div className="w-full sm:w-[380px] lg:w-[450px] sm:h-screen flex flex-col bg-white border-l border-slate-100 p-4">
-                                <div className="border-b border-slate-100 pb-3 mb-3">
+                            <div className="w-full sm:w-[380px] lg:w-[450px] sm:h-screen flex flex-col bg-white p-4">
+                                <div className="border-b pb-3 mb-3">
                                     <div className="flex items-center justify-between">
-                                        <h1 className="font-bold text-lg text-slate-900">Request Details</h1>
+                                        <h1 className="font-bold text-lg text-gray-900">Request Details</h1>
                                         <Badge
-                                            className={`text-[10px] font-bold uppercase border ${partialRequest?.status === "Accepted"
-                                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                                                : partialRequest?.status === "Rejected"
-                                                    ? "bg-rose-50 text-rose-800 border-rose-200"
-                                                    : partialRequest?.status === "Hold"
-                                                        ? "bg-blue-50 text-blue-800 border-blue-200"
-                                                        : "bg-amber-50 text-amber-800 border-amber-200"
-                                                }`}
+                                            className={
+                                                partialRequest?.status === "Accepted"
+                                                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                                                    : partialRequest?.status === "Rejected"
+                                                        ? "bg-rose-100 text-rose-800 border-rose-300"
+                                                        : partialRequest?.status === "Hold"
+                                                            ? "bg-blue-100 text-blue-800 border-blue-300"
+                                                            : "bg-amber-100 text-amber-800 border-amber-300"
+                                            }
                                         >
                                             {partialRequest?.status || "Pending"}
                                         </Badge>
                                     </div>
-                                    <p className="text-xs text-slate-500 mt-1">
+                                    <p className="text-xs text-gray-500 mt-1">
                                         Raised At: {partialRequest?.createdAt ? format(new Date(partialRequest.createdAt), "dd MMM yyyy, hh:mm a") : "—"}
                                     </p>
                                     {partialRequest?.resolvedBy && (
-                                        <p className="text-xs text-slate-500 mt-0.5">
-                                            Resolved By: <span className="font-semibold text-slate-700">{partialRequest.resolvedBy.name || partialRequest.resolvedBy.email || partialRequest.resolvedBy}</span>
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            Resolved By: <span className="font-semibold text-gray-700">{partialRequest.resolvedBy.name || partialRequest.resolvedBy.email || partialRequest.resolvedBy}</span>
                                             {partialRequest.resolvedAt && ` at ${format(new Date(partialRequest.resolvedAt), "dd MMM yyyy, hh:mm a")}`}
                                         </p>
                                     )}
                                     {partialRequest?.holdBy && (
-                                        <p className="text-xs text-slate-500 mt-0.5">
-                                            Hold By: <span className="font-semibold text-slate-700">{partialRequest.holdBy.name || partialRequest.holdBy.email || partialRequest.holdBy}</span>
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            Hold By: <span className="font-semibold text-gray-700">{partialRequest.holdBy.name || partialRequest.holdBy.email || partialRequest.holdBy}</span>
                                             {partialRequest.holdAt && ` at ${format(new Date(partialRequest.holdAt), "dd MMM yyyy, hh:mm a")}`}
                                         </p>
                                     )}
                                     {partialRequest?.reopenedBy && (
-                                        <p className="text-xs text-slate-500 mt-0.5">
-                                            Reopened By: <span className="font-semibold text-slate-700">{partialRequest.reopenedBy.name || partialRequest.reopenedBy.email || partialRequest.reopenedBy}</span>
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            Reopened By: <span className="font-semibold text-gray-700">{partialRequest.reopenedBy.name || partialRequest.reopenedBy.email || partialRequest.reopenedBy}</span>
                                             {partialRequest.reopenedAt && ` at ${format(new Date(partialRequest.reopenedAt), "dd MMM yyyy, hh:mm a")}`}
                                         </p>
                                     )}
                                 </div>
 
                                 {/* Return Reason */}
-                                <div className="bg-amber-50 border border-amber-200 p-3.5 rounded-xl text-xs space-y-1 mb-3">
-                                    <span className="font-bold text-amber-900 uppercase tracking-wider text-[10px]">Reason for Return</span>
+                                <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg text-xs space-y-1 mb-3">
+                                    <span className="font-bold text-amber-900 uppercase tracking-wide">Reason for Return</span>
                                     <p className="text-amber-800 font-medium">{partialRequest?.reason || "No reason specified"}</p>
                                 </div>
 
                                 {/* Requested Items List */}
-                                <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/60 mb-4 max-h-[220px] overflow-y-auto space-y-2">
-                                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wide">Items Selected for Return</span>
+                                <div className="border rounded-lg p-3 bg-gray-50 mb-4 max-h-[220px] overflow-y-auto space-y-2">
+                                    <span className="text-xs font-bold text-gray-700 uppercase">Items Selected for Return</span>
                                     {partialRequest?.items?.map((it, idx) => (
-                                        <div key={idx} className="flex items-center gap-3 bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm text-xs">
+                                        <div key={idx} className="flex items-center gap-3 bg-white p-2 rounded border text-xs">
                                             <img
                                                 src={it.productId?.photos?.[0] || it.productId?.images?.[0] || "/placeholder.png"}
                                                 alt={it.fullName}
-                                                className="w-10 h-10 object-contain rounded-lg border border-slate-100 shrink-0 bg-slate-50"
+                                                className="w-10 h-10 object-contain rounded border shrink-0 bg-gray-50"
                                             />
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-bold text-slate-800 truncate">{it.fullName}</p>
-                                                <p className="text-slate-500">
+                                                <p className="font-semibold text-gray-900 truncate">{it.fullName}</p>
+                                                <p className="text-gray-500">
                                                     Variant: {it.variantName} | SKU: {it.sku || "—"}
                                                 </p>
                                                 <p className="font-bold text-emerald-600 mt-0.5">
@@ -459,15 +378,15 @@ export default function PartialReturnSheet({ open, onOpenChange, request: _reque
                                 </div>
 
                                 {/* Chat / Communication Thread */}
-                                <div className="flex-1 flex flex-col border border-slate-100 rounded-xl overflow-hidden bg-slate-50/40">
-                                    <div className="bg-white px-3 py-2.5 border-b border-slate-100 flex items-center gap-2">
-                                        <MessageSquare className="w-4 h-4 text-indigo-600" />
-                                        <span className="text-xs font-bold text-slate-800">Customer Communication</span>
+                                <div className="flex-1 flex flex-col border rounded-lg overflow-hidden bg-gray-50">
+                                    <div className="bg-white px-3 py-2 border-b flex items-center gap-2">
+                                        <MessageSquare className="w-4 h-4 text-primary" />
+                                        <span className="text-xs font-bold text-gray-800">Customer Communication</span>
                                     </div>
 
                                     <div className="flex-1 p-3 overflow-y-auto space-y-3">
                                         {(!partialRequest?.replies || partialRequest.replies.length === 0) ? (
-                                            <div className="text-center py-6 text-xs text-slate-400 italic">
+                                            <div className="text-center py-6 text-xs text-gray-400 italic">
                                                 No messages yet. Start a conversation below.
                                             </div>
                                         ) : (
@@ -480,13 +399,13 @@ export default function PartialReturnSheet({ open, onOpenChange, request: _reque
                                                         key={reply._id || idx}
                                                         className={`flex flex-col ${isAdmin ? "items-end" : "items-start"}`}
                                                     >
-                                                        <div className="text-[10px] text-slate-400 mb-0.5">
+                                                        <div className="text-[10px] text-gray-400 mb-0.5">
                                                             {senderName} • {reply.messagedAt ? format(new Date(reply.messagedAt), "dd MMM, hh:mm a") : ""}
                                                         </div>
                                                         <div
-                                                            className={`p-2.5 rounded-xl text-xs max-w-[85%] ${isAdmin
-                                                                ? "bg-indigo-600 text-white rounded-br-none"
-                                                                : "bg-white text-slate-800 border border-slate-100 shadow-sm rounded-bl-none"
+                                                            className={`p-2.5 rounded-lg text-xs max-w-[85%] ${isAdmin
+                                                                ? "bg-primary text-white rounded-br-none"
+                                                                : "bg-white text-gray-800 border shadow-sm rounded-bl-none"
                                                                 }`}
                                                         >
                                                             {reply.message}
@@ -498,7 +417,7 @@ export default function PartialReturnSheet({ open, onOpenChange, request: _reque
                                     </div>
 
                                     {/* Reply Input Box */}
-                                    <div className="p-2.5 bg-white border-t border-slate-100 flex gap-2 items-center">
+                                    <div className="p-2 bg-white border-t flex gap-2 items-center">
                                         <Input
                                             placeholder="Type a message to customer..."
                                             value={message}
@@ -509,13 +428,13 @@ export default function PartialReturnSheet({ open, onOpenChange, request: _reque
                                                     handleSendMessage();
                                                 }
                                             }}
-                                            className="text-xs border-slate-200 bg-slate-50 flex-1 rounded-xl"
+                                            className="text-xs border-gray-200 bg-gray-50 flex-1"
                                         />
                                         <Button
                                             size="sm"
                                             onClick={handleSendMessage}
                                             disabled={sendReply.isLoading || !message.trim()}
-                                            className="shrink-0 h-9 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm"
+                                            className="shrink-0 h-9 px-3"
                                         >
                                             {sendReply.isLoading ? (
                                                 <Loader2 className="w-4 h-4 animate-spin" />

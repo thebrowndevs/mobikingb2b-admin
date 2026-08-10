@@ -165,12 +165,12 @@ export default function PartialReturnCreateDialog({ open, onOpenChange, order: i
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col p-6 overflow-hidden bg-white rounded-2xl shadow-2xl border border-slate-100">
-                <DialogHeader className="border-b border-slate-100 pb-3 mb-2">
-                    <DialogTitle className="flex items-center gap-2 text-lg font-bold text-slate-800">
+            <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col p-6 overflow-hidden bg-white rounded-lg shadow-xl border">
+                <DialogHeader className="border-b pb-3 mb-2">
+                    <DialogTitle className="flex items-center gap-2 text-lg font-bold text-gray-900">
                         <RefreshCw className="w-5 h-5 text-indigo-600 animate-spin-slow" /> Raise Partial Return Request
                     </DialogTitle>
-                    <DialogDescription className="text-xs text-slate-500">
+                    <DialogDescription className="text-xs text-gray-500">
                         Raise a partial return request on behalf of a user.
                     </DialogDescription>
                 </DialogHeader>
@@ -180,22 +180,22 @@ export default function PartialReturnCreateDialog({ open, onOpenChange, order: i
                     <div className="flex-1 flex flex-col gap-4 overflow-hidden py-2">
                         <div className="flex items-center gap-2">
                             <div className="relative flex-1">
-                                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                                 <Input
                                     placeholder="Enter Order ID or phone number..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                    className="pl-9 text-sm border-slate-200 focus:border-slate-400 rounded-xl"
+                                    className="pl-9 text-sm border-gray-200"
                                 />
                             </div>
-                            <Button onClick={handleSearch} disabled={searching} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-4 h-10 rounded-xl shadow-sm">
+                            <Button onClick={handleSearch} disabled={searching} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-4 h-10">
                                 {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : "Search"}
                             </Button>
                         </div>
 
                         {/* Search Results */}
-                        <div className="flex-1 overflow-y-auto border border-slate-100 rounded-xl divide-y divide-slate-100 bg-slate-50/50 max-h-[300px]">
+                        <div className="flex-1 overflow-y-auto border rounded-lg divide-y bg-gray-50 max-h-[300px]">
                             {searching ? (
                                 <div className="p-8 text-center text-gray-500 flex flex-col items-center gap-2">
                                     <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
@@ -237,10 +237,10 @@ export default function PartialReturnCreateDialog({ open, onOpenChange, order: i
                     // Step 2: Select Items and Reason
                     <div className="flex-1 overflow-y-auto space-y-4 my-2 pr-1 max-h-[60vh]">
                         {/* Selected Order Overview */}
-                        <div className="bg-indigo-50/30 border border-indigo-100 p-3.5 rounded-xl flex items-center justify-between text-xs mb-3">
+                        <div className="bg-indigo-50/40 border border-indigo-100 p-3 rounded-lg flex items-center justify-between text-xs mb-3">
                             <div>
                                 <p className="font-bold text-indigo-900">Order: <span className="font-mono">{order.orderId}</span></p>
-                                <p className="text-slate-500 mt-0.5">Customer: {order.name || order.phoneNo}</p>
+                                <p className="text-gray-600 mt-0.5">Customer: {order.name || order.phoneNo}</p>
                             </div>
                             {!initialOrder && (
                                 <Button
@@ -255,8 +255,8 @@ export default function PartialReturnCreateDialog({ open, onOpenChange, order: i
                         </div>
 
                         {/* Items Checklist */}
-                        <div className="space-y-2.5">
-                            <label className="text-xs font-bold uppercase text-slate-500 tracking-wide">Order Items</label>
+                        <div className="space-y-3">
+                            <label className="text-xs font-bold uppercase text-gray-500 tracking-wide">Order Items</label>
                             {order.items?.map((it, index) => {
                                 const key = it.index !== undefined ? it.index : (it._id || index);
                                 const isAlreadyReturned = it.isReturned || (it.returnStatus && it.returnStatus !== "Rejected");
@@ -266,11 +266,11 @@ export default function PartialReturnCreateDialog({ open, onOpenChange, order: i
                                 return (
                                     <div
                                         key={key}
-                                        className={`flex items-start gap-3 p-3.5 rounded-xl border text-sm transition-colors ${isAlreadyReturned
-                                                ? "bg-slate-50 opacity-60 cursor-not-allowed border-slate-200"
-                                                : isChecked
-                                                    ? "border-indigo-400 bg-indigo-50/30"
-                                                    : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/40"
+                                        className={`flex items-start gap-3 p-3 rounded-lg border text-sm transition-colors ${isAlreadyReturned
+                                            ? "bg-gray-50 opacity-60 cursor-not-allowed border-gray-200"
+                                            : isChecked
+                                                ? "border-indigo-600 bg-indigo-50/20"
+                                                : "bg-white border-gray-200 hover:border-gray-300"
                                             }`}
                                     >
                                         <input
@@ -279,24 +279,18 @@ export default function PartialReturnCreateDialog({ open, onOpenChange, order: i
                                             checked={isChecked}
                                             disabled={isAlreadyReturned}
                                             onChange={() => toggleItemSelect(key)}
-                                            className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 mt-1 accent-indigo-600 cursor-pointer disabled:cursor-not-allowed"
+                                            className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-1 accent-indigo-600 cursor-pointer disabled:cursor-not-allowed"
                                         />
 
                                         <div className="flex-1 min-w-0">
-                                            <label
-                                                htmlFor={`item-${key}`}
-                                                className={`font-semibold text-slate-800 cursor-pointer block whitespace-normal break-words leading-snug ${isAlreadyReturned ? "cursor-not-allowed text-slate-400" : ""
-                                                    }`}
-                                            >
+                                            <label htmlFor={`item-${key}`} className={`font-medium text-gray-900 cursor-pointer block truncate ${isAlreadyReturned ? "cursor-not-allowed text-gray-500" : ""}`}>
                                                 {it.fullName || it.productId?.fullName || "Product Item"}
                                             </label>
 
-                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-slate-500">
-                                                {it.variantName && (
-                                                    <span>Variant: <span className="capitalize text-slate-700 font-medium">{it.variantName}</span></span>
-                                                )}
-                                                <span>Order Qty: <span className="text-slate-700 font-bold">{it.quantity}</span></span>
-                                                <span>Price: <span className="text-slate-700 font-bold">&#x20B9;{it.price?.toLocaleString()}</span></span>
+                                            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500">
+                                                {it.variantName && <span>Variant: <span className="capitalize text-gray-700 font-medium">{it.variantName}</span></span>}
+                                                <span>Qty: <span className="text-gray-700 font-medium">{it.quantity}</span></span>
+                                                <span>Price: <span className="text-gray-700 font-medium">₹{it.price}</span></span>
                                             </div>
 
                                             {isAlreadyReturned && (
@@ -308,8 +302,7 @@ export default function PartialReturnCreateDialog({ open, onOpenChange, order: i
 
                                         {/* Quantity Input for selected items */}
                                         {isChecked && !isAlreadyReturned && (
-                                            <div className="flex flex-col items-end shrink-0 gap-1">
-                                                <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Return Qty</span>
+                                            <div className="flex items-center shrink-0">
                                                 <Input
                                                     type="number"
                                                     min={1}
@@ -320,7 +313,7 @@ export default function PartialReturnCreateDialog({ open, onOpenChange, order: i
                                                         const nextVal = Math.max(1, Math.min(it.quantity, val));
                                                         setQuantities(prev => ({ ...prev, [key]: nextVal }));
                                                     }}
-                                                    className="w-16 h-8 text-center font-bold border-slate-200 focus:border-indigo-400 rounded-lg text-sm p-1 bg-white"
+                                                    className="w-16 h-7 text-center font-bold border-gray-200 focus:border-indigo-500 rounded-md text-xs p-1 bg-white"
                                                 />
                                             </div>
                                         )}
@@ -330,13 +323,13 @@ export default function PartialReturnCreateDialog({ open, onOpenChange, order: i
                         </div>
 
                         {/* Reason Selection */}
-                        <div className="space-y-3 border-t border-slate-100 pt-4">
-                            <label className="text-xs font-bold uppercase text-slate-500 tracking-wide">Reason for Return</label>
-                            <RadioGroup value={reason} onValueChange={setReason} className="space-y-2">
+                        <div className="space-y-3 border-t pt-3">
+                            <label className="text-xs font-bold uppercase text-gray-500 tracking-wide">Reason for Return</label>
+                            <RadioGroup value={reason} onValueChange={setReason} className="space-y-2.5">
                                 {PARTIAL_RETURN_REASONS.map((r) => (
                                     <div key={r} className="flex items-center gap-2.5">
-                                        <RadioGroupItem value={r} id={`reason-${r}`} className="text-indigo-600 border-slate-300 focus:ring-indigo-500" />
-                                        <label htmlFor={`reason-${r}`} className="text-sm cursor-pointer font-medium text-slate-700">
+                                        <RadioGroupItem value={r} id={`reason-${r}`} className="text-indigo-600 border-gray-300 focus:ring-indigo-500" />
+                                        <label htmlFor={`reason-${r}`} className="text-sm cursor-pointer font-medium text-gray-700">
                                             {r}
                                         </label>
                                     </div>
@@ -348,22 +341,22 @@ export default function PartialReturnCreateDialog({ open, onOpenChange, order: i
                                     placeholder="Specify your return reason..."
                                     value={otherReason}
                                     onChange={(e) => setOtherReason(e.target.value)}
-                                    className="mt-2 text-sm border-slate-200 focus:border-indigo-400 rounded-xl"
+                                    className="mt-2 text-sm border-gray-200 focus:border-indigo-500"
                                 />
                             )}
                         </div>
                     </div>
                 )}
 
-                <DialogFooter className="border-t border-slate-100 pt-3 mt-2 flex items-center gap-2 justify-end">
-                    <Button variant="outline" onClick={() => onOpenChange(false)} className="text-xs px-4 h-9 border-slate-200 text-slate-600 hover:bg-slate-50">
+                <DialogFooter className="border-t pt-3 mt-4 flex items-center gap-2 justify-end">
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="text-xs px-4 h-9">
                         Cancel
                     </Button>
                     {order && (
                         <Button
                             onClick={handleSubmit}
                             disabled={!canSubmit || submitting}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-5 h-9 font-bold rounded-xl"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-4 h-9 font-semibold"
                         >
                             {submitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                             Submit Return
