@@ -664,12 +664,18 @@ export default function QuotationDetailsPage() {
                                                             </div>
                                                         ) : (
                                                             <span className="text-emerald-600 font-semibold">
-                                                                {it.discount ? `-₹${it.discount.toLocaleString()}` : '-'}
+                                                                {it.discountPercent > 0 ? (
+                                                                    <span>{it.discountPercent}% (-₹{it.discount?.toLocaleString()})</span>
+                                                                ) : it.discount > 0 ? (
+                                                                    <span>-₹{it.discount.toLocaleString()}</span>
+                                                                ) : (
+                                                                    '-'
+                                                                )}
                                                             </span>
                                                         )}
                                                     </td>
                                                     <td className="py-3 px-4 text-right font-bold text-slate-900">
-                                                        ₹{(it.quantity * it.price).toLocaleString()}
+                                                        ₹{(it.quantity * it.price - (it.discount || 0)).toLocaleString()}
                                                     </td>
                                                     {isEditingItems && (
                                                         <td className="py-3 px-4 text-center">
@@ -728,7 +734,10 @@ export default function QuotationDetailsPage() {
                                             className="w-24 h-7 text-right border-slate-200 text-xs font-bold"
                                         />
                                     ) : (
-                                        <span className="font-bold text-slate-700">₹{quotation.discount?.toLocaleString() || '0'}</span>
+                                        <span className="font-bold text-slate-700">
+                                            {quotation.discountPercent > 0 ? `(${quotation.discountPercent}%) ` : ''}
+                                            ₹{quotation.discount?.toLocaleString() || '0'}
+                                        </span>
                                     )}
                                 </div>
                                 <Separator className="my-2 bg-slate-100" />

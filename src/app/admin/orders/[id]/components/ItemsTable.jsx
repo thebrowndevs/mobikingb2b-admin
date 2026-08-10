@@ -26,6 +26,7 @@ function ItemsTable({ order, isNewOrder, canEdit }) {
                             <TableHead className="font-semibold text-slate-700">Variant</TableHead>
                             <TableHead className="font-semibold text-slate-700 text-center">Qty</TableHead>
                             <TableHead className="font-semibold text-slate-700 text-right">Selling Price</TableHead>
+                            <TableHead className="font-semibold text-slate-700 text-right">Discount</TableHead>
                             <TableHead className="font-semibold text-slate-700 text-right">Total Price</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -37,7 +38,9 @@ function ItemsTable({ order, isNewOrder, canEdit }) {
                             const variant = item?.variantName
                             const quantity = item?.quantity
                             const sellingPrice = item?.price
-                            const totalPrice = sellingPrice * quantity
+                            const discountVal = item?.discount || 0
+                            const discountPercent = item?.discountPercent || 0
+                            const totalPrice = (sellingPrice * quantity) - discountVal
 
                             return (
                                 <TableRow key={idx} className="hover:bg-slate-50/50">
@@ -54,6 +57,15 @@ function ItemsTable({ order, isNewOrder, canEdit }) {
                                     <TableCell className="text-slate-600 font-mono text-xs">{variant}</TableCell>
                                     <TableCell className="text-center font-bold text-slate-800">{quantity}</TableCell>
                                     <TableCell className="text-right text-slate-600 font-medium">₹{sellingPrice?.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right text-emerald-600 font-semibold">
+                                        {discountPercent > 0 ? (
+                                            <span>{discountPercent}% (-₹{discountVal})</span>
+                                        ) : discountVal > 0 ? (
+                                            <span>₹{discountVal}</span>
+                                        ) : (
+                                            <span>-</span>
+                                        )}
+                                    </TableCell>
                                     <TableCell className="text-right font-bold text-slate-800">₹{totalPrice?.toLocaleString()}</TableCell>
                                 </TableRow>
                             )
@@ -71,7 +83,7 @@ function ItemsTable({ order, isNewOrder, canEdit }) {
                     </div>
                     {order?.discount > 0 && (
                         <div className="flex justify-between text-emerald-600 font-semibold">
-                            <span>Discount</span>
+                            <span>Discount {order?.discountPercent > 0 ? `(${order.discountPercent}%)` : ''}</span>
                             <span>-₹{order?.discount?.toLocaleString()}</span>
                         </div>
                     )}
