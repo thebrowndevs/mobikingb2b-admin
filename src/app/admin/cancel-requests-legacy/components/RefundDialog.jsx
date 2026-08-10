@@ -57,56 +57,58 @@ export default function RefundDialog({ open, onOpenChange, order }) {
             : "Unknown Gateway"
 
     const isAlreadyRefunded = order?.refundStatus === "Success"
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[550px] max-h-[85vh] bg-white rounded-xl border border-slate-200 shadow-none p-6">
-                <DialogHeader className="border-b border-slate-100 pb-3 mb-2">
-                    <DialogTitle className="text-lg font-bold text-slate-800">Refund Online Order Payment</DialogTitle>
+            <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>Refund Online Order Payment</DialogTitle>
                 </DialogHeader>
 
                 {/* Pricing Summary & Order Details */}
-                <div className="space-y-4 text-sm text-slate-600">
-                    <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-3">
-                        <div className="space-y-1">
-                            <p><strong>Order ID:</strong> <span className="font-mono text-slate-850 font-bold">{order?.orderId || '-'}</span></p>
-                            <p><strong>Customer:</strong> <span className="text-slate-850 font-bold">{order?.name || '-'}</span></p>
-                            <p><strong>Phone:</strong> <span className="text-slate-850 font-medium">{order?.phoneNo || '-'}</span></p>
+                <div className="space-y-4 text-sm text-gray-700">
+                    <div className="grid grid-cols-2 gap-2 border-b pb-3">
+                        <div>
+                            <p><strong>Order ID:</strong> {order?.orderId || '-'}</p>
+                            <p><strong>Customer:</strong> {order?.name || '-'}</p>
+                            <p><strong>Phone:</strong> {order?.phoneNo || '-'}</p>
                         </div>
-                        <div className="space-y-1">
-                            <p><strong>Method:</strong> <span className="text-slate-850 font-semibold">{order?.method || '-'}</span></p>
+                        <div>
+                            <p><strong>Method:</strong> {order?.method || '-'}</p>
                             <p><strong>Gateway:</strong> <span className="font-bold text-indigo-600">{gateway}</span></p>
                             {order?.refundId && (
-                                <p><strong>Refund ID:</strong> <span className="font-mono text-xs text-slate-700">{order.refundId}</span></p>
+                                <p><strong>Refund ID:</strong> <span className="font-mono text-xs">{order.refundId}</span></p>
                             )}
                         </div>
                     </div>
+
                     {/* Items table */}
                     <div>
-                        <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Order Items</span>
-                        <div className="border border-slate-200 rounded-lg overflow-hidden">
+                        <h4 className="font-semibold mb-2">Order Items</h4>
+                        <div className="border rounded-lg overflow-hidden">
                             <Table className="text-xs">
-                                <TableHeader className="bg-slate-50 border-b border-slate-200">
+                                <TableHeader className="bg-gray-50">
                                     <TableRow>
-                                        <TableHead className="font-semibold text-slate-600">Item</TableHead>
-                                        <TableHead className="font-semibold text-slate-600">Variant</TableHead>
-                                        <TableHead className="text-center font-semibold text-slate-600">Qty</TableHead>
-                                        <TableHead className="text-right font-semibold text-slate-600">Price</TableHead>
-                                        <TableHead className="text-right font-semibold text-slate-600">Total</TableHead>
+                                        <TableHead>Item</TableHead>
+                                        <TableHead>Variant</TableHead>
+                                        <TableHead className="text-center">Qty</TableHead>
+                                        <TableHead className="text-right">Price</TableHead>
+                                        <TableHead className="text-right">Total</TableHead>
                                     </TableRow>
                                 </TableHeader>
-                                <TableBody className="divide-y divide-slate-100">
+                                <TableBody>
                                     {(order?.items || []).map((it, i) => (
-                                        <TableRow key={i} className="hover:bg-slate-50/40">
-                                            <TableCell className="font-bold text-slate-800 max-w-[150px] truncate">
+                                        <TableRow key={i}>
+                                            <TableCell className="font-medium max-w-[150px] truncate">
                                                 {it?.productId?.fullName || it?.fullName || '-'}
                                             </TableCell>
-                                            <TableCell className="max-w-[100px] truncate text-slate-650 font-medium">
+                                            <TableCell className="max-w-[100px] truncate">
                                                 {it?.variantName || '-'}
                                             </TableCell>
-                                            <TableCell className="text-center font-bold text-slate-700">{it?.quantity || 0}</TableCell>
-                                            <TableCell className="text-right font-semibold text-slate-750">₹{it?.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</TableCell>
-                                            <TableCell className="text-right font-bold text-slate-900">
-                                                ₹{(it?.price * it?.quantity)?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                                            <TableCell className="text-center">{it?.quantity || 0}</TableCell>
+                                            <TableCell className="text-right">₹{it?.price?.toFixed(2) || '0.00'}</TableCell>
+                                            <TableCell className="text-right">
+                                                ₹{(it?.price * it?.quantity)?.toFixed(2) || '0.00'}
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -116,42 +118,42 @@ export default function RefundDialog({ open, onOpenChange, order }) {
                     </div>
 
                     {/* Price Breakdown */}
-                    <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600">
+                    <div className="space-y-1 bg-gray-50 p-3 rounded-lg border text-xs">
                         <div className="flex justify-between">
                             <span>Subtotal</span>
-                            <span>₹{order?.subtotal?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '0.00'}</span>
+                            <span>₹{order?.subtotal?.toFixed(2) || '0.00'}</span>
                         </div>
                         <div className="flex justify-between">
                             <span>Delivery Charge</span>
-                            <span>₹{order?.deliveryCharge?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '0.00'}</span>
+                            <span>₹{order?.deliveryCharge?.toFixed(2) || '0.00'}</span>
                         </div>
                         <div className="flex justify-between">
                             <span>Discount</span>
-                            <span className="text-rose-600">-₹{order?.discount?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '0.00'}</span>
+                            <span className="text-red-500">-₹{order?.discount?.toFixed(2) || '0.00'}</span>
                         </div>
-                        <div className="flex justify-between font-extrabold border-t border-slate-250 pt-2 text-sm mt-1 text-slate-800">
+                        <div className="flex justify-between font-bold border-t pt-1.5 text-sm mt-1 text-gray-900">
                             <span>Total Paid</span>
-                            <span>₹{order?.orderAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '0.00'}</span>
+                            <span>₹{order?.orderAmount?.toFixed(2) || '0.00'}</span>
                         </div>
                         {order?.refundAmount > 0 && (
-                            <div className="flex justify-between font-bold text-rose-600 border-t border-slate-250 pt-2 mt-1">
+                            <div className="flex justify-between font-bold text-red-600">
                                 <span>Refunded Amount</span>
-                                <span>-₹{order?.refundAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                <span>-₹{order?.refundAmount?.toFixed(2)}</span>
                             </div>
                         )}
                     </div>
 
                     {/* Refund Amount Input */}
                     {isAlreadyRefunded ? (
-                        <div className="p-3 bg-emerald-50/50 border border-emerald-250 text-emerald-800 rounded-lg">
-                            <p className="font-bold text-xs uppercase tracking-wider">Refund Status: Success</p>
-                            <p className="text-xs mt-1 leading-relaxed">
-                                An amount of <strong>₹{order?.refundAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong> has already been successfully refunded for this order via {gateway}.
+                        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg">
+                            <p className="font-medium text-xs">Refund Status: Success</p>
+                            <p className="text-xs mt-1">
+                                An amount of <strong>₹{order?.refundAmount?.toFixed(2)}</strong> has already been successfully refunded for this order via {gateway}.
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-2">
-                            <Label htmlFor="refund-amount" className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="refund-amount" className="text-xs font-semibold">
                                 Refund Amount (₹)
                             </Label>
                             <Input
@@ -164,21 +166,20 @@ export default function RefundDialog({ open, onOpenChange, order }) {
                                 value={refundAmount}
                                 onChange={(e) => setRefundAmount(e.target.value)}
                                 disabled={refundOrder.isPending}
-                                className="bg-white border-slate-250 focus:border-slate-400 rounded-lg"
+                                className="bg-white"
                             />
-                            <p className="text-[10px] text-slate-400 font-medium">
+                            <p className="text-[10px] text-gray-500">
                                 Prefilled with the full paid total amount. You can manually adjust it to perform a partial refund if needed.
                             </p>
                         </div>
                     )}
                 </div>
 
-                <DialogFooter className="flex justify-end space-x-2 mt-4 border-t border-slate-100 pt-3">
+                <DialogFooter className="flex justify-end space-x-2 mt-4 border-t pt-3">
                     <Button
-                        variant="outline"
+                        variant="ghost"
                         onClick={() => onOpenChange(false)}
                         disabled={refundOrder.isPending}
-                        className="text-xs px-4 h-9 border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg"
                     >
                         Close
                     </Button>
@@ -186,7 +187,7 @@ export default function RefundDialog({ open, onOpenChange, order }) {
                         <LoaderButton
                             onClick={handleRefund}
                             loading={refundOrder.isPending}
-                            className="bg-indigo-650 hover:bg-indigo-700 text-white font-bold h-9 px-5 rounded-lg text-xs border border-transparent"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
                         >
                             Process Refund
                         </LoaderButton>

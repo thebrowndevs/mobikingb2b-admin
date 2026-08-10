@@ -80,12 +80,12 @@ function page() {
     return (
         <InnerDashboardLayout>
             {/* Header */}
-            <div className="w-full flex items-center justify-between gap-4 border-b border-gray-500 pb-4">
+            <div className="w-full flex items-center justify-between gap-4 border-b border-slate-100 pb-5 mb-6">
                 <div>
-                    <h1 className="text-primary font-semibold sm:text-2xl lg:text-4xl">
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">
                         Cancel Requests
                     </h1>
-                    <p className='text-xs text-gray-600 mt-2'>Showing Summary: <strong>{formattedStart}</strong> - <strong>{formattedEnd}</strong></p>
+                    <p className='text-xs text-slate-500 mt-1.5'>Showing Summary: <span className="font-semibold text-slate-700">{formattedStart}</span> - <span className="font-semibold text-slate-700">{formattedEnd}</span></p>
                 </div>
                 {/* date range selector */}
                 <div className="space-x-1 flex">
@@ -94,23 +94,26 @@ function page() {
             </div>
 
             {/* Status counts cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 mt-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 {[
-                    { key: 'all', label: 'All Requests', count: totalCount, bg: 'bg-indigo-500', border: 'border-indigo-500' },
-                    { key: 'Pending', label: 'Pending', count: pendingCount, bg: 'bg-yellow-500', border: 'border-yellow-500' },
-                    { key: 'Accepted', label: 'Accepted', count: acceptedCount, bg: 'bg-green-500', border: 'border-green-500' },
-                    { key: 'Rejected', label: 'Rejected', count: rejectedCount, bg: 'bg-red-500', border: 'border-red-500' }
+                    { key: 'all', label: 'All Requests', count: totalCount, borderAccent: 'border-l-indigo-600 text-indigo-700' },
+                    { key: 'Pending', label: 'Pending', count: pendingCount, borderAccent: 'border-l-amber-500 text-amber-700' },
+                    { key: 'Accepted', label: 'Accepted', count: acceptedCount, borderAccent: 'border-l-emerald-600 text-emerald-700' },
+                    { key: 'Rejected', label: 'Rejected', count: rejectedCount, borderAccent: 'border-l-rose-600 text-rose-700' }
                 ].map((item) => (
                     <div
                         key={item.key}
-                        className={`cursor-pointer border rounded-lg p-2 lg:p-4 text-center hover:shadow-sm transition-all duration-300 ${statusFilter === item.key ? `${item.bg} text-white ${item.border}` : 'bg-white border-gray-300'}`}
+                        className={`cursor-pointer border rounded-xl p-4 transition-all duration-200 bg-white hover:bg-slate-50/50 ${statusFilter === item.key
+                            ? `border-slate-300 ${item.borderAccent} border-l-4 bg-slate-50/80`
+                            : 'border-slate-200 border-l-4 border-l-slate-300'
+                            }`}
                         onClick={() => {
                             setStatusFilter(item.key);
                             setPage(1);
                         }}
                     >
-                        <h2 className="text-2xl font-bold">{item.count}</h2>
-                        <p className={`text-xs lg:text-sm ${statusFilter === item.key ? 'text-white' : 'text-gray-600'}`}>
+                        <h2 className="text-2xl font-extrabold text-slate-800">{item.count}</h2>
+                        <p className="text-xs font-semibold text-slate-500 mt-0.5">
                             {item.label}
                         </p>
                     </div>
@@ -118,19 +121,22 @@ function page() {
             </div>
 
             {/* Search controls */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-4 items-center">
+            <div className="flex flex-col sm:flex-row gap-3 mb-5 items-center bg-white p-4 rounded-xl border border-slate-200">
                 <div className="relative flex-1 w-full">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                     <Input
                         placeholder="Search by Order ID, Phone, Rejection Reason, or Customer name..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 pr-8 text-sm bg-white border-gray-200"
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setPage(1);
+                        }}
+                        className="pl-9 pr-8 text-sm bg-white border-slate-200 focus:border-slate-400 rounded-xl"
                     />
                     {searchTerm && (
                         <button
                             onClick={() => setSearchTerm('')}
-                            className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
+                            className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-655 transition-colors"
                             title="Clear search"
                         >
                             <X className="h-4 w-4" />
@@ -146,7 +152,7 @@ function page() {
                             setStatusFilter('all');
                             setPage(1);
                         }}
-                        className="text-xs text-gray-500 hover:text-gray-900 gap-1.5 shrink-0"
+                        className="text-xs text-slate-500 hover:text-slate-900 gap-1.5 shrink-0 rounded-xl"
                     >
                         <RotateCcw className="w-3.5 h-3.5" />
                         Reset

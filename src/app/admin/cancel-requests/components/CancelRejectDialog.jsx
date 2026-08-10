@@ -34,43 +34,46 @@ export default function CancelRejectDialog({ open, onOpenChange, order }) {
             onOpenChange(val)
             if (!val) setReason("") // clear on close
         }}>
-            <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Reject Cancel Request?</DialogTitle>
+            <DialogContent className="sm:max-w-[420px] max-h-[85vh] bg-white rounded-2xl border border-slate-200 shadow-none p-6">
+                <DialogHeader className="border-b border-slate-100 pb-3 mb-2">
+                    <DialogTitle className="text-lg font-bold text-slate-800">Reject Cancel Request?</DialogTitle>
                 </DialogHeader>
 
-                <div className='text-gray-600 text-sm space-y-1'>
-                    <p><strong>Order ID:</strong> {order?.orderId || '-'}</p>
-                    <p><strong>Customer:</strong> {order?.name || '-'} ({order?.phoneNo || '-'})</p>
-                    <p><strong>Total:</strong> ₹{order?.orderAmount?.toFixed(2) ?? '-'}</p>
+                <div className='text-slate-500 text-xs space-y-1.5 py-2'>
+                    <p><strong>Order ID:</strong> <span className="font-mono text-slate-700">{order?.orderId || '-'}</span></p>
+                    <p><strong>Customer:</strong> <span className="text-slate-700">{order?.name || '-'} ({order?.phoneNo || '-'})</span></p>
+                    <p><strong>Total:</strong> <span className="text-slate-750 font-bold">₹{order?.orderAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 }) ?? '-'}</span></p>
                 </div>
 
 
                 {/* Reason Input */}
-                <div className="mt-4 space-y-1">
-                    <Label htmlFor="reason">Reason for rejection</Label>
+                <div className="mt-2 space-y-2">
+                    <Label htmlFor="reason" className="text-xs font-bold uppercase tracking-wider text-slate-400">Reason for rejection</Label>
                     <Textarea
                         id="reason"
                         placeholder="Please provide a reason..."
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                         disabled={rejectCancelRequest.isPending}
+                        className="text-sm border-slate-200 focus:border-slate-400 rounded-lg"
                     />
                 </div>
 
-                <DialogFooter className="flex justify-end space-x-2 mt-4">
+                <DialogFooter className="flex justify-end space-x-2 mt-4 border-t border-slate-100 pt-3">
                     <Button
-                        variant="ghost"
+                        variant="outline"
                         onClick={() => onOpenChange(false)}
                         disabled={rejectCancelRequest.isLoading}
+                        className="text-xs px-4 h-9 border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg"
                     >
                         Close
                     </Button>
                     <LoaderButton
                         onClick={handleRejectCancel}
                         loading={rejectCancelRequest.isPending}
+                        className="bg-slate-900 hover:bg-slate-800 text-white font-bold h-9 px-4 rounded-lg text-xs"
                     >
-                        Reject Cancel Request
+                        Reject Request
                     </LoaderButton>
                 </DialogFooter>
             </DialogContent>
