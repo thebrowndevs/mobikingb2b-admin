@@ -267,10 +267,10 @@ export default function PartialReturnCreateDialog({ open, onOpenChange, order: i
                                     <div
                                         key={key}
                                         className={`flex items-start gap-3 p-3 rounded-lg border text-sm transition-colors ${isAlreadyReturned
-                                                ? "bg-gray-50 opacity-60 cursor-not-allowed border-gray-200"
-                                                : isChecked
-                                                    ? "border-indigo-600 bg-indigo-50/20"
-                                                    : "bg-white border-gray-200 hover:border-gray-300"
+                                            ? "bg-gray-50 opacity-60 cursor-not-allowed border-gray-200"
+                                            : isChecked
+                                                ? "border-indigo-600 bg-indigo-50/20"
+                                                : "bg-white border-gray-200 hover:border-gray-300"
                                             }`}
                                     >
                                         <input
@@ -300,30 +300,21 @@ export default function PartialReturnCreateDialog({ open, onOpenChange, order: i
                                             )}
                                         </div>
 
-                                        {/* Quantity Counter for selected items */}
+                                        {/* Quantity Input for selected items */}
                                         {isChecked && !isAlreadyReturned && (
-                                            <div className="flex items-center border rounded bg-white shrink-0 shadow-sm">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleQtyChange(key, it.quantity, -1)}
-                                                    disabled={currentQty <= 1}
-                                                    className="p-1 hover:bg-gray-100 disabled:opacity-30 text-gray-500"
-                                                >
-                                                    <Minus className="w-3 h-3" />
-                                                </button>
-
-                                                <span className="px-2 py-0.5 text-xs font-bold min-w-[20px] text-center text-gray-700">
-                                                    {currentQty}
-                                                </span>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleQtyChange(key, it.quantity, 1)}
-                                                    disabled={currentQty >= it.quantity}
-                                                    className="p-1 hover:bg-gray-100 disabled:opacity-30 text-gray-500"
-                                                >
-                                                    <Plus className="w-3 h-3" />
-                                                </button>
+                                            <div className="flex items-center shrink-0">
+                                                <Input
+                                                    type="number"
+                                                    min={1}
+                                                    max={it.quantity}
+                                                    value={currentQty}
+                                                    onChange={(e) => {
+                                                        const val = parseInt(e.target.value) || 1;
+                                                        const nextVal = Math.max(1, Math.min(it.quantity, val));
+                                                        setQuantities(prev => ({ ...prev, [key]: nextVal }));
+                                                    }}
+                                                    className="w-16 h-7 text-center font-bold border-gray-200 focus:border-indigo-500 rounded-md text-xs p-1 bg-white"
+                                                />
                                             </div>
                                         )}
                                     </div>

@@ -9,7 +9,7 @@ export const usePartialReturnRequests = () => {
         queryKey: ['partialReturnRequests', page, limit, status, startDate, endDate, searchQuery],
         queryFn: () =>
             api
-                .get('/v2/orders/partial-return/requests', { params: { page, limit, status, startDate, endDate, searchQuery } })
+                .get('/orders/partial-return/requests', { params: { page, limit, status, startDate, endDate, searchQuery } })
                 .then(res => res.data?.data || {}),
         staleTime: 1000 * 60,
         onError: (err) => {
@@ -19,7 +19,7 @@ export const usePartialReturnRequests = () => {
 
     const getPartialReturnRequestById = (id, enabled = true) => useQuery({
         queryKey: ['partialReturnRequest', id],
-        queryFn: () => api.get(`/v2/orders/partial-return/requests/${id}`).then(res => res.data?.data?.partialRequest || res.data?.data),
+        queryFn: () => api.get(`/orders/partial-return/requests/${id}`).then(res => res.data?.data?.partialRequest || res.data?.data),
         enabled: Boolean(enabled && id),
         staleTime: 0,
         onError: (err) => {
@@ -28,7 +28,7 @@ export const usePartialReturnRequests = () => {
     });
 
     const raiseRequest = useMutation({
-        mutationFn: (payload) => api.post('/v2/orders/partial-return/raise', payload),
+        mutationFn: (payload) => api.post('/orders/partial-return/raise', payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequests'] });
             queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -40,7 +40,7 @@ export const usePartialReturnRequests = () => {
     });
 
     const acceptRequest = useMutation({
-        mutationFn: (payload) => api.post('/v2/orders/partial-return/accept', payload),
+        mutationFn: (payload) => api.post('/orders/partial-return/accept', payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequests'] });
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequest'] });
@@ -53,7 +53,7 @@ export const usePartialReturnRequests = () => {
     });
 
     const rejectRequest = useMutation({
-        mutationFn: (payload) => api.post('/v2/orders/partial-return/reject', payload),
+        mutationFn: (payload) => api.post('/orders/partial-return/reject', payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequests'] });
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequest'] });
@@ -66,7 +66,7 @@ export const usePartialReturnRequests = () => {
     });
 
     const holdRequest = useMutation({
-        mutationFn: (payload) => api.post('/v2/orders/partial-return/hold', payload),
+        mutationFn: (payload) => api.post('/orders/partial-return/hold', payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequests'] });
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequest'] });
@@ -79,7 +79,7 @@ export const usePartialReturnRequests = () => {
     });
 
     const sendReply = useMutation({
-        mutationFn: (payload) => api.post('/v2/orders/partial-return/reply', payload),
+        mutationFn: (payload) => api.post('/orders/partial-return/reply', payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequests'] });
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequest'] });
@@ -91,7 +91,7 @@ export const usePartialReturnRequests = () => {
     });
 
     const assignCourier = useMutation({
-        mutationFn: (payload) => api.post('/v2/orders/partial-return/courier/assign', payload),
+        mutationFn: (payload) => api.post('/orders/partial-return/courier/assign', payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequests'] });
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequest'] });
@@ -104,7 +104,7 @@ export const usePartialReturnRequests = () => {
     });
 
     const schedulePickup = useMutation({
-        mutationFn: (payload) => api.post('/v2/orders/partial-return/pickup/schedule', payload),
+        mutationFn: (payload) => api.post('/orders/partial-return/pickup/schedule', payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequests'] });
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequest'] });
@@ -117,7 +117,7 @@ export const usePartialReturnRequests = () => {
     });
 
     const reopenRequest = useMutation({
-        mutationFn: (payload) => api.post('/v2/orders/partial-return/reopen', payload),
+        mutationFn: (payload) => api.post('/orders/partial-return/reopen', payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequests'] });
             queryClient.invalidateQueries({ queryKey: ['partialReturnRequest'] });
