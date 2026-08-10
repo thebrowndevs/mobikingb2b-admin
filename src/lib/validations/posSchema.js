@@ -2,15 +2,27 @@ import { z } from "zod";
 
 export const posSchema = z.object({
   userId: z.string().optional(),
-  name: z.string().min(1, "User Name is required"),
+  name: z.string().min(1, "Customer Name is required"),
   phoneNo: z.string().min(1, "Phone Number is required"),
+  email: z.string().optional(),
   gst: z.string().optional(),
-  method: z.enum(["UPI", "Online", "Cash"]).default("Cash"),
+  method: z.enum(["UPI", "Online", "Cash", "COD", "Mixed"]).default("Cash"),
+  paymentMode: z.enum(["complete", "parcel"]).default("complete"),
+  address: z.string().min(1, "Address is required"),
+  address2: z.string().optional(),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  pincode: z.string().min(1, "Pincode is required"),
+  country: z.string().default("India"),
   subtotal: z.number().min(0),
   discount: z.preprocess((val) => {
-    if (val === "") return undefined;
+    if (val === "" || val === null || val === undefined) return 0;
     return typeof val === "string" ? Number(val) : val;
-  }, z.number().optional()),
+  }, z.number().default(0)),
+  deliveryCharge: z.preprocess((val) => {
+    if (val === "" || val === null || val === undefined) return 0;
+    return typeof val === "string" ? Number(val) : val;
+  }, z.number().default(0)),
   orderAmount: z.number().min(0),
   comments: z.string().optional(),
   items: z
@@ -18,9 +30,12 @@ export const posSchema = z.object({
       z.object({
         productId: z.string().min(1, "Product ID is required"),
         variantName: z.string().optional(),
-        isScratchy: z.boolean().optional(),
         quantity: z.number().min(1, "Quantity must be at least 1"),
         price: z.number().min(0),
+        discountPercent: z.preprocess((val) => {
+          if (val === "" || val === null || val === undefined) return 0;
+          return typeof val === "string" ? Number(val) : val;
+        }, z.number().default(0)),
       })
     )
     .min(1, "At least one item is required"),

@@ -238,9 +238,9 @@ export const useOrders = () => {
   });
 
   const createPosOrder = useMutation({
-    mutationFn: (data) => api.post(api.defaults.baseURL.replace('/v1', '/v2') + "/orders/pos/new", data),
+    mutationFn: (data) => api.post("/orders/pos/new", data),
     onSuccess: () => {
-      toast.success("Order Created!");
+      toast.success("Quotaion Raised!");
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["productsPagination"] });
     },

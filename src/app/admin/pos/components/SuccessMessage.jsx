@@ -1,63 +1,47 @@
-import LoaderButton from '@/components/custom/LoaderButton';
 import { Button } from '@/components/ui/button'
-import { useOrders } from '@/hooks/useOrders'
-import React, { useState } from 'react'
+import React from 'react'
+import Link from 'next/link'
+import { CheckCircle2, ArrowRight, FileText } from 'lucide-react'
 
-function SuccessMessage({ order, resetOrder, reset, linkSent, setLinkSent }) {
-    const [linkData, setLinkData] = useState(null)
-    const [selectedGateway, setSelectedGateway] = useState('razorpay')
-    const { sendPaymentLink } = useOrders();
+function SuccessMessage({ order, resetOrder, reset }) {
+    const quotation = order;
 
-    console.log(linkSent)
-
-    const handleSendLink = async () => {
-        setLinkSent(false)
-        setLinkData(null);
-        const data = {
-            orderId: order?.order?._id,
-            name: order?.order?.name,
-            email: order?.user?.email,
-            phoneNo: order?.order?.phoneNo,
-            amount: order?.order?.orderAmount,
-            gateway: selectedGateway
-        }
-        try {
-            const res = await sendPaymentLink.mutateAsync({ data })
-            console.log(res)
-            setLinkData(res?.data?.data)
-            setLinkSent(true)
-        } catch (error) {
-            setLinkSent(false)
-        }
-    }
     return (
-        <div className='bg-green-50 p-5 rounded-xl border border-green-600 w-full flex flex-col gap-3 sm:flex-row justify-between items-center'>
-            <div>
-                <h2 className='flex-1 text-green-600 font-bold'>Order Placed Successfully</h2>
-                {linkSent &&
-                    <p className='text-gray-700 text-sm bg-blue-50 border border-blue-600 px-2 py-1 rounded-sm mt-3'>Payment Link sent successfully: <span className='text-blue-700'><a href={linkData?.payment_link} target='_blank'>{linkData?.payment_link}</a></span></p>
-                }
+        <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-200 w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
+            <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <div>
+                    <h2 className="text-emerald-800 font-extrabold text-base">POS Quotation Created Successfully</h2>
+                    <p className="text-emerald-700 text-xs mt-1 font-medium">
+                        Quotation ID: <span className="font-mono font-bold">{quotation?.quotationId}</span>
+                    </p>
+                    <p className="text-slate-500 text-xs mt-0.5">
+                        Items: {quotation?.items?.length} | Total Amount: ₹{quotation?.orderAmount?.toLocaleString()}
+                    </p>
+                </div>
             </div>
-            <div className='w-fit sm:w-1/2 flex flex-col items-end justify-end h-full gap-3'>
 
-                {order?.order?.method === 'Online' && !linkSent &&
-                    <div className="flex gap-2 items-center">
-                        <select
-                            value={selectedGateway}
-                            onChange={(e) => setSelectedGateway(e.target.value)}
-                            className="border border-gray-300 rounded px-2.5 py-1.5 text-sm bg-white"
-                        >
-                            <option value="razorpay">Razorpay</option>
-                            <option value="phonepe">PhonePe</option>
-                        </select>
-                        <LoaderButton
-                            onClick={handleSendLink}
-                            loading={sendPaymentLink.isPending}
-                        >
-                            Send Payment Link
-                        </LoaderButton>
-                    </div>
-                }
+            <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-emerald-200 text-emerald-800 bg-white hover:bg-emerald-50/50 gap-1.5 text-xs font-bold rounded-lg h-9"
+                    asChild
+                >
+                    <Link href={`/admin/quotations`}>
+                        <FileText className="w-3.5 h-3.5" /> View Quotations
+                    </Link>
+                </Button>
+                <Button
+                    size="sm"
+                    onClick={() => {
+                        reset();
+                        resetOrder(null);
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-xs font-bold rounded-lg h-9"
+                >
+                    Create Another <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
             </div>
         </div>
     )
