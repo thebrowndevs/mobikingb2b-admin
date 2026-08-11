@@ -1,21 +1,45 @@
 import admin from 'firebase-admin'
 
-if (!admin.apps.length) {
-  // console.log("Project:", process.env.FIREBASE_PROJECT_ID)
-  // console.log("Email:", process.env.FIREBASE_CLIENT_EMAIL)
-  // console.log("Key exists:", !!process.env.FIREBASE_PRIVATE_KEY)
-
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-  })
+function getFirebaseApp() {
+  if (!admin.apps.length) {
+    if (!process.env.FIREBASE_PROJECT_ID) {
+      console.warn("Firebase Admin credentials not found. Firebase Admin is not initialized.");
+      return null;
+    }
+    return admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      }),
+    })
+  }
+  return admin.apps[0];
 }
 
-export const messaging = admin.messaging()
-export const db = admin.firestore()
+export const messaging = new Proxy({}, {
+  get(target, prop) {
+    const app = getFirebaseApp();
+    if (!app) {
+      throw new Error("Firebase Admin not initialized - missing credentials");
+    }
+    const instance = admin.messaging(app);
+    const value = instance[prop];
+    return typeof value === 'function' ? value.bind(instance) : value;
+  }
+});
+
+export const db = new Proxy({}, {
+  get(target, prop) {
+    const app = getFirebaseApp();
+    if (!app) {
+      throw new Error("Firebase Admin not initialized - missing credentials");
+    }
+    const instance = admin.firestore(app);
+    const value = instance[prop];
+    return typeof value === 'function' ? value.bind(instance) : value;
+  }
+});
 
 
 // import admin from 'firebase-admin'

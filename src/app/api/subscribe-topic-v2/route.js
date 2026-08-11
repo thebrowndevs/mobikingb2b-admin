@@ -1,8 +1,6 @@
 import admin from "firebase-admin"
-import { messaging } from "@/lib/firebase-admin"
+import { messaging, db } from "@/lib/firebase-admin"
 import * as XLSX from "xlsx"
-
-const db = admin.firestore()
 
 export async function GET() {
   try {
