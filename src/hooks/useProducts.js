@@ -138,6 +138,21 @@ export const useProducts = () => {
         }
     });
 
+    const getProductQuotationsQuery = (id, page = 1, limit = 10) => useQuery({
+        queryKey: ['productQuotations', id, page, limit],
+        queryFn: async () => {
+            const res = await api.get(`/products/quotations/${id}`, {
+                params: { page, limit }
+            });
+            return res.data?.data;
+        },
+        staleTime: 1000 * 60 * 5,
+        keepPreviousData: true,
+        onError: (err) => {
+            toast.error(err?.response?.data?.message || 'Failed to fetch product quotations');
+        }
+    });
+
     // Create Product mutation
     const createProduct = useMutation({
         mutationFn: (data) => api.post('/products/createProduct', data),
@@ -268,7 +283,7 @@ export const useProducts = () => {
         updateProduct, markProductChecked, addProductStock, bulkUpdateProductStock, getStockHistoryByProductQuery,
         updateProductPrice, createVariant, updateVariant, deleteVariant,
         productsPaginationQuery, updateProductStatus, availableProductsQuery, getProductByIdQuery,
-        getProductOrdersQuery, getProductInventoryDetailsQuery,
+        getProductOrdersQuery, getProductInventoryDetailsQuery, getProductQuotationsQuery,
         permissions: {
             canView,
             canAdd,

@@ -28,10 +28,17 @@ import {
   Warehouse,
   Lock,
   TrendingUp,
+  ShoppingBag,
+  FileSpreadsheet,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
 
 /* ─────────────────────── SIDEBAR NAV CONFIG ─────────────────────── */
 const TABS = [
@@ -40,6 +47,8 @@ const TABS = [
   { id: "pricing", label: "Pricing & Slabs", icon: BadgeDollarSign },
   { id: "description", label: "Description", icon: FileText },
   { id: "variants", label: "Variants & Stock", icon: Package },
+  { id: "orders", label: "Orders", icon: ShoppingBag },
+  { id: "quotations", label: "Quotations", icon: FileSpreadsheet },
 ];
 
 /* ─────────────────────── HELPER COMPONENTS ─────────────────────── */
@@ -384,8 +393,14 @@ function DescriptionPanel({ product }) {
               [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-bold [&_th]:text-[10px] [&_th]:uppercase [&_th]:bg-slate-50 [&_th]:border-b [&_th]:border-bdr2
               [&_td]:px-3 [&_td]:py-2 [&_td]:border-b [&_td]:border-bdr2
             "
-            dangerouslySetInnerHTML={{ __html: product.description }}
-          />
+          >
+            <ReactMarkdown
+              rehypePlugins={[rehypeRaw]}
+              remarkPlugins={[remarkGfm]}
+            >
+              {product.description}
+            </ReactMarkdown>
+          </div>
         ) : (
           <p className="text-xs text-slate-400 py-4 text-center italic">No description provided.</p>
         )}
@@ -396,6 +411,11 @@ function DescriptionPanel({ product }) {
 
 function VariantsPanel({ product }) {
   const variants = product.variants || [];
+  const [expandedVariant, setExpandedVariant] = useState(null);
+
+  const toggleExpand = (variantId) => {
+    setExpandedVariant(expandedVariant === variantId ? null : variantId);
+  };
 
   return (
     <div className="space-y-4">
@@ -410,10 +430,12 @@ function VariantsPanel({ product }) {
             <table className="w-full text-xs text-left">
               <thead>
                 <tr className="bg-slate-50/75 border-b border-bdr2 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                  <th className="p-2.5 w-6"></th>
                   <th className="p-2.5 w-8 text-center">#</th>
                   <th className="p-2.5 w-14 text-center">Image</th>
                   <th className="p-2.5">Variant Name</th>
-                  <th className="p-2.5 text-center w-20">Stock</th>
+                  <th className="p-2.5 text-center w-24">Phys Stock</th>
+                  <th className="p-2.5 text-center w-24">Avail Stock</th>
                   <th className="p-2.5 text-center w-20">Status</th>
                   <th className="p-2.5 text-center w-14">Web</th>
                   <th className="p-2.5 text-center w-14">App</th>
@@ -421,38 +443,103 @@ function VariantsPanel({ product }) {
                 </tr>
               </thead>
               <tbody>
-                {variants.map((v, idx) => (
-                  <tr key={v._id} className="border-b border-bdr2 last:border-b-0 hover:bg-slate-50/30">
-                    <td className="p-2.5 text-center text-slate-400 font-medium">{idx + 1}</td>
-                    <td className="p-1.5 text-center">
-                      <div className="relative w-8 h-8 rounded border border-bdr2 bg-slate-50 mx-auto overflow-hidden">
-                        <Image src={v.images?.[0] || "/not-found-img.webp"} alt={v.name} fill className="object-cover" sizes="32px" />
-                      </div>
-                    </td>
-                    <td className="p-2.5 font-bold text-slate-800">{v.name}</td>
-                    <td className="p-2.5 text-center">
-                      <span className={`font-bold ${(v.totalStock || 0) > 0 ? "text-emerald-600" : "text-red-500"}`}>
-                        {v.totalStock ?? 0}
-                      </span>
-                    </td>
-                    <td className="p-2.5 text-center">
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${v.active ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
-                        {v.active ? "Active" : "Off"}
-                      </span>
-                    </td>
-                    <td className="p-2.5 text-center">
-                      {v.webVisibility !== false
-                        ? <CheckCircle2 size={13} className="text-green-500 mx-auto" />
-                        : <XCircle size={13} className="text-slate-300 mx-auto" />}
-                    </td>
-                    <td className="p-2.5 text-center">
-                      {v.appVisibility !== false
-                        ? <CheckCircle2 size={13} className="text-green-500 mx-auto" />
-                        : <XCircle size={13} className="text-slate-300 mx-auto" />}
-                    </td>
-                    <td className="p-2.5 text-center text-slate-600 font-medium">{v.orderCount ?? 0}</td>
-                  </tr>
-                ))}
+                {variants.map((v, idx) => {
+                  const isExpanded = expandedVariant === v._id;
+                  return (
+                    <React.Fragment key={v._id}>
+                      <tr
+                        className="border-b border-bdr2 hover:bg-slate-50/30 cursor-pointer"
+                        onClick={() => toggleExpand(v._id)}
+                      >
+                        <td className="p-2.5 text-center text-slate-400">
+                          <button className="focus:outline-none pointer-events-none">
+                            {isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                          </button>
+                        </td>
+                        <td className="p-2.5 text-center text-slate-400 font-medium" onClick={(e) => e.stopPropagation()}>
+                          {idx + 1}
+                        </td>
+                        <td className="p-1.5 text-center" onClick={(e) => e.stopPropagation()}>
+                          <div className="relative w-8 h-8 rounded border border-bdr2 bg-slate-50 mx-auto overflow-hidden">
+                            <Image src={v.images?.[0] || "/not-found-img.webp"} alt={v.name} fill className="object-cover" sizes="32px" />
+                          </div>
+                        </td>
+                        <td className="p-2.5 font-bold text-slate-800">{v.name}</td>
+                        <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                          <span className={`font-bold ${(v.totalStock || 0) > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                            {v.totalStock ?? 0}
+                          </span>
+                        </td>
+                        <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                          <span className={`font-bold ${(v.availableStock || 0) > 0 ? "text-indigo-650" : "text-slate-400"}`}>
+                            {v.availableStock ?? 0}
+                          </span>
+                        </td>
+                        <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${v.active ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
+                            {v.active ? "Active" : "Off"}
+                          </span>
+                        </td>
+                        <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                          {v.webVisibility !== false
+                            ? <CheckCircle2 size={13} className="text-green-500 mx-auto" />
+                            : <XCircle size={13} className="text-slate-300 mx-auto" />}
+                        </td>
+                        <td className="p-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                          {v.appVisibility !== false
+                            ? <CheckCircle2 size={13} className="text-green-500 mx-auto" />
+                            : <XCircle size={13} className="text-slate-300 mx-auto" />}
+                        </td>
+                        <td className="p-2.5 text-center text-slate-600 font-medium" onClick={(e) => e.stopPropagation()}>
+                          {v.orderCount ?? 0}
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr className="bg-slate-50/50 hover:bg-slate-50/50">
+                          <td colSpan={10} className="p-3">
+                            <div className="rounded-lg border border-bdr2 bg-white p-3 space-y-2">
+                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                Purchase Sets / Inventory Batches
+                              </p>
+                              {(!v.purchaseSets || v.purchaseSets.length === 0) ? (
+                                <p className="text-xs text-slate-400 italic">No purchase batches recorded.</p>
+                              ) : (
+                                <div className="overflow-x-auto rounded border border-bdr2">
+                                  <table className="w-full text-[11px] text-left">
+                                    <thead>
+                                      <tr className="bg-slate-50 border-b border-bdr2 text-slate-550 font-bold uppercase tracking-wider [&_th]:px-3 [&_th]:py-1.5">
+                                        <th>Batch Price</th>
+                                        <th>Qty Received</th>
+                                        <th>Phys Remaining</th>
+                                        <th>Avail (Virtual)</th>
+                                        <th>Date Added</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {v.purchaseSets.map((set, sidx) => (
+                                        <tr key={set._id || sidx} className="border-b border-bdr2 last:border-b-0 [&_td]:px-3 [&_td]:py-1.5">
+                                          <td className="font-bold text-slate-800">
+                                            ₹{set.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                                          </td>
+                                          <td className="text-slate-600">{set.quantity ?? 0} units</td>
+                                          <td className="font-semibold text-emerald-600">{set.remainingStock ?? 0} units</td>
+                                          <td className="font-semibold text-indigo-650">{set.availableStock ?? 0} units</td>
+                                          <td className="text-slate-400">
+                                            {set.createdAt ? format(new Date(set.createdAt), "dd MMM yy") : "—"}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -462,9 +549,229 @@ function VariantsPanel({ product }) {
   );
 }
 
+/* ─────────────────────── ORDERS PANEL ─────────────────────── */
+function OrdersPanel({ product, getProductOrdersQuery }) {
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = getProductOrdersQuery(product._id, page, 10);
+  const orders = data?.orders || [];
+  const pagination = data?.pagination || {};
+
+  return (
+    <div className="space-y-4">
+      <SectionCard title="B2B Orders containing this Product" icon={ShoppingBag}>
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="animate-spin h-5 w-5 text-indigo-600" />
+          </div>
+        ) : orders.length === 0 ? (
+          <p className="text-xs text-slate-400 py-6 text-center italic">No orders found containing this product.</p>
+        ) : (
+          <div className="space-y-3">
+            <div className="overflow-hidden rounded-lg border border-bdr2 bg-white">
+              <table className="w-full text-xs text-left">
+                <thead>
+                  <tr className="bg-slate-50/75 border-b border-bdr2 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                    <th className="p-2.5">Order ID</th>
+                    <th className="p-2.5">Customer Name</th>
+                    <th className="p-2.5">Ordered Item Detail</th>
+                    <th className="p-2.5 text-right">Order Amount</th>
+                    <th className="p-2.5 text-center">Status</th>
+                    <th className="p-2.5 w-28">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((o) => {
+                    const matchingItems = o.items?.filter(item =>
+                      String(item.productId?._id || item.productId) === String(product._id)
+                    ) || [];
+
+                    return (
+                      <tr key={o._id} className="border-b border-bdr2 last:border-b-0 hover:bg-slate-50/30">
+                        <td className="p-2.5 font-bold font-mono text-slate-800">{o.orderId}</td>
+                        <td className="p-2.5 text-slate-650 font-medium">{o.userId?.name || "—"}</td>
+                        <td className="p-2.5">
+                          <div className="flex flex-col gap-0.5">
+                            {matchingItems.map((item, idx) => (
+                              <div key={idx} className="text-slate-700">
+                                <span className="font-semibold capitalize">{item.variantName}</span>
+                                <span className="text-[10px] text-slate-400 ml-1">
+                                  ({item.quantity} units x ₹{item.price})
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="p-2.5 text-right font-bold text-slate-850">
+                          ₹{o.orderAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="p-2.5 text-center">
+                          <span className={`inline-block px-1.5 py-0.5 rounded-md text-[10px] font-bold border capitalize ${o.status === "completed" || o.status === "delivered"
+                              ? "bg-green-50 text-green-700 border-green-200"
+                              : o.status === "cancelled" || o.status === "rejected"
+                                ? "bg-red-50 text-red-700 border-red-200"
+                                : "bg-amber-50 text-amber-700 border-amber-200"
+                            }`}>
+                            {o.status}
+                          </span>
+                        </td>
+                        <td className="p-2.5 text-slate-500 whitespace-nowrap">
+                          {format(new Date(o.createdAt), "dd MMM yy, hh:mm a")}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-[11px] text-slate-550 font-medium">
+                  Page {pagination.page} of {pagination.totalPages}
+                </span>
+                <div className="flex gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!pagination.hasPrevPage}
+                    onClick={() => setPage(p => p - 1)}
+                    className="h-7 text-[10px] px-2.5 border-bdr2 bg-white"
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!pagination.hasNextPage}
+                    onClick={() => setPage(p => p + 1)}
+                    className="h-7 text-[10px] px-2.5 border-bdr2 bg-white"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </SectionCard>
+    </div>
+  );
+}
+
+/* ─────────────────────── QUOTATIONS PANEL ─────────────────────── */
+function QuotationsPanel({ product, getProductQuotationsQuery }) {
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = getProductQuotationsQuery(product._id, page, 10);
+  const quotations = data?.quotations || [];
+  const pagination = data?.pagination || {};
+
+  return (
+    <div className="space-y-4">
+      <SectionCard title="B2B Quotations containing this Product" icon={FileSpreadsheet}>
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="animate-spin h-5 w-5 text-indigo-600" />
+          </div>
+        ) : quotations.length === 0 ? (
+          <p className="text-xs text-slate-400 py-6 text-center italic">No quotations found containing this product.</p>
+        ) : (
+          <div className="space-y-3">
+            <div className="overflow-hidden rounded-lg border border-bdr2 bg-white">
+              <table className="w-full text-xs text-left">
+                <thead>
+                  <tr className="bg-slate-50/75 border-b border-bdr2 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                    <th className="p-2.5">Quotation ID</th>
+                    <th className="p-2.5">Customer Name</th>
+                    <th className="p-2.5">Quoted Item Detail</th>
+                    <th className="p-2.5 text-right">Total Amount</th>
+                    <th className="p-2.5 text-center">Status</th>
+                    <th className="p-2.5 w-28">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quotations.map((q) => {
+                    const matchingItems = q.items?.filter(item =>
+                      String(item.productId?._id || item.productId) === String(product._id)
+                    ) || [];
+
+                    return (
+                      <tr key={q._id} className="border-b border-bdr2 last:border-b-0 hover:bg-slate-50/30">
+                        <td className="p-2.5 font-bold font-mono text-slate-800">{q.requestId || q._id?.slice(-8)}</td>
+                        <td className="p-2.5 text-slate-650 font-medium">{q.userId?.name || "—"}</td>
+                        <td className="p-2.5">
+                          <div className="flex flex-col gap-0.5">
+                            {matchingItems.map((item, idx) => (
+                              <div key={idx} className="text-slate-700">
+                                <span className="font-semibold capitalize">{item.variantName || "Variant"}</span>
+                                <span className="text-[10px] text-slate-400 ml-1">
+                                  ({item.quantity} units x ₹{item.price})
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="p-2.5 text-right font-bold text-slate-850">
+                          ₹{q.totalAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="p-2.5 text-center">
+                          <span className={`inline-block px-1.5 py-0.5 rounded-md text-[10px] font-bold border capitalize ${q.status === "approved" || q.status === "converted"
+                              ? "bg-green-50 text-green-700 border-green-200"
+                              : q.status === "rejected" || q.status === "expired"
+                                ? "bg-red-50 text-red-700 border-red-200"
+                                : "bg-amber-50 text-amber-700 border-amber-200"
+                            }`}>
+                            {q.status}
+                          </span>
+                        </td>
+                        <td className="p-2.5 text-slate-500 whitespace-nowrap">
+                          {format(new Date(q.createdAt), "dd MMM yy, hh:mm a")}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-[11px] text-slate-550 font-medium">
+                  Page {pagination.page} of {pagination.totalPages}
+                </span>
+                <div className="flex gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!pagination.hasPrevPage}
+                    onClick={() => setPage(p => p - 1)}
+                    className="h-7 text-[10px] px-2.5 border-bdr2 bg-white"
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!pagination.hasNextPage}
+                    onClick={() => setPage(p => p + 1)}
+                    className="h-7 text-[10px] px-2.5 border-bdr2 bg-white"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </SectionCard>
+    </div>
+  );
+}
+
 /* ─────────────────────── MAIN DRAWER ─────────────────────── */
 export default function ProductDetailsDrawer({ open, onOpenChange, productId, onEdit, onUpdateStock }) {
-  const { getProductByIdQuery } = useProducts();
+  const { getProductByIdQuery, getProductOrdersQuery, getProductQuotationsQuery } = useProducts();
   const [activeTab, setActiveTab] = useState("overview");
 
   const { data: productResp, isLoading, error } = getProductByIdQuery(productId);
@@ -483,6 +790,8 @@ export default function ProductDetailsDrawer({ open, onOpenChange, productId, on
       case "pricing": return <PricingPanel product={product} />;
       case "description": return <DescriptionPanel product={product} />;
       case "variants": return <VariantsPanel product={product} />;
+      case "orders": return <OrdersPanel product={product} getProductOrdersQuery={getProductOrdersQuery} />;
+      case "quotations": return <QuotationsPanel product={product} getProductQuotationsQuery={getProductQuotationsQuery} />;
       default: return <OverviewPanel product={product} />;
     }
   };

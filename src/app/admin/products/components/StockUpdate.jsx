@@ -45,14 +45,18 @@ import BulkStockUpdate from "./BulkStockUpdate";
 
 /* ─────────────── STOCK TYPE META ─────────────── */
 const STOCK_TYPE_META = {
-  "stock-in": { label: "Stock In", color: "bg-emerald-50 text-emerald-700 border-emerald-200", sign: "+" },
-  "add-item": { label: "Order Edit: Add Item", color: "bg-pink-50 text-pink-700 border-pink-200", sign: "-" },
-  "remove-item": { label: "Order Edit: Remove", color: "bg-cyan-50 text-cyan-700 border-cyan-200", sign: "+" },
-  purchase: { label: "Purchase", color: "bg-red-50 text-red-700 border-red-200", sign: "-" },
-  "purchase-restore": { label: "Purchase Restore", color: "bg-lime-50 text-lime-700 border-lime-200", sign: "+" },
-  cancel: { label: "Order Cancel", color: "bg-blue-50 text-blue-700 border-blue-200", sign: "+" },
-  reject: { label: "Order Reject", color: "bg-violet-50 text-violet-700 border-violet-200", sign: "+" },
-  return: { label: "Return", color: "bg-amber-50 text-amber-700 border-amber-200", sign: "+" },
+  "stock-in": { label: "Stock In", color: "bg-emerald-50 text-emerald-700 border-emerald-100", sign: "+" },
+  "add-item": { label: "Order Edit: Add Item", color: "bg-pink-50 text-pink-700 border-pink-100", sign: "-" },
+  "remove-item": { label: "Order Edit: Remove", color: "bg-cyan-50 text-cyan-700 border-cyan-100", sign: "+" },
+  purchase: { label: "Purchase", color: "bg-red-50 text-red-700 border-red-100", sign: "-" },
+  // "purchase-restore": { label: "Purchase Restore", color: "bg-lime-50 text-lime-700 border-lime-100", sign: "+" },
+  cancel: { label: "Order Cancel", color: "bg-blue-50 text-blue-700 border-blue-100", sign: "+" },
+  reject: { label: "Order Reject", color: "bg-violet-50 text-violet-700 border-violet-100", sign: "+" },
+  return: { label: "Return", color: "bg-amber-50 text-amber-700 border-amber-100", sign: "+" },
+  reserved: { label: "Reserved", color: "bg-indigo-50 text-indigo-700 border-indigo-100", sign: "-" },
+  hold: { label: "Hold", color: "bg-amber-50 text-amber-700 border-amber-100", sign: "-" },
+  cancelled: { label: "Cancelled", color: "bg-slate-50 text-slate-600 border-slate-150", sign: "+" },
+  rejected: { label: "Rejected", color: "bg-red-50 text-red-600 border-red-100", sign: "+" },
 };
 
 /* ─────────────── FORM SCHEMA ─────────────── */
@@ -98,17 +102,29 @@ function StockUpdate({ open, onOpenChange, productId, product }) {
   const [history, setHistory] = React.useState([]);
   const [typeFilter, setTypeFilter] = React.useState("all");
   const [variantFilter, setVariantFilter] = React.useState("all");
+  const [categoryFilter, setCategoryFilter] = React.useState("all");
+  const [refTypeFilter, setRefTypeFilter] = React.useState("all");
   const [bulkOpen, setBulkOpen] = React.useState(false);
 
   const stockRes = getStockHistoryByProductQuery(resolvedId, {
-    page, limit: 30, type: typeFilter, variantName: variantFilter,
+    page,
+    limit: 30,
+    type: typeFilter,
+    variantName: variantFilter,
+    category: categoryFilter,
+    refType: refTypeFilter,
   });
 
   /* ── reset on open ── */
   React.useEffect(() => {
     if (open) {
-      setTypeFilter("all"); setVariantFilter("all");
-      setPage(1); setHistory([]); form.reset();
+      setTypeFilter("all");
+      setVariantFilter("all");
+      setCategoryFilter("all");
+      setRefTypeFilter("all");
+      setPage(1);
+      setHistory([]);
+      form.reset();
     }
   }, [open]);
 
@@ -135,6 +151,8 @@ function StockUpdate({ open, onOpenChange, productId, product }) {
 
   const handleTypeChange = (e) => { setTypeFilter(e.target.value); setPage(1); setHistory([]); };
   const handleVariantChange = (e) => { setVariantFilter(e.target.value); setPage(1); setHistory([]); };
+  const handleCategoryChange = (e) => { setCategoryFilter(e.target.value); setPage(1); setHistory([]); };
+  const handleRefTypeChange = (e) => { setRefTypeFilter(e.target.value); setPage(1); setHistory([]); };
 
   async function onSubmit(values) {
     // Resolve variantName → variantId from the populated variants array
@@ -160,7 +178,7 @@ function StockUpdate({ open, onOpenChange, productId, product }) {
   /* ─────────────────── RENDER ─────────────────── */
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full md:min-w-[720px] flex flex-col h-full overflow-hidden bg-back1 border-l border-bdr2 p-0 gap-0">
+      <SheetContent className="w-full md:min-w-[1100px] flex flex-col h-full overflow-hidden bg-back1 border-l border-bdr2 p-0 gap-0">
 
         {/* ── Header ── */}
         <SheetHeader className="px-6 py-4 border-b border-bdr2 bg-back2 shrink-0">
@@ -189,29 +207,29 @@ function StockUpdate({ open, onOpenChange, productId, product }) {
           </div>
 
           {/* Inventory metrics strip */}
-          <div className="grid grid-cols-3 gap-2 mt-3">
+          <div className="grid grid-cols-3 gap-3 mt-4">
             {(() => {
               const phys = inventory?.physicalStock ?? totalStock;
               const res = inventory?.reservedStock ?? 0;
               const avail = inventory ? Math.max(0, phys - res) : availableStock;
               return (
                 <>
-                  <div className="bg-back1 border border-bdr2 rounded-xl p-2.5 text-center">
-                    <div className={`text-base font-bold ${phys > 0 ? "text-slate-800" : "text-red-500"}`}>{phys}</div>
-                    <div className="text-[9px] font-semibold text-slate-450 mt-0.5 flex items-center justify-center gap-0.5">
-                      <Warehouse size={8} /> Physical
+                  <div className="bg-emerald-50/20 border border-emerald-150 rounded-xl p-3 text-center shadow-[inset_0_1px_2px_rgba(16,185,129,0.02)]">
+                    <div className={`text-base md:text-lg font-black ${phys > 0 ? "text-emerald-700" : "text-red-500"}`}>{phys}</div>
+                    <div className="text-[9px] font-bold text-emerald-600 mt-0.5 flex items-center justify-center gap-1 uppercase tracking-wider">
+                      <Warehouse size={10} /> Physical Stock
                     </div>
                   </div>
-                  <div className="bg-back1 border border-bdr2 rounded-xl p-2.5 text-center">
-                    <div className={`text-base font-bold ${avail > 0 ? "text-emerald-600" : "text-red-500"}`}>{avail}</div>
-                    <div className="text-[9px] font-semibold text-slate-450 mt-0.5 flex items-center justify-center gap-0.5">
-                      <TrendingUp size={8} /> Available
+                  <div className="bg-indigo-50/20 border border-indigo-150 rounded-xl p-3 text-center shadow-[inset_0_1px_2px_rgba(99,102,241,0.02)]">
+                    <div className={`text-base md:text-lg font-black ${avail > 0 ? "text-indigo-700" : "text-red-500"}`}>{avail}</div>
+                    <div className="text-[9px] font-bold text-indigo-650 mt-0.5 flex items-center justify-center gap-1 uppercase tracking-wider">
+                      <TrendingUp size={10} /> Available
                     </div>
                   </div>
-                  <div className="bg-back1 border border-bdr2 rounded-xl p-2.5 text-center">
-                    <div className={`text-base font-bold ${res > 0 ? "text-amber-600" : "text-slate-400"}`}>{res}</div>
-                    <div className="text-[9px] font-semibold text-slate-450 mt-0.5 flex items-center justify-center gap-0.5">
-                      <Lock size={8} /> Reserved
+                  <div className="bg-amber-50/20 border border-amber-150 rounded-xl p-3 text-center shadow-[inset_0_1px_2px_rgba(245,158,11,0.02)]">
+                    <div className={`text-base md:text-lg font-black ${res > 0 ? "text-amber-700" : "text-slate-400"}`}>{res}</div>
+                    <div className="text-[9px] font-bold text-amber-600 mt-0.5 flex items-center justify-center gap-1 uppercase tracking-wider">
+                      <Lock size={10} /> Reserved
                     </div>
                   </div>
                 </>
@@ -349,17 +367,21 @@ function StockUpdate({ open, onOpenChange, productId, product }) {
             ) : populatedVariants.length === 0 ? (
               <p className="text-xs text-slate-400 italic">No variants defined.</p>
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2.5">
                 {populatedVariants.map((v, i) => (
                   <div
                     key={v._id || i}
-                    className="bg-back2 border border-bdr2 rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs"
+                    className="bg-white border border-bdr2 rounded-xl p-2.5 flex flex-col gap-1 min-w-[130px] shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
                   >
-                    <span className="font-semibold text-slate-700">{v.name}</span>
-                    <span className="text-slate-350">·</span>
-                    <span className={`font-bold ${(v.totalStock ?? 0) > 0 ? "text-emerald-600" : "text-red-500"}`}>
-                      {v.totalStock ?? 0}
-                    </span>
+                    <span className="font-bold text-slate-800 capitalize leading-none truncate max-w-[120px]">{v.name}</span>
+                    <div className="flex gap-3 text-[10px] font-semibold text-slate-500 mt-1">
+                      <div>
+                        Phys: <span className="text-emerald-600 font-bold">{v.totalStock ?? 0}</span>
+                      </div>
+                      <div>
+                        Avail: <span className="text-indigo-650 font-bold">{v.availableStock ?? 0}</span>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -389,6 +411,26 @@ function StockUpdate({ open, onOpenChange, productId, product }) {
                 <option key={v._id || v.name} value={v.name}>{v.name}</option>
               ))}
             </select>
+
+            <select
+              className="bg-back1 border border-bdr2 rounded-lg px-3 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
+              value={categoryFilter}
+              onChange={handleCategoryChange}
+            >
+              <option value="all">All Categories</option>
+              <option value="physical">Physical Stock</option>
+              <option value="virtual">Virtual Stock</option>
+            </select>
+
+            <select
+              className="bg-back1 border border-bdr2 rounded-lg px-3 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
+              value={refTypeFilter}
+              onChange={handleRefTypeChange}
+            >
+              <option value="all">All References</option>
+              <option value="orders">Orders Only</option>
+              <option value="quotations">Quotations Only</option>
+            </select>
           </div>
 
           {/* ── Stock History Table ── */}
@@ -415,12 +457,13 @@ function StockUpdate({ open, onOpenChange, productId, product }) {
                     <TableRow className="border-b border-bdr2">
                       <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5 w-8">#</TableHead>
                       <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5">Type</TableHead>
+                      <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5">Category</TableHead>
                       <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5">Variant</TableHead>
                       <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5 text-center w-16">Qty</TableHead>
-                      <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5 w-28">Stock</TableHead>
+                      <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5 w-32">Stock</TableHead>
                       <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5 w-24">Price</TableHead>
                       <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5">Vendor</TableHead>
-                      <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5">Order</TableHead>
+                      <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5">Reference</TableHead>
                       <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5 w-32">Date</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -432,8 +475,24 @@ function StockUpdate({ open, onOpenChange, productId, product }) {
                           <TableCell className="text-slate-400 font-medium text-xs py-2.5">{i + 1}</TableCell>
 
                           <TableCell className="py-2.5">
-                            <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold border ${meta.color}`}>
-                              {meta.label || s.type}
+                            <div className="flex flex-col gap-0.5 items-start">
+                              <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold border ${meta.color || "bg-slate-50 text-slate-700 border-slate-200"}`}>
+                                {meta.label || s.type}
+                              </span>
+                              {s.orderId ? (
+                                <span className="text-[9px] font-medium text-indigo-500 leading-none mt-0.5">(via Order)</span>
+                              ) : s.quotationId || s.category === "virtual" ? (
+                                <span className="text-[9px] font-medium text-amber-600 leading-none mt-0.5">(via Quotation)</span>
+                              ) : null}
+                            </div>
+                          </TableCell>
+
+                          <TableCell className="py-2.5">
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider ${s.category === "physical"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-150"
+                              : "bg-sky-50 text-sky-700 border-sky-100"
+                              }`}>
+                              {s.category === "physical" ? "Physical" : "Virtual"}
                             </span>
                           </TableCell>
 
@@ -441,12 +500,27 @@ function StockUpdate({ open, onOpenChange, productId, product }) {
                             {s.variantName || "—"}
                           </TableCell>
 
-                          <TableCell className={`text-center text-xs font-bold py-2.5 ${meta.sign === "-" ? "text-red-600" : "text-emerald-600"}`}>
+                          <TableCell className={`text-center text-xs font-bold py-2.5 ${meta.sign === "-" ? "text-red-650" : "text-emerald-650"}`}>
                             {meta.sign}{s.quantity}
                           </TableCell>
 
-                          <TableCell className="text-xs text-slate-500 font-medium py-2.5">
-                            {s.previousStock ?? "—"} → {s.updatedStock ?? "—"}
+                          <TableCell className="text-xs text-slate-500 font-medium py-2.5 whitespace-nowrap">
+                            <div className="flex flex-col gap-0.5">
+                              <div>
+                                <span className="text-[10px] text-slate-400 font-semibold mr-1">Avail:</span>
+                                <span className="font-bold text-slate-700">{s.previousStock ?? 0} ➔ {s.updatedStock ?? 0}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-400 font-semibold mr-1">Phys:</span>
+                                <span className="font-bold text-slate-700">{s.previousPhysicalStock ?? "—"} ➔ {s.updatedPhysicalStock ?? "—"}</span>
+                              </div>
+                              {s.totalProductStock !== undefined && s.totalProductStock !== null && (
+                                <div>
+                                  <span className="text-[10px] text-slate-400 font-semibold mr-1">Product:</span>
+                                  <span className="font-bold text-indigo-600">{s.totalProductStock}</span>
+                                </div>
+                              )}
+                            </div>
                           </TableCell>
 
                           <TableCell className="text-xs font-semibold text-slate-700 py-2.5">
@@ -457,8 +531,20 @@ function StockUpdate({ open, onOpenChange, productId, product }) {
                             {s.vendor || "—"}
                           </TableCell>
 
-                          <TableCell className="text-xs text-slate-500 py-2.5 font-mono">
-                            {s.orderId || "—"}
+                          <TableCell className="text-xs py-2.5 font-mono">
+                            <div className="flex flex-col gap-1">
+                              {s.orderId && (
+                                <div className="inline-flex items-center gap-1 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-md px-1.5 py-0.5 text-[9px] font-bold w-fit">
+                                  <span className="opacity-70">ORD:</span> {s.orderId}
+                                </div>
+                              )}
+                              {s.quotationId && (
+                                <div className="inline-flex items-center gap-1 bg-amber-50 border border-amber-100 text-amber-700 rounded-md px-1.5 py-0.5 text-[9px] font-bold w-fit">
+                                  <span className="opacity-70">QTN:</span> {s.quotationId}
+                                </div>
+                              )}
+                              {!s.orderId && !s.quotationId && <span className="text-slate-400">—</span>}
+                            </div>
                           </TableCell>
 
                           <TableCell className="text-xs text-slate-500 py-2.5 whitespace-nowrap">
@@ -470,7 +556,7 @@ function StockUpdate({ open, onOpenChange, productId, product }) {
 
                     {stockRes.isFetching && (
                       <TableRow>
-                        <TableCell colSpan={9} className="p-3">
+                        <TableCell colSpan={10} className="p-3">
                           <div className="flex flex-col gap-2">
                             <Skeleton className="h-4 w-full bg-slate-200" />
                             <Skeleton className="h-4 w-4/5 bg-slate-200" />
