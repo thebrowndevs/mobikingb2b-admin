@@ -82,10 +82,10 @@ function page() {
             {/* Header */}
             <div className="w-full flex items-center justify-between gap-4 border-b border-slate-100 pb-5 mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tighter">
                         Cancel Requests
                     </h1>
-                    <p className='text-xs text-slate-500 mt-1.5'>Showing Summary: <span className="font-semibold text-slate-700">{formattedStart}</span> - <span className="font-semibold text-slate-700">{formattedEnd}</span></p>
+                    <p className='text-sm text-slate-500'>Showing Summary: <span className="font-semibold text-slate-700">{formattedStart}</span> - <span className="font-semibold text-slate-700">{formattedEnd}</span></p>
                 </div>
                 {/* date range selector */}
                 <div className="space-x-1 flex">

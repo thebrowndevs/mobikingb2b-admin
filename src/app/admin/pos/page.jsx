@@ -392,10 +392,8 @@ function Page() {
         <InnerDashboardLayout>
             <div className='flex items-center justify-between w-full mb-3 border-b border-slate-100 pb-3'>
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-                        Create POS Quotation
-                    </h1>
-                    <p className="text-slate-500 text-xs mt-0.5">Generate a wholesale POS invoice or quotation dynamically</p>
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tighter"> Create POS Quotation</h1>
+                    <p className="text-sm text-slate-500">Generate a wholesale POS invoice or quotation dynamically</p>
                 </div>
                 <div>
                     <Button variant="outline" size="sm" className="border-slate-200 text-slate-700 hover:bg-slate-50 h-8 text-xs">

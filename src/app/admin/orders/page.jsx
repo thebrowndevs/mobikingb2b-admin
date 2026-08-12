@@ -388,7 +388,7 @@ export default function Page() {
 
     return (
         <InnerDashboardLayout>
-            <div className="flex flex-col gap-6 p-6">
+            <div className="flex flex-col gap-6">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -493,8 +493,8 @@ export default function Page() {
                                 setPage(1)
                             }}
                             className={`pb-3 font-semibold text-sm transition-all duration-200 border-b-2 -mb-[2px] ${orderType === key
-                                    ? 'border-slate-900 text-slate-900'
-                                    : 'border-transparent text-slate-400 hover:text-slate-600'
+                                ? 'border-slate-900 text-slate-900'
+                                : 'border-transparent text-slate-400 hover:text-slate-600'
                                 }`}
                         >
                             {label} ({TABS_COUNT_MAP[key] ?? 0})

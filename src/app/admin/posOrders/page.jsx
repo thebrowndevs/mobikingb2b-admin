@@ -240,10 +240,10 @@ export default function Page() {
             {/* Header */}
             <div className="w-full flex items-center justify-between gap-4 border-b border-gray-500 pb-4 mb-4">
                 <div>
-                    <h1 className="text-primary font-semibold sm:text-2xl lg:text-4xl">
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tighter">
                         POS Orders
                     </h1>
-                    <p className='text-xs text-gray-600 mt-2'>Showing Summary: <strong>{formattedStart}</strong> - <strong>{formattedEnd}</strong></p>
+                    <p className='text-sm text-slate-500'>Showing Summary: <strong>{formattedStart}</strong> - <strong>{formattedEnd}</strong></p>
                 </div>
                 <div className="space-x-1 flex">
                     {/* Export Data */}

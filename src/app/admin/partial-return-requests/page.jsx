@@ -99,10 +99,10 @@ export default function PartialReturnRequestsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5 mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tighter">
                         Partial Return Requests
                     </h1>
-                    <p className="text-slate-500 mt-1">
+                    <p className="text-sm text-slate-500">
                         Showing requests from <span className="font-bold text-slate-700">{format(range.from, 'dd MMM yyyy')}</span> to <span className="font-bold text-slate-700">{format(range.to, 'dd MMM yyyy')}</span>
                     </p>
                 </div>

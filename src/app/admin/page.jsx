@@ -30,9 +30,10 @@ export default function Home() {
   return (
     <InnerDashboardLayout>
       <div className="w-full flex justify-between items-center gap-4 mb-4">
-        <h1 className="text-primary font-bold sm:text-lg lg:text-3xl">
-          Mobiking Admin
-        </h1>
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800 tracking-tighter"> Mobiking Admin</h1>
+          <p className="text-sm text-slate-500">Complete Platform for B2B Sales Management</p>
+        </div>
         <div className="flex gap-2 items-center justify-center">
           {/* <POS>
             <Button>POS</Button>
