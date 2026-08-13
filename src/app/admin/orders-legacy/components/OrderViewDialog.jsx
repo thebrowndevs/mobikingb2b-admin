@@ -89,7 +89,7 @@ export function OrderViewDialog({ order, children }) {
                     {children}
                 </DialogTrigger>
 
-                <DialogContent className="max-w-3xl overflow-auto max-h-[90vh]">
+                <DialogContent className="sm:max-w-3xl overflow-auto max-h-[90vh]">
                     <DialogHeader>
                         <div className="flex justify-between items-center">
                             <DialogTitle>Order #{safe(order?.orderId)}</DialogTitle>

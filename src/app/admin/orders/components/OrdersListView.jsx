@@ -80,7 +80,7 @@ export default function OrdersListView({ error, orders = [], canEdit, orderType 
                         <TableHead>Order No.</TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Phone</TableHead>
-                        {/* <TableHead>Call Attempts</TableHead> */}
+                        <TableHead>Call Attempts</TableHead>
                         <TableHead>Amount</TableHead>
                         <TableHead>Payment</TableHead>
                         {!abandoned &&
@@ -165,9 +165,9 @@ export default function OrdersListView({ error, orders = [], canEdit, orderType 
                                         }
                                     </div>
                                 </TableCell>
-                                {/* <TableCell>
+                                <TableCell>
                                     <CallAttemptDialog order={o} />
-                                </TableCell> */}
+                                </TableCell>
                                 <TableCell>
                                     <div className="flex flex-col">
                                         <span>₹{o.orderAmount.toFixed(2)}</span>

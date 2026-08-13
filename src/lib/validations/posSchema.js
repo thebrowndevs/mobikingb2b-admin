@@ -19,6 +19,10 @@ export const posSchema = z.object({
     if (val === "" || val === null || val === undefined) return 0;
     return typeof val === "string" ? Number(val) : val;
   }, z.number().default(0)),
+  discountPercent: z.preprocess((val) => {
+    if (val === "" || val === null || val === undefined) return 0;
+    return typeof val === "string" ? Number(val) : val;
+  }, z.number().default(0)),
   deliveryCharge: z.preprocess((val) => {
     if (val === "" || val === null || val === undefined) return 0;
     return typeof val === "string" ? Number(val) : val;
@@ -70,8 +74,13 @@ export const manualOrderSchema = z.object({
 
   discount: z.preprocess(
     (val) =>
-      val === "" ? undefined : typeof val === "string" ? Number(val) : val,
-    z.number().min(0, "Discount must be 0 or more").optional()
+      (val === "" || val === null || val === undefined) ? 0 : typeof val === "string" ? Number(val) : val,
+    z.number().min(0, "Discount must be 0 or more").default(0)
+  ),
+  discountPercent: z.preprocess(
+    (val) =>
+      (val === "" || val === null || val === undefined) ? 0 : typeof val === "string" ? Number(val) : val,
+    z.number().min(0, "Discount percent must be 0 or more").default(0)
   ),
 
   orderAmount: z.number().min(0, "Order amount must be 0 or more"),

@@ -376,26 +376,6 @@ export default function BillingForm({
                                 <span className="font-bold text-slate-800">₹{subtotal?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </div>
 
-                            {/* Delivery Charge */}
-                            <FormField
-                                control={control}
-                                name="deliveryCharge"
-                                render={({ field }) => (
-                                    <FormItem className="flex items-center justify-between gap-4">
-                                        <FormLabel className="text-slate-500 font-semibold text-xs">Delivery Charge (₹)</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="number"
-                                                min={0}
-                                                {...field}
-                                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                                className="w-24 text-right font-semibold h-7 border-slate-200 rounded-md text-xs bg-white"
-                                            />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
-
                             {/* Global Discount and Toggle */}
                             <div className="flex items-center justify-between gap-4">
                                 <span className="text-slate-500 font-semibold text-xs">Global Discount:</span>
@@ -414,9 +394,15 @@ export default function BillingForm({
                                                             max={100}
                                                             {...field}
                                                             onChange={(e) => {
-                                                                const valPercent = parseFloat(e.target.value) || 0
-                                                                field.onChange(valPercent)
-                                                                setValue('discount', subtotal * (valPercent / 100))
+                                                                const valStr = e.target.value
+                                                                if (valStr === "") {
+                                                                    field.onChange("")
+                                                                    setValue('discount', 0)
+                                                                } else {
+                                                                    const valPercent = parseFloat(valStr) || 0
+                                                                    field.onChange(valPercent)
+                                                                    setValue('discount', parseFloat((subtotal * (valPercent / 100)).toFixed(2)))
+                                                                }
                                                             }}
                                                             className="text-center font-bold h-full w-14 border-0 focus:ring-0 rounded-none text-xs p-0"
                                                         />
@@ -436,9 +422,15 @@ export default function BillingForm({
                                                             min={0}
                                                             {...field}
                                                             onChange={(e) => {
-                                                                const valFlat = parseFloat(e.target.value) || 0
-                                                                field.onChange(valFlat)
-                                                                setValue('discountPercent', subtotal > 0 ? (valFlat / subtotal) * 100 : 0)
+                                                                const valStr = e.target.value
+                                                                if (valStr === "") {
+                                                                    field.onChange("")
+                                                                    setValue('discountPercent', 0)
+                                                                } else {
+                                                                    const valFlat = parseFloat(valStr) || 0
+                                                                    field.onChange(valFlat)
+                                                                    setValue('discountPercent', parseFloat((subtotal > 0 ? (valFlat / subtotal) * 100 : 0).toFixed(2)))
+                                                                }
                                                             }}
                                                             className="text-right font-bold h-full w-14 border-0 focus:ring-0 rounded-none text-xs p-1"
                                                         />
@@ -457,6 +449,26 @@ export default function BillingForm({
                                     </button>
                                 </div>
                             </div>
+
+                            {/* Delivery Charge */}
+                            <FormField
+                                control={control}
+                                name="deliveryCharge"
+                                render={({ field }) => (
+                                    <FormItem className="flex items-center justify-between gap-4">
+                                        <FormLabel className="text-slate-500 font-semibold text-xs">Delivery Charge (₹)</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                {...field}
+                                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                                className="w-24 text-right font-semibold h-7 border-slate-200 rounded-md text-xs bg-white"
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
 
                             <Separator className="bg-slate-200/50" />
 

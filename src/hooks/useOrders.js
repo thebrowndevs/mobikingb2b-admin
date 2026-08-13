@@ -377,7 +377,34 @@ export const useOrders = () => {
     },
   });
 
+  const updateOrderItems = useMutation({
+    mutationFn: ({ data, id }) => api.put(`/orders/${id}/update-items`, data),
+    onSuccess: () => {
+      toast.success("Order items updated successfully.");
+      queryClient.invalidateQueries({ queryKey: ["order"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to update order items");
+      console.error(err);
+    },
+  });
+
+  const getOrderActivity = (orderId) => {
+    return useQuery({
+      queryKey: ["order-activity", orderId],
+      queryFn: () =>
+        api.get(`/orders/${orderId}/activity`).then((res) => res.data.data),
+      enabled: !!orderId,
+      staleTime: 0,
+      onError: (err) => {
+        toast.error(err?.response?.data?.message || "Failed to fetch activity logs.");
+      },
+    });
+  };
+
   return {
+    getOrderActivity,
     // ordersQuery,
     getOrdersByDate,
     acceptOrder,
@@ -392,6 +419,7 @@ export const useOrders = () => {
     rejectOrder,
     getSingleOrderQuery,
     updateOrder,
+    updateOrderItems,
     addItemInOrder,
     removeItemFromOrder,
     getCancelRequestOrders,

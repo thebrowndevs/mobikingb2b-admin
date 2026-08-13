@@ -5,10 +5,12 @@ import { useQuotations } from '@/hooks/useQuotations'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import TableSkeleton from '@/components/custom/TableSkeleton'
-import { ChevronRight, Search, FileText } from 'lucide-react'
+import { ChevronRight, Search, FileText, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { getPaginationRange } from "@/lib/services/getPaginationRange"
+import CallAttemptDialog from '@/components/CallAttemptDialog'
+import { QuotationViewDialog } from './components/QuotationViewDialog'
 import {
     Pagination,
     PaginationContent,
@@ -179,6 +181,7 @@ export default function QuotationsListPage() {
                                         <tr className="bg-slate-50 text-slate-400 font-semibold text-xs border-b border-slate-100">
                                             <th className="py-4 px-6">REQUEST ID</th>
                                             <th className="py-4 px-6">CUSTOMER / BUSINESS</th>
+                                            <th className="py-4 px-6 text-center">CALL ATTEMPTS</th>
                                             <th className="py-4 px-6">DATE</th>
                                             <th className="py-4 px-6">ITEMS</th>
                                             <th className="py-4 px-6">AMOUNT</th>
@@ -191,13 +194,18 @@ export default function QuotationsListPage() {
                                         {quotations.map((q) => (
                                             <tr key={q._id} className="hover:bg-slate-50/50 transition-colors">
                                                 <td className="py-4 px-6 font-mono font-bold text-slate-900">
-                                                    {q.quotationId}
+                                                    <Link href={`/admin/quotations/${q._id}`} className="hover:underline text-indigo-650">
+                                                        {q.quotationId}
+                                                    </Link>
                                                 </td>
                                                 <td className="py-4 px-6">
                                                     <div className="flex flex-col">
                                                         <span className="font-bold text-slate-800">{q.name}</span>
                                                         <span className="text-xs text-slate-400">{q.phoneNo}</span>
                                                     </div>
+                                                </td>
+                                                <td className="py-4 px-6 text-center">
+                                                    <CallAttemptDialog quotation={q} type="quotation" />
                                                 </td>
                                                 <td className="py-4 px-6 text-slate-500">
                                                     {q.createdAt ? format(new Date(q.createdAt), 'dd MMM yyyy, hh:mm a') : '-'}
@@ -221,12 +229,17 @@ export default function QuotationsListPage() {
                                                     </span>
                                                 </td>
                                                 <td className="py-4 px-6 text-right">
-                                                    <Link href={`/admin/quotations/${q._id}`}>
-                                                        <Button variant="ghost" size="sm" className="hover:bg-slate-100 text-slate-700 font-semibold gap-1">
-                                                            View Request
-                                                            <ChevronRight className="w-4 h-4" />
-                                                        </Button>
-                                                    </Link>
+                                                    <div className="flex items-center justify-end gap-3">
+                                                        <QuotationViewDialog quotation={q}>
+                                                            <Eye className="cursor-pointer text-slate-500 hover:text-slate-800" size={18} />
+                                                        </QuotationViewDialog>
+                                                        {/* <Link href={`/admin/quotations/${q._id}`}>
+                                                            <Button variant="ghost" size="sm" className="hover:bg-slate-100 text-slate-700 font-semibold gap-1">
+                                                                View Request
+                                                                <ChevronRight className="w-4 h-4" />
+                                                            </Button>
+                                                        </Link> */}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}

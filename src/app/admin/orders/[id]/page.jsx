@@ -1,5 +1,5 @@
 "use client"
-import { Car, Printer, Download, Truck, Edit2, Plus, Calendar, FileText, Copy, Link2, ChevronLeft, ShoppingBag } from "lucide-react"
+import { Car, Printer, Download, Truck, Edit2, Plus, Calendar, FileText, Copy, Link2, ChevronLeft, ShoppingBag, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import PCard from '@/components/custom/PCard';
 import InnerDashboardLayout from '@/components/dashboard/InnerDashboardLayout';
@@ -38,6 +38,7 @@ import Link from "next/link";
 import GSTBillDownload from "@/components/GSTBill";
 import ReturnShippingDetails from "./components/ReturnShippingDetails";
 import OrderTimeline from "@/components/OrderTimeline";
+import ActivityLogDrawer from "@/components/ActivityLogDrawer";
 import GSTBillDownloadV2 from "@/components/GSTBillV2";
 
 function page() {
@@ -46,6 +47,7 @@ function page() {
     const [courierOpen, setCourierOpen] = useState(false)
     const [rejectOpen, setRejectOpen] = useState(false)
     const [cancelOpen, setCancelOpen] = useState(false)
+    const [isActivityOpen, setIsActivityOpen] = useState(false)
 
     const { getSingleOrderQuery, onlyAdmin, markAsDelivered, permissions: { canView, canAdd, canEdit, canDelete } } = useOrders()
     const { data: orderResp, isLoading, error } = getSingleOrderQuery(id)
@@ -72,6 +74,7 @@ function page() {
     const [shipCity, setShipCity] = useState("")
     const [shipState, setShipState] = useState("")
     const [shipPincode, setShipPincode] = useState("")
+    const [trackingUrl, setTrackingUrl] = useState("")
 
     // Manual status update fields
     const [shippingStatus, setShippingStatus] = useState("picked up")
@@ -106,6 +109,7 @@ function page() {
             setSchedulePickup(o.pickupScheduled || false)
             setPickupScheduledAt(o.pickupDate ? o.pickupDate.split('T')[0] : "")
             setExpectedDeliveryDate(o.expectedDeliveryDate ? o.expectedDeliveryDate.split('T')[0] : "")
+            setTrackingUrl(o.trackingUrl || "")
         }
     }, [orderResp])
 
@@ -199,6 +203,22 @@ function page() {
 
     const isAdmin = onlyAdmin();
 
+    const canCancel = () => {
+        if (!isAdmin) return false;
+        if (order?.returnData?.isReturnInitiated) return false;
+        if (order?.shippingType === 'Manual') {
+            return !['Delivered', 'Rejected', 'Cancelled', 'Returned'].includes(order?.status);
+        } else {
+            return (
+                (order?.status === 'New' || order?.status === 'Accepted' || order?.status === 'Hold') &&
+                !order?.awbCode &&
+                !order?.shipmentId &&
+                !order?.pickupScheduled &&
+                !order?.courierName
+            );
+        }
+    };
+
     return (
         <InnerDashboardLayout>
             <div className="flex flex-col gap-6 p-6">
@@ -272,7 +292,7 @@ function page() {
                                 Reject
                             </Button>
                         }
-                        {((order?.status === 'New' || order?.status === 'Accepted' || order?.status === 'Hold') && !order?.awbCode && !order?.pickupScheduled && !order?.shipmentId) && !order?.returnData?.isReturnInitiated && isAdmin &&
+                        {canCancel() &&
                             <Button
                                 onClick={() => setCancelOpen(true)}
                                 variant="destructive"
@@ -295,6 +315,14 @@ function page() {
                                 Mark Delivered
                             </Button>
                         }
+                        <Button
+                            onClick={() => setIsActivityOpen(true)}
+                            variant="outline"
+                            className="border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 gap-1.5"
+                        >
+                            <Clock className="w-4 h-4 text-slate-500" />
+                            History
+                        </Button>
                     </div>
                 </div>
 
@@ -303,7 +331,16 @@ function page() {
                     <UpperDetailss order={order} admin={isAdmin} canEdit={canEdit} />
 
                     {/* Order Timeline & Call Attempts */}
-                    {/* <OrderTimeline order={order} /> */}
+                    <OrderTimeline order={order} />
+
+                    {isActivityOpen && (
+                        <ActivityLogDrawer
+                            open={isActivityOpen}
+                            onOpenChange={setIsActivityOpen}
+                            id={id}
+                            type="order"
+                        />
+                    )}
 
                     <PaymentDetails order={order} />
 
@@ -322,6 +359,7 @@ function page() {
                         order={order}
                         isNewOrder={isNewOrder}
                         canEdit={canEdit}
+                        isAdmin={isAdmin}
                     />
 
                     {/* Payments & Transactions List */}
@@ -333,8 +371,8 @@ function page() {
                                     onClick={() => {
                                         setPaymentAmount("");
                                         setPaymentNotes("");
-                                        setPaymentMethod("COD");
-                                        setPaymentStatus("Paid");
+                                        setPaymentMethod("Online");
+                                        setPaymentStatus(isAdmin ? "Paid" : "Pending");
                                         setPaymentPaidAt("");
                                         setAddPaymentOpen(true);
                                     }}
@@ -382,24 +420,26 @@ function page() {
                                                     {payment.notes || "—"}
                                                 </td>
                                                 <td className="p-3 text-right whitespace-nowrap space-x-1.5">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => {
-                                                            setEditingPayment(payment);
-                                                            setPaymentAmount(payment.amount);
-                                                            setPaymentNotes(payment.notes || "");
-                                                            setPaymentMethod(payment.method);
-                                                            setPaymentStatus(payment.status);
-                                                            setPaymentPaidAt(payment.paidAt ? new Date(payment.paidAt).toISOString().split('T')[0] : "");
-                                                            setEditPaymentOpen(true);
-                                                        }}
-                                                        className="text-indigo-650 hover:text-indigo-900 h-8 w-8 p-0"
-                                                    >
-                                                        <Edit2 className="w-4 h-4" />
-                                                    </Button>
+                                                    {payment.status !== "Paid" && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                setEditingPayment(payment);
+                                                                setPaymentAmount(payment.amount);
+                                                                setPaymentNotes(payment.notes || "");
+                                                                setPaymentMethod(payment.method);
+                                                                setPaymentStatus(payment.status);
+                                                                setPaymentPaidAt(payment.paidAt ? new Date(payment.paidAt).toISOString().split('T')[0] : "");
+                                                                setEditPaymentOpen(true);
+                                                            }}
+                                                            className="text-indigo-650 hover:text-indigo-900 h-8 w-8 p-0"
+                                                        >
+                                                            <Edit2 className="w-4 h-4" />
+                                                        </Button>
+                                                    )}
                                                     <GSTBillDownloadV2 billData={order} paymentData={payment} />
-                                                    {payment.method === "Online" && (
+                                                    {payment.method === "Online" && payment.status !== "Paid" && (
                                                         payment.paymentLinkUrl ? (
                                                             <Button
                                                                 variant="ghost"
@@ -556,6 +596,11 @@ function page() {
                                 <Input value={shippingPartnerKey} onChange={(e) => setShippingPartnerKey(e.target.value)} placeholder="e.g. partner_key_xyz" />
                             </div>
 
+                            <div className="flex flex-col gap-1">
+                                <Label className="text-slate-500 font-semibold text-xs uppercase">Tracking URL</Label>
+                                <Input value={trackingUrl} onChange={(e) => setTrackingUrl(e.target.value)} placeholder="e.g. https://delhivery.com/track?id=123" />
+                            </div>
+
                             <div className="border-t pt-3 flex flex-col gap-3">
                                 <span className="font-bold text-slate-700 text-xs uppercase">Delivery Address overrides</span>
                                 <div className="flex flex-col gap-1">
@@ -623,7 +668,8 @@ function page() {
                                     pincode: shipPincode,
                                     schedulePickup,
                                     pickupScheduledAt,
-                                    expectedDeliveryDate
+                                    expectedDeliveryDate,
+                                    trackingUrl
                                 })}
                                 loading={manualShipMutation.isPending}
                                 className="bg-slate-900 hover:bg-slate-800 text-white font-semibold"
@@ -712,7 +758,6 @@ function page() {
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="COD">COD</SelectItem>
                                             <SelectItem value="Online">Online</SelectItem>
                                             <SelectItem value="UPI">UPI</SelectItem>
                                             <SelectItem value="Cash">Cash</SelectItem>
@@ -722,7 +767,7 @@ function page() {
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <Label className="text-slate-500 font-semibold text-xs uppercase">Transaction Status</Label>
-                                    <Select onValueChange={(val) => setPaymentStatus(val)} defaultValue={paymentStatus}>
+                                    <Select onValueChange={(val) => setPaymentStatus(val)} defaultValue={paymentStatus} disabled={!isAdmin}>
                                         <SelectTrigger className="border-slate-200 h-9">
                                             <SelectValue />
                                         </SelectTrigger>
@@ -788,7 +833,6 @@ function page() {
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="COD">COD</SelectItem>
                                             <SelectItem value="Online">Online</SelectItem>
                                             <SelectItem value="UPI">UPI</SelectItem>
                                             <SelectItem value="Cash">Cash</SelectItem>
@@ -798,7 +842,7 @@ function page() {
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <Label className="text-slate-500 font-semibold text-xs uppercase">Transaction Status</Label>
-                                    <Select onValueChange={(val) => setPaymentStatus(val)} defaultValue={paymentStatus}>
+                                    <Select onValueChange={(val) => setPaymentStatus(val)} defaultValue={paymentStatus} disabled={!isAdmin}>
                                         <SelectTrigger className="border-slate-200 h-9">
                                             <SelectValue />
                                         </SelectTrigger>

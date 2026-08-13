@@ -188,7 +188,7 @@ export default function POS({ children }) {
     return (
         <Dialog>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="max-w-3xl overflow-auto max-h-[90vh]">
+            <DialogContent className="sm:max-w-3xl overflow-auto max-h-[90vh]">
                 <DialogHeader><DialogTitle>Create POS Order</DialogTitle></DialogHeader>
                 <Form {...form}>
                     <form onSubmit={onSubmit} className="space-y-6">

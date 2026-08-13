@@ -461,7 +461,7 @@ function StockUpdate({ open, onOpenChange, productId, product }) {
                       <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5">Variant</TableHead>
                       <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5 text-center w-16">Qty</TableHead>
                       <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5 w-32">Stock</TableHead>
-                      <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5 w-24">Price</TableHead>
+                      <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5 w-32">Prices</TableHead>
                       <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5">Vendor</TableHead>
                       <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5">Reference</TableHead>
                       <TableHead className="text-[10px] font-bold text-slate-600 uppercase tracking-wider py-2.5 w-32">Date</TableHead>
@@ -523,8 +523,17 @@ function StockUpdate({ open, onOpenChange, productId, product }) {
                             </div>
                           </TableCell>
 
-                          <TableCell className="text-xs font-semibold text-slate-700 py-2.5">
-                            {s.purchasePrice ? `₹${s.purchasePrice}` : "—"}
+                          <TableCell className="text-xs py-2.5">
+                            <div className="flex flex-col gap-0.5 whitespace-nowrap">
+                              <div>
+                                <span className="text-[10px] text-slate-400 font-semibold mr-1">Purchase:</span>
+                                <span className="font-bold text-slate-700">{s.purchasePrice ? `₹${s.purchasePrice}` : "—"}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-400 font-semibold mr-1">Selling:</span>
+                                <span className="font-bold text-slate-700">{s.sellingPrice ? `₹${s.sellingPrice}` : "—"}</span>
+                              </div>
+                            </div>
                           </TableCell>
 
                           <TableCell className="text-xs text-slate-600 py-2.5">

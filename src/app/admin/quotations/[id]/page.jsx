@@ -19,6 +19,9 @@ import api from '@/lib/api'
 import { useQuotations } from '@/hooks/useQuotations'
 import { toast } from 'sonner'
 import LoaderButton from '@/components/custom/LoaderButton'
+import CallAttemptDialog from '@/components/CallAttemptDialog'
+import ActivityLogDrawer from '@/components/ActivityLogDrawer'
+import { PhoneCall, Clock } from 'lucide-react'
 
 const STATUS_CLASSES = {
     New: 'bg-blue-100 text-blue-800 border-blue-200',
@@ -39,6 +42,7 @@ export default function QuotationDetailsPage() {
         updateQuotationStatus,
         bookQuotation,
         updateQuotation,
+        updateQuotationItems,
         addItemQuantity,
         removeItemQuantity,
         permissions
@@ -49,6 +53,7 @@ export default function QuotationDetailsPage() {
     // Edit toggles
     const [isEditingCustomer, setIsEditingCustomer] = useState(false)
     const [isEditingItems, setIsEditingItems] = useState(false)
+    const [isActivityOpen, setIsActivityOpen] = useState(false)
 
     // Customer edit states
     const [editName, setEditName] = useState('')
@@ -64,7 +69,28 @@ export default function QuotationDetailsPage() {
     // Charges / Discounts edit states (saved via Save Charges button)
     const [editDeliveryCharge, setEditDeliveryCharge] = useState(0)
     const [editDiscount, setEditDiscount] = useState(0)
+    const [editDiscountPercent, setEditDiscountPercent] = useState(0)
+    const [discountMode, setDiscountMode] = useState('flat')
     const [editItemDiscounts, setEditItemDiscounts] = useState({}) // maps variantName -> discount
+    const [editItemDiscountPercents, setEditItemDiscountPercents] = useState({}) // maps variantName -> discountPercent
+    const [itemDiscountModes, setItemDiscountModes] = useState({}) // maps variantName -> 'flat' | 'percent'
+
+    // Inline Qty edit state
+    const [editingQtyIndex, setEditingQtyIndex] = useState(null)
+    const [tempQty, setTempQty] = useState("")
+
+    // Inline Global Discount edit state
+    const [editingDiscount, setEditingDiscount] = useState(false)
+    const [tempDiscount, setTempDiscount] = useState(0)
+    const [tempDiscountPercent, setTempDiscountPercent] = useState(0)
+    const [tempDiscountMode, setTempDiscountMode] = useState('flat')
+
+    // Inline Delivery Charge edit state
+    const [editingDelCharge, setEditingDelCharge] = useState(false)
+    const [tempDelCharge, setTempDelCharge] = useState(0)
+
+    // Per-item pricing edit state
+    const [editItemPrices, setEditItemPrices] = useState({})
 
     // Product search inside editor
     const [searchQuery, setSearchQuery] = useState('')
@@ -104,6 +130,8 @@ export default function QuotationDetailsPage() {
             setEditComments(quotation.comments || '')
             setEditDeliveryCharge(quotation.deliveryCharge || 0)
             setEditDiscount(quotation.discount || 0)
+            setEditDiscountPercent(quotation.discountPercent || 0)
+            setDiscountMode(quotation.discountPercent > 0 ? 'percent' : 'flat')
 
             setBookingLength(quotation.length || 19)
             setBookingBreadth(quotation.breadth || 16)
@@ -113,12 +141,88 @@ export default function QuotationDetailsPage() {
             setBookingPaymentMethod(quotation.method || "COD")
 
             const discounts = {}
+            const discountPercents = {}
+            const modes = {}
+            const prices = {}
                 ; (quotation.items || []).forEach(it => {
-                    discounts[it.variantName] = it.discount || 0
+                    const itemKey = String(it.variantId?._id || it.variantId || `${it.productId?._id || it.productId}_${it.variantName}`)
+                    discounts[itemKey] = it.discount || 0
+                    discountPercents[itemKey] = it.discountPercent || 0
+                    modes[itemKey] = it.discountPercent > 0 ? 'percent' : 'flat'
+                    prices[itemKey] = it.price || 0
                 })
             setEditItemDiscounts(discounts)
+            setEditItemDiscountPercents(discountPercents)
+            setItemDiscountModes(modes)
+            setEditItemPrices(prices)
         }
     }, [quotation])
+
+    const getRecalculatedTotals = () => {
+        if (!quotation) return { subtotal: 0, discount: 0, discountPercent: 0, deliveryCharge: 0, orderAmount: 0 };
+        let subtotal = 0;
+        (quotation.items || []).forEach((it, idx) => {
+            const itemKey = String(it.variantId?._id || it.variantId || `${it.productId?._id || it.productId}_${it.variantName}`);
+            const qty = editingQtyIndex === idx ? (parseFloat(tempQty) || 0) : (it.quantity || 0);
+            const price = editItemPrices[itemKey] !== undefined ? Number(editItemPrices[itemKey] || 0) : (it.price || 0);
+            const discount = editItemDiscounts[itemKey] !== undefined ? Number(editItemDiscounts[itemKey] || 0) : (it.discount || 0);
+            subtotal += qty * (price - discount);
+        });
+
+        const subtotalFixed = parseFloat(subtotal.toFixed(2));
+
+        let flatDiscount = 0;
+        let percentDiscount = 0;
+
+        if (editingDiscount) {
+            // User is actively editing discount — use temp values, live-derive companion
+            flatDiscount = parseFloat(tempDiscount) || 0;
+            percentDiscount = parseFloat(tempDiscountPercent) || 0;
+            if (tempDiscountMode === 'percent') {
+                flatDiscount = parseFloat(((subtotalFixed * percentDiscount) / 100).toFixed(2));
+            } else {
+                percentDiscount = subtotalFixed > 0 ? parseFloat(((flatDiscount / subtotalFixed) * 100).toFixed(2)) : 0;
+            }
+        } else {
+            // Not editing discount — use saved values, anchor by discountType
+            flatDiscount = parseFloat(editDiscount) || 0;
+            percentDiscount = parseFloat(editDiscountPercent) || 0;
+
+            // Resolve saved discount type: flat holds flat amount constant, percentage holds % constant
+            const savedDiscountType = quotation?.discountType
+                || (quotation?.discountPercent > 0 && quotation?.discount === 0 ? 'percentage' : 'flat');
+
+            if (savedDiscountType === 'percentage') {
+                // % is the anchor — flat follows new subtotal
+                flatDiscount = parseFloat(((subtotalFixed * percentDiscount) / 100).toFixed(2));
+            } else {
+                // Flat is the anchor — keep flat constant, only recalculate % for display
+                percentDiscount = subtotalFixed > 0 ? parseFloat(((flatDiscount / subtotalFixed) * 100).toFixed(2)) : 0;
+            }
+        }
+
+        const delCharge = editingDelCharge
+            ? (parseFloat(tempDelCharge) || 0)
+            : (parseFloat(editDeliveryCharge) || 0);
+
+        const orderAmount = parseFloat((Math.max(0, subtotalFixed - flatDiscount) + delCharge).toFixed(2));
+
+        return {
+            subtotal: subtotalFixed,
+            discount: flatDiscount,
+            discountPercent: percentDiscount,
+            deliveryCharge: delCharge,
+            orderAmount
+        };
+    };
+
+    const totals = (isEditingItems || editingDiscount || editingDelCharge || editingQtyIndex !== null) ? getRecalculatedTotals() : {
+        subtotal: quotation?.subtotal || 0,
+        discount: quotation?.discount || 0,
+        discountPercent: quotation?.discountPercent || 0,
+        deliveryCharge: quotation?.deliveryCharge || 0,
+        orderAmount: quotation?.orderAmount || 0
+    };
 
     // Handle stage payments generation
     useEffect(() => {
@@ -147,7 +251,7 @@ export default function QuotationDetailsPage() {
         }
         setSearching(true)
         try {
-            const res = await api.get(`/product/all/search?q=${val}`)
+            const res = await api.get(`/products/all/search?q=${val}`)
             setSearchResults(res.data?.data || [])
         } catch (e) {
             console.error("Search error:", e)
@@ -160,7 +264,7 @@ export default function QuotationDetailsPage() {
         setSelectedProduct(prod)
         setSelectedVariant(null)
         try {
-            const res = await api.get(`/product/${prod._id}`)
+            const res = await api.get(`/products/${prod._id}`)
             setSelectedProduct(res.data?.data || prod)
         } catch (e) {
             console.error("Failed to load variants:", e)
@@ -220,23 +324,68 @@ export default function QuotationDetailsPage() {
     };
 
     // Save Pricing charges, global discount, and per-item discounts
+    const handleSaveInlineQty = async (idx) => {
+        const parsed = parseInt(tempQty);
+        if (isNaN(parsed) || parsed <= 0) {
+            toast.error("Please enter a valid quantity.");
+            return;
+        }
+        const originalItem = quotation.items[idx];
+        if (originalItem.quantity === parsed) {
+            setEditingQtyIndex(null);
+            return;
+        }
+
+        const updatedItemsList = (quotation.items || []).map((it, i) => {
+            const isTarget = i === idx;
+            return {
+                productId: it.productId?._id || it.productId,
+                variantId: it.variantId?._id || it.variantId,
+                variantName: it.variantName,
+                quantity: isTarget ? parsed : it.quantity,
+                price: it.price || 0,
+                discount: it.discount || 0,
+                discountPercent: it.discountPercent || 0,
+                discountType: it.discountType || (it.discountPercent > 0 && it.discount === 0 ? "percentage" : "flat")
+            };
+        });
+
+        try {
+            await updateQuotationItems.mutateAsync({
+                id: quotation._id,
+                data: { items: updatedItemsList, discountType: quotation?.discountType || 'flat' }
+            });
+            toast.success("Quantity updated successfully.");
+            setEditingQtyIndex(null);
+            refetch();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
     const handleSaveCharges = async () => {
         try {
-            // Re-submit the existing items with updated discounts
-            const itemsData = (quotation.items || []).map((it) => ({
-                productId: it.productId?._id || it.productId,
-                variantName: it.variantName,
-                quantity: it.quantity,
-                discount: Number(editItemDiscounts[it.variantName] || 0)
-            }))
-
-            await updateQuotation.mutateAsync({
-                quotationId: quotation._id,
-                deliveryCharge: Number(editDeliveryCharge),
-                discount: Number(editDiscount),
-                items: itemsData
+            // Re-submit the existing items with updated discounts and prices
+            const itemsData = (quotation.items || []).map((it) => {
+                const itemKey = String(it.variantId?._id || it.variantId || `${it.productId?._id || it.productId}_${it.variantName}`);
+                return {
+                    productId: it.productId?._id || it.productId,
+                    variantId: it.variantId?._id || it.variantId,
+                    variantName: it.variantName,
+                    quantity: it.quantity,
+                    price: Number(editItemPrices[itemKey] ?? it.price),
+                    discount: Number(editItemDiscounts[itemKey] || 0),
+                    discountPercent: Number(editItemDiscountPercents[itemKey] || 0),
+                    discountType: itemDiscountModes[itemKey] === 'percent' ? 'percentage' : 'flat'
+                };
             })
-            toast.success("Charges and pricing updated successfully.")
+
+            await updateQuotationItems.mutateAsync({
+                id: quotation._id,
+                data: { items: itemsData, discountType: quotation?.discountType || 'flat' }
+            })
+            toast.success("Items pricing and discounts updated successfully.")
+            setIsEditingItems(false)
             refetch()
         } catch (e) {
             console.error(e)
@@ -376,6 +525,14 @@ export default function QuotationDetailsPage() {
                                 </LoaderButton>
                             </>
                         )}
+                        <Button
+                            onClick={() => setIsActivityOpen(true)}
+                            variant="outline"
+                            className="border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 gap-1.5"
+                        >
+                            <Clock className="w-4 h-4 text-slate-500" />
+                            History
+                        </Button>
                     </div>
                 </div>
 
@@ -486,13 +643,6 @@ export default function QuotationDetailsPage() {
                                                 )}
                                             </div>
                                         </div>
-
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-xs text-slate-400 font-semibold uppercase">Notes</span>
-                                            <p className="text-slate-600 italic bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs mt-1">
-                                                {quotation.comments || 'No specific warehouse instructions.'}
-                                            </p>
-                                        </div>
                                     </div>
                                 )}
                             </CardContent>
@@ -503,15 +653,40 @@ export default function QuotationDetailsPage() {
                             <CardHeader className="flex flex-row items-center justify-between pb-3">
                                 <CardTitle className="text-lg font-bold text-slate-800">Items List</CardTitle>
                                 {isActionable && (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setIsEditingItems(!isEditingItems)}
-                                        className="border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 gap-1.5"
-                                    >
-                                        {isEditingItems ? <X className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
-                                        {isEditingItems ? 'Cancel' : 'Edit Items'}
-                                    </Button>
+                                    <div className="flex items-center gap-2">
+                                        {isEditingItems ? (
+                                            <>
+                                                <LoaderButton
+                                                    loading={updateQuotationItems.isPending}
+                                                    onClick={handleSaveCharges}
+                                                    size="sm"
+                                                    className="bg-slate-900 hover:bg-slate-800 text-white font-semibold flex items-center gap-1.5"
+                                                >
+                                                    <Check className="w-4 h-4" />
+                                                    Save
+                                                </LoaderButton>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setIsEditingItems(false)}
+                                                    className="border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 gap-1.5"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                    Cancel
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setIsEditingItems(true)}
+                                                className="border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 gap-1.5"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                                Edit Items
+                                            </Button>
+                                        )}
+                                    </div>
                                 )}
                             </CardHeader>
                             <CardContent>
@@ -610,87 +785,200 @@ export default function QuotationDetailsPage() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-50 text-slate-700">
-                                            {(quotation.items || []).map((it, idx) => (
-                                                <tr key={idx} className="hover:bg-slate-50/20">
-                                                    <td className="py-3 px-4">
-                                                        <div className="flex flex-col">
-                                                            <span className="font-bold text-slate-800">{it.productId?.fullName || it.productId?.name}</span>
-                                                            <span className="text-xs text-slate-400">Variant: {it.variantName}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-3 px-4 text-center">
-                                                        {isEditingItems ? (
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="icon"
-                                                                    className="w-7 h-7 rounded-md border-slate-200"
-                                                                    onClick={() => handleRemoveItemQuantity(it.productId?._id || it.productId, it.variantName, 1)}
-                                                                >
-                                                                    <Minus className="w-3.5 h-3.5" />
-                                                                </Button>
-                                                                <span className="font-bold w-6">{it.quantity}</span>
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="icon"
-                                                                    className="w-7 h-7 rounded-md border-slate-200"
-                                                                    onClick={() => handleAddItemQuantity(it.productId?._id || it.productId, it.variantName, 1)}
-                                                                >
-                                                                    <Plus className="w-3.5 h-3.5" />
-                                                                </Button>
+                                            {(quotation.items || []).map((it, idx) => {
+                                                const itemKey = String(it.variantId?._id || it.variantId || `${it.productId?._id || it.productId}_${it.variantName}`);
+                                                return (
+                                                    <tr key={idx} className="hover:bg-slate-50/20">
+                                                        <td className="py-3 px-4">
+                                                            <div className="flex flex-col">
+                                                                <span className="font-bold text-slate-800">{it.productId?.fullName || it.productId?.name}</span>
+                                                                <span className="text-xs text-slate-400">Variant: {it.variantName}</span>
                                                             </div>
-                                                        ) : (
-                                                            <span className="font-bold">{it.quantity}</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-3 px-4 text-right font-mono">
-                                                        ₹{it.price?.toLocaleString()}
-                                                    </td>
-                                                    <td className="py-3 px-4 text-right">
-                                                        {isEditingItems ? (
-                                                            <div className="flex items-center justify-end">
-                                                                <span className="text-slate-400 mr-1 text-xs">₹</span>
+                                                        </td>
+                                                        <td className="py-3 px-4 text-center">
+                                                            {editingQtyIndex === idx ? (
+                                                                <div className="flex items-center justify-center gap-1">
+                                                                    <Input
+                                                                        type="number"
+                                                                        min={1}
+                                                                        value={tempQty}
+                                                                        onChange={(e) => setTempQty(e.target.value)}
+                                                                        className="w-16 h-8 text-center text-xs font-bold border-slate-200"
+                                                                    />
+                                                                    <Button
+                                                                        size="icon"
+                                                                        variant="ghost"
+                                                                        onClick={() => handleSaveInlineQty(idx)}
+                                                                        className="w-8 h-8 text-emerald-600 hover:bg-emerald-50"
+                                                                    >
+                                                                        <Check className="w-4 h-4" />
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="icon"
+                                                                        variant="ghost"
+                                                                        onClick={() => setEditingQtyIndex(null)}
+                                                                        className="w-8 h-8 text-slate-400 hover:bg-slate-100"
+                                                                    >
+                                                                        <X className="w-4 h-4" />
+                                                                    </Button>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center justify-center gap-1.5">
+                                                                    <span className="font-bold">{it.quantity}</span>
+                                                                    {!isEditingItems && isActionable && (
+                                                                        <Button
+                                                                            size="icon"
+                                                                            variant="ghost"
+                                                                            onClick={() => {
+                                                                                setEditingQtyIndex(idx);
+                                                                                setTempQty(it.quantity);
+                                                                            }}
+                                                                            className="w-6 h-6 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full"
+                                                                        >
+                                                                            <Edit className="w-3 h-3" />
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                        <td className="py-3 px-4 text-right font-mono">
+                                                            {isEditingItems ? (
                                                                 <Input
                                                                     type="number"
-                                                                    value={editItemDiscounts[it.variantName] ?? 0}
+                                                                    min={0}
+                                                                    value={editItemPrices[itemKey] ?? ""}
                                                                     onChange={(e) => {
-                                                                        setEditItemDiscounts({
-                                                                            ...editItemDiscounts,
-                                                                            [it.variantName]: Number(e.target.value)
-                                                                        })
+                                                                        setEditItemPrices({
+                                                                            ...editItemPrices,
+                                                                            [itemKey]: e.target.value === "" ? "" : parseFloat(e.target.value) || 0
+                                                                        });
                                                                     }}
-                                                                    className="w-20 h-7 text-right border-slate-200 text-xs"
+                                                                    className="w-24 h-8 text-right text-xs font-bold border-slate-200 ml-auto"
                                                                 />
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-emerald-600 font-semibold">
-                                                                {it.discountPercent > 0 ? (
-                                                                    <span>{it.discountPercent}% (-₹{it.discount?.toLocaleString()})</span>
-                                                                ) : it.discount > 0 ? (
-                                                                    <span>-₹{it.discount.toLocaleString()}</span>
-                                                                ) : (
-                                                                    '-'
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-3 px-4 text-right font-bold text-slate-900">
-                                                        ₹{(it.quantity * it.price - (it.discount || 0)).toLocaleString()}
-                                                    </td>
-                                                    {isEditingItems && (
-                                                        <td className="py-3 px-4 text-center">
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="text-rose-500 hover:bg-rose-50 w-7 h-7 rounded-md"
-                                                                onClick={() => handleRemoveItemQuantity(it.productId?._id || it.productId, it.variantName, it.quantity)}
-                                                            >
-                                                                <Trash className="w-4 h-4" />
-                                                            </Button>
+                                                            ) : (
+                                                                <span>₹{(it.price || 0).toLocaleString()}</span>
+                                                            )}
                                                         </td>
-                                                    )}
-                                                </tr>
-                                            ))}
+                                                        <td className="py-3 px-4 text-right">
+                                                            {isEditingItems ? (
+                                                                <div className="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden h-7 w-28 ml-auto">
+                                                                    {itemDiscountModes[itemKey] === 'percent' ? (
+                                                                        <Input
+                                                                            type="number"
+                                                                            min={0}
+                                                                            max={100}
+                                                                            value={editItemDiscountPercents[itemKey] ?? ""}
+                                                                            onChange={(e) => {
+                                                                                const valStr = e.target.value;
+                                                                                if (valStr === "") {
+                                                                                    setEditItemDiscountPercents({
+                                                                                        ...editItemDiscountPercents,
+                                                                                        [itemKey]: ""
+                                                                                    });
+                                                                                    setEditItemDiscounts({
+                                                                                        ...editItemDiscounts,
+                                                                                        [itemKey]: 0
+                                                                                    });
+                                                                                } else {
+                                                                                    const valPercent = parseFloat(valStr) || 0;
+                                                                                    const basePrice = it.appliedSlab?.price || it.price;
+                                                                                    const flatDiscount = parseFloat((basePrice * (valPercent / 100)).toFixed(2));
+                                                                                    setEditItemDiscountPercents({
+                                                                                        ...editItemDiscountPercents,
+                                                                                        [itemKey]: valPercent
+                                                                                    });
+                                                                                    setEditItemDiscounts({
+                                                                                        ...editItemDiscounts,
+                                                                                        [itemKey]: flatDiscount
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                            className="text-center font-bold h-full w-16 border-0 focus:ring-0 rounded-none text-xs p-0 bg-white"
+                                                                        />
+                                                                    ) : (
+                                                                        <Input
+                                                                            type="number"
+                                                                            min={0}
+                                                                            value={editItemDiscounts[itemKey] ?? ""}
+                                                                            onChange={(e) => {
+                                                                                const valStr = e.target.value;
+                                                                                if (valStr === "") {
+                                                                                    setEditItemDiscounts({
+                                                                                        ...editItemDiscounts,
+                                                                                        [itemKey]: ""
+                                                                                    });
+                                                                                    setEditItemDiscountPercents({
+                                                                                        ...editItemDiscountPercents,
+                                                                                        [itemKey]: 0
+                                                                                    });
+                                                                                } else {
+                                                                                    const valFlat = parseFloat(valStr) || 0;
+                                                                                    const basePrice = it.appliedSlab?.price || it.price;
+                                                                                    const percentDiscount = basePrice > 0 ? parseFloat(((valFlat / basePrice) * 100).toFixed(2)) : 0;
+                                                                                    setEditItemDiscounts({
+                                                                                        ...editItemDiscounts,
+                                                                                        [itemKey]: valFlat
+                                                                                    });
+                                                                                    setEditItemDiscountPercents({
+                                                                                        ...editItemDiscountPercents,
+                                                                                        [itemKey]: percentDiscount
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                            className="text-right font-bold h-full w-16 border-0 focus:ring-0 rounded-none text-xs p-1 bg-white"
+                                                                        />
+                                                                    )}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setItemDiscountModes({
+                                                                                ...itemDiscountModes,
+                                                                                [itemKey]: itemDiscountModes[itemKey] === 'percent' ? 'flat' : 'percent'
+                                                                            });
+                                                                        }}
+                                                                        className="bg-slate-100 hover:bg-slate-200 border-l border-slate-200 text-[10px] font-black h-full w-10 flex items-center justify-center text-slate-600 transition-colors"
+                                                                    >
+                                                                        {itemDiscountModes[itemKey] === 'percent' ? '%' : '₹'}
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex flex-col items-end text-emerald-600 font-semibold">
+                                                                    {it.discount > 0 ? (
+                                                                        <>
+                                                                            <span>-₹{it.discount.toLocaleString()}</span>
+                                                                            {it.discountPercent > 0 && (
+                                                                                <span className="text-[10px] text-slate-400 font-medium mt-0.5">({it.discountPercent}%)</span>
+                                                                            )}
+                                                                        </>
+                                                                    ) : (
+                                                                        <span className="text-slate-400">-</span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                        <td className="py-3 px-4 text-right font-bold text-slate-900">
+                                                            ₹{(
+                                                                (editingQtyIndex === idx ? (parseFloat(tempQty) || 0) : it.quantity) * (
+                                                                    (editItemPrices[itemKey] !== undefined ? Number(editItemPrices[itemKey] || 0) : (it.price || 0)) -
+                                                                    (editItemDiscounts[itemKey] !== undefined ? Number(editItemDiscounts[itemKey] || 0) : (it.discount || 0))
+                                                                )
+                                                            ).toLocaleString()}
+                                                        </td>
+                                                        {isEditingItems && (
+                                                            <td className="py-3 px-4 text-center">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="text-rose-500 hover:bg-rose-50 w-7 h-7 rounded-md"
+                                                                    onClick={() => handleRemoveItemQuantity(it.productId?._id || it.productId, it.variantName, it.quantity)}
+                                                                >
+                                                                    <Trash className="w-4 h-4" />
+                                                                </Button>
+                                                            </td>
+                                                        )}
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -701,6 +989,41 @@ export default function QuotationDetailsPage() {
                     {/* Right Pane (White Financial Summary card) */}
                     <div className="flex flex-col gap-6">
 
+                        {/* Call Attempts Card */}
+                        <Card className="border-slate-100 shadow-sm bg-white">
+                            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-50">
+                                <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <PhoneCall className="h-4 w-4 text-emerald-600" />
+                                    Call Attempts ({quotation.callAttempts?.noOfAttempts || 0}/3)
+                                </CardTitle>
+                                <CallAttemptDialog quotation={quotation} type="quotation" />
+                            </CardHeader>
+                            <CardContent className="pt-4 text-xs space-y-3">
+                                {(!quotation.callAttempts?.history || quotation.callAttempts.history.length === 0) ? (
+                                    <p className="text-slate-400 italic">No call attempts recorded yet.</p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {[...quotation.callAttempts.history].sort((a, b) => a.attemptNo - b.attemptNo).map((item, idx) => {
+                                            const empName = item.employeeId?.name || 'User'
+                                            const empRole = item.employeeId?.role ? ` (${item.employeeId.role})` : ''
+                                            return (
+                                                <div key={idx} className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 shadow-3xs space-y-1">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="font-bold text-emerald-700">Attempt #{item.attemptNo}</span>
+                                                        <span className="text-[10px] text-slate-400">
+                                                            {item.date ? format(new Date(item.date), 'dd MMM, hh:mm a') : '—'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-slate-700 italic">"{item.remarks}"</p>
+                                                    <div className="text-[10px] text-slate-400 font-semibold">By: {empName}{empRole}</div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
                         {/* White Background Box for Financial Summary */}
                         <Card className="border-slate-100 shadow-sm bg-white">
                             <CardHeader className="pb-3">
@@ -709,59 +1032,226 @@ export default function QuotationDetailsPage() {
                             <CardContent className="flex flex-col gap-3 text-sm text-slate-600">
                                 <div className="flex justify-between text-slate-500">
                                     <span>Subtotal:</span>
-                                    <span className="font-bold text-slate-700">₹{quotation.subtotal?.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-slate-500">
-                                    <span>Delivery Charge:</span>
-                                    {isEditingItems ? (
-                                        <Input
-                                            type="number"
-                                            value={editDeliveryCharge}
-                                            onChange={(e) => setEditDeliveryCharge(e.target.value)}
-                                            className="w-24 h-7 text-right border-slate-200 text-xs font-bold"
-                                        />
-                                    ) : (
-                                        <span className="font-bold text-slate-700">₹{quotation.deliveryCharge?.toLocaleString() || '0'}</span>
-                                    )}
+                                    <span className="font-bold text-slate-700">₹{totals.subtotal?.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-slate-500">
                                     <span>Global Discount:</span>
                                     {isEditingItems ? (
-                                        <Input
-                                            type="number"
-                                            value={editDiscount}
-                                            onChange={(e) => setEditDiscount(e.target.value)}
-                                            className="w-24 h-7 text-right border-slate-200 text-xs font-bold"
-                                        />
-                                    ) : (
                                         <span className="font-bold text-slate-700">
-                                            {quotation.discountPercent > 0 ? `(${quotation.discountPercent}%) ` : ''}
-                                            ₹{quotation.discount?.toLocaleString() || '0'}
+                                            {totals.discountPercent > 0 ? `(${totals.discountPercent}%) ` : ''}
+                                            ₹{totals.discount?.toLocaleString() || '0'}
                                         </span>
+                                    ) : (
+                                        <div className="flex items-center gap-1.5">
+                                            {editingDiscount ? (
+                                                <div className="flex items-center gap-1">
+                                                    <div className="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden h-8 w-28">
+                                                        {tempDiscountMode === 'percent' ? (
+                                                            <Input
+                                                                type="number"
+                                                                min={0}
+                                                                max={100}
+                                                                value={tempDiscountPercent}
+                                                                onChange={(e) => {
+                                                                    const valStr = e.target.value;
+                                                                    if (valStr === "") {
+                                                                        setTempDiscountPercent("");
+                                                                        setTempDiscount(0);
+                                                                    } else {
+                                                                        const valPercent = parseFloat(valStr) || 0;
+                                                                        setTempDiscountPercent(valPercent);
+                                                                        setTempDiscount(parseFloat(((totals.subtotal || 0) * (valPercent / 100)).toFixed(2)));
+                                                                    }
+                                                                }}
+                                                                className="text-center font-bold h-full w-16 border-0 focus:ring-0 rounded-none text-xs p-0 bg-white"
+                                                            />
+                                                        ) : (
+                                                            <Input
+                                                                type="number"
+                                                                min={0}
+                                                                value={tempDiscount}
+                                                                onChange={(e) => {
+                                                                    const valStr = e.target.value;
+                                                                    if (valStr === "") {
+                                                                        setTempDiscount("");
+                                                                        setTempDiscountPercent(0);
+                                                                    } else {
+                                                                        const valFlat = parseFloat(valStr) || 0;
+                                                                        setTempDiscount(valFlat);
+                                                                        setTempDiscountPercent((totals.subtotal || 0) > 0 ? parseFloat(((valFlat / (totals.subtotal || 0)) * 100).toFixed(2)) : 0);
+                                                                    }
+                                                                }}
+                                                                className="text-right font-bold h-full w-16 border-0 focus:ring-0 rounded-none text-xs p-1 bg-white"
+                                                            />
+                                                        )}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setTempDiscountMode(prev => prev === 'percent' ? 'flat' : 'percent')}
+                                                            className="bg-slate-100 hover:bg-slate-200 border-l border-slate-200 text-[10px] font-black h-full w-8 flex items-center justify-center text-slate-600 transition-colors"
+                                                        >
+                                                            {tempDiscountMode === 'percent' ? '%' : '₹'}
+                                                        </button>
+                                                    </div>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={async () => {
+                                                            try {
+                                                                const finalOrderAmount = parseFloat((Math.max(0, (totals.subtotal || 0) - Number(tempDiscount || 0)) + (totals.deliveryCharge || 0)).toFixed(2));
+                                                                await updateQuotation.mutateAsync({
+                                                                    quotationId: quotation._id,
+                                                                    discount: Number(tempDiscount || 0),
+                                                                    discountPercent: Number(tempDiscountPercent || 0),
+                                                                    discountType: tempDiscountMode === 'percent' ? 'percentage' : 'flat',
+                                                                    orderAmount: finalOrderAmount
+                                                                });
+                                                                setEditingDiscount(false);
+                                                                refetch();
+                                                            } catch (err) {
+                                                                console.error(err);
+                                                            }
+                                                        }}
+                                                        className="w-8 h-8 text-emerald-600 hover:bg-emerald-50"
+                                                    >
+                                                        <Check className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => setEditingDiscount(false)}
+                                                        className="w-8 h-8 text-slate-400 hover:bg-slate-100"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="font-bold text-slate-700">
+                                                        {totals.discountPercent > 0 ? `(${totals.discountPercent}%) ` : ''}
+                                                        ₹{totals.discount?.toLocaleString() || '0'}
+                                                    </span>
+                                                    {isActionable && (
+                                                        <Button
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            onClick={() => {
+                                                                setEditingDiscount(true);
+                                                                setTempDiscount(totals.discount || 0);
+                                                                setTempDiscountPercent(totals.discountPercent || 0);
+                                                                setTempDiscountMode(quotation.discountType === 'percentage' ? 'percent' : 'flat');
+                                                            }}
+                                                            className="w-6 h-6 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full"
+                                                        >
+                                                            <Edit className="w-3 h-3" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex justify-between items-center text-slate-500">
+                                    <span>Delivery Charge:</span>
+                                    {isEditingItems ? (
+                                        <span className="font-bold text-slate-700">₹{totals.deliveryCharge?.toLocaleString() || '0'}</span>
+                                    ) : (
+                                        <div className="flex items-center gap-1.5">
+                                            {editingDelCharge ? (
+                                                <div className="flex items-center gap-1">
+                                                    <Input
+                                                        type="number"
+                                                        value={tempDelCharge}
+                                                        onChange={(e) => {
+                                                            const valStr = e.target.value;
+                                                            setTempDelCharge(valStr === "" ? "" : parseFloat(valStr) || 0);
+                                                        }}
+                                                        className="w-24 h-8 text-right border-slate-200 text-xs font-bold bg-white p-1"
+                                                    />
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={async () => {
+                                                            try {
+                                                                const finalOrderAmount = parseFloat((Math.max(0, (totals.subtotal || 0) - (totals.discount || 0)) + Number(tempDelCharge || 0)).toFixed(2));
+                                                                await updateQuotation.mutateAsync({
+                                                                    quotationId: quotation._id,
+                                                                    deliveryCharge: Number(tempDelCharge || 0),
+                                                                    orderAmount: finalOrderAmount
+                                                                });
+                                                                setEditingDelCharge(false);
+                                                                refetch();
+                                                            } catch (err) {
+                                                                console.error(err);
+                                                            }
+                                                        }}
+                                                        className="w-8 h-8 text-emerald-600 hover:bg-emerald-50"
+                                                    >
+                                                        <Check className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => setEditingDelCharge(false)}
+                                                        className="w-8 h-8 text-slate-400 hover:bg-slate-100"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="font-bold text-slate-700">₹{totals.deliveryCharge?.toLocaleString() || '0'}</span>
+                                                    {isActionable && (
+                                                        <Button
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            onClick={() => {
+                                                                setEditingDelCharge(true);
+                                                                setTempDelCharge(totals.deliveryCharge || 0);
+                                                            }}
+                                                            className="w-6 h-6 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full"
+                                                        >
+                                                            <Edit className="w-3 h-3" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                                 <Separator className="my-2 bg-slate-100" />
                                 <div className="flex justify-between text-base font-extrabold text-slate-900">
                                     <span>Order Total:</span>
-                                    <span>₹{quotation.orderAmount?.toLocaleString()}</span>
+                                    <span>₹{totals.orderAmount?.toLocaleString()}</span>
                                 </div>
 
-                                {isEditingItems && (
-                                    <div className="flex flex-col gap-2 mt-4">
-                                        <LoaderButton
-                                            loading={updateQuotation.isPending}
-                                            onClick={handleSaveCharges}
-                                            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold"
-                                        >
-                                            Save Pricing & Charges
-                                        </LoaderButton>
-                                        <Button onClick={() => setIsEditingItems(false)} variant="ghost" className="w-full hover:bg-slate-100 text-slate-400">
-                                            Done Editing
-                                        </Button>
-                                    </div>
-                                )}
+
                             </CardContent>
                         </Card>
+
+                        {/* Notes / Warehouse Instructions */}
+                        <Card className="border-slate-100 shadow-sm bg-white mt-4">
+                            <CardHeader className="pb-3 border-b border-slate-50">
+                                <CardTitle className="text-sm font-bold text-slate-805 flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-slate-500" />
+                                    Notes / Warehouse Instructions
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-4">
+                                <p className="text-slate-650 italic bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
+                                    {quotation.comments || 'No specific warehouse instructions.'}
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        {/* Activity Timeline Audit Trail Drawer */}
+                        {isActivityOpen && (
+                            <ActivityLogDrawer
+                                open={isActivityOpen}
+                                onOpenChange={setIsActivityOpen}
+                                id={quotationId}
+                                type="quotation"
+                            />
+                        )}
                     </div>
                 </div>
             </div>

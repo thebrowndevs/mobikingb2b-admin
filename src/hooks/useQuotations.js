@@ -40,10 +40,7 @@ export const useQuotations = () => {
     return useQuery({
       queryKey: ["quotation", quotationId],
       queryFn: () =>
-        api.get("/quotations/all").then((res) => {
-          const list = res.data.data || [];
-          return list.find((q) => q._id === quotationId);
-        }),
+        api.get(`/quotations/details/${quotationId}`).then((res) => res.data.data),
       enabled: !!quotationId,
       staleTime: 1000 * 60 * 2,
       onError: (err) => {
@@ -122,14 +119,56 @@ export const useQuotations = () => {
     },
   });
 
+  const recordCallAttemptMutation = useMutation({
+    mutationFn: ({ quotationId, remarks }) =>
+      api.post(`/quotations/call-attempt/${quotationId}`, { remarks }).then((res) => res.data),
+    onSuccess: (data, variables) => {
+      toast.success("Call attempt recorded successfully.");
+      queryClient.invalidateQueries(["quotations"]);
+      queryClient.invalidateQueries(["quotation", variables.quotationId]);
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to record call attempt.");
+    },
+  });
+
+  const updateQuotationItemsMutation = useMutation({
+    mutationFn: ({ id, data }) =>
+      api.put(`/quotations/${id}/update-items`, data).then((res) => res.data),
+    onSuccess: (data, variables) => {
+      toast.success("Order request items and pricing updated successfully.");
+      queryClient.invalidateQueries(["quotations"]);
+      queryClient.invalidateQueries(["quotation", variables.id]);
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to update order request.");
+    },
+  });
+
+  const getQuotationActivity = (quotationId) => {
+    return useQuery({
+      queryKey: ["quotation-activity", quotationId],
+      queryFn: () =>
+        api.get(`/quotations/${quotationId}/activity`).then((res) => res.data.data),
+      enabled: !!quotationId,
+      staleTime: 0,
+      onError: (err) => {
+        toast.error(err?.response?.data?.message || "Failed to fetch activity logs.");
+      },
+    });
+  };
+
   return {
     getQuotationsPaginated,
     getSingleQuotation,
+    getQuotationActivity,
     updateQuotationStatus: updateQuotationStatusMutation,
     bookQuotation: bookQuotationMutation,
     updateQuotation: updateQuotationMutation,
+    updateQuotationItems: updateQuotationItemsMutation,
     addItemQuantity: addItemMutation,
     removeItemQuantity: removeItemMutation,
+    recordCallAttempt: recordCallAttemptMutation,
     permissions: {
       canView,
       canAdd,

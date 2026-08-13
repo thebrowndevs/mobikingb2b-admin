@@ -21,7 +21,8 @@ function ShippingDetails({ order }) {
         pickupDate,
         pickupTokenNumber,
         courierAssignedAt,
-        expectedDeliveryDate
+        expectedDeliveryDate,
+        trackingUrl
     } = order
 
     const shippingFields = [
@@ -33,6 +34,7 @@ function ShippingDetails({ order }) {
         ["Pickup Date", formatDateTime(pickupDate)],
         ["Courier Assigned At", formatDateTime(courierAssignedAt)],
         ["Expected Delivery", formatDateTime(expectedDeliveryDate)],
+        ["Tracking URL", trackingUrl ? <a href={trackingUrl} target="_blank" rel="noreferrer" className="text-blue-600 bg-blue-50 rounded-lg border border-blue-100 px-3 py-1 font-semibold text-xs shadow-xs hover:bg-blue-100 transition-colors">Track Order</a> : "—"],
         ["Shiprocket Shipping Label", shippingLabelUrl ? <a href={shippingLabelUrl} target="_blank" rel="noreferrer" className="text-emerald-600 bg-emerald-50 rounded-lg border border-emerald-100 px-3 py-1 font-semibold text-xs shadow-xs hover:bg-emerald-100 transition-colors">Download</a> : "—"],
         ["Shiprocket Manifest PDF", shippingManifestUrl ? <a href={shippingManifestUrl} target="_blank" rel="noreferrer" className="text-indigo-650 bg-indigo-50 rounded-lg border border-indigo-100 px-3 py-1 font-semibold text-xs shadow-xs hover:bg-indigo-100 transition-colors">Download</a> : "—"]
     ]

@@ -19,16 +19,23 @@ import { Badge } from '@/components/ui/badge'
 import { Phone, PhoneCall } from 'lucide-react'
 import { format } from 'date-fns'
 import { useOrders } from '@/hooks/useOrders'
+import { useQuotations } from '@/hooks/useQuotations'
 
-export default function CallAttemptDialog({ order }) {
+export default function CallAttemptDialog({ order, quotation, type = 'order' }) {
     const [open, setOpen] = useState(false)
     const [remarks, setRemarks] = useState('')
-    const { recordCallAttempt } = useOrders()
 
-    if (!order) return null
+    const ordersHook = useOrders()
+    const quotationsHook = useQuotations()
 
-    const noOfAttempts = order?.callAttempts?.noOfAttempts || 0
-    const history = order?.callAttempts?.history || []
+    const isOrder = type === 'order'
+    const record = isOrder ? order : quotation
+    const mutation = isOrder ? ordersHook.recordCallAttempt : quotationsHook.recordCallAttempt
+
+    if (!record) return null
+
+    const noOfAttempts = record?.callAttempts?.noOfAttempts || 0
+    const history = record?.callAttempts?.history || []
 
     // Sort history by attemptNo ascending
     const sortedHistory = [...history].sort((a, b) => (a?.attemptNo || 0) - (b?.attemptNo || 0))
@@ -38,14 +45,21 @@ export default function CallAttemptDialog({ order }) {
         if (noOfAttempts >= 3) return
 
         try {
-            await recordCallAttempt.mutateAsync({
-                orderId: order._id,
-                remarks: remarks
-            })
+            if (isOrder) {
+                await mutation.mutateAsync({
+                    orderId: record._id,
+                    remarks: remarks
+                })
+            } else {
+                await mutation.mutateAsync({
+                    quotationId: record._id,
+                    remarks: remarks
+                })
+            }
             setRemarks('')
             setOpen(false)
         } catch (error) {
-            // Handled in useOrders hook
+            // Handled in hooks
         }
     }
 
@@ -121,7 +135,11 @@ export default function CallAttemptDialog({ order }) {
                             </Badge>
                         </div>
                         <DialogDescription className="text-xs text-gray-500 mt-1">
-                            Order ID: <span className="font-semibold text-gray-700">{order?.orderId}</span> ({order?.phoneNo})
+                            {isOrder ? (
+                                <>Order ID: <span className="font-semibold text-gray-700">{record?.orderId}</span> ({record?.phoneNo})</>
+                            ) : (
+                                <>Quotation Name: <span className="font-semibold text-gray-700">{record?.name}</span> ({record?.phoneNo})</>
+                            )}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -160,7 +178,7 @@ export default function CallAttemptDialog({ order }) {
                         )}
                     </div>
 
-                    {/* Remarks Input & Submit Button (Hidden when 3 attempts done) */}
+                    {/* Remarks Input & Submit Button */}
                     {noOfAttempts < 3 && (
                         <form onSubmit={handleSubmit} className="space-y-4 mt-3 pt-3 border-t border-gray-200">
                             <div>
@@ -188,20 +206,14 @@ export default function CallAttemptDialog({ order }) {
                                 <Button
                                     type="submit"
                                     size="sm"
-                                    disabled={recordCallAttempt.isPending}
+                                    disabled={mutation.isPending}
                                     className="bg-emerald-600 hover:bg-emerald-700 text-white"
                                 >
-                                    {recordCallAttempt.isPending ? "Submitting..." : `Submit Attempt #${nextAttemptNo}`}
+                                    {mutation.isPending ? "Submitting..." : `Submit Attempt #${nextAttemptNo}`}
                                 </Button>
                             </div>
                         </form>
-                    )
-                        // : (
-                        //     <div className="mt-3 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs text-center">
-                        //         Maximum 3 call attempts recorded for this order. Remarks input disabled.
-                        //     </div>
-                        // )
-                    }
+                    )}
                 </DialogContent>
             </Dialog>
         </TooltipProvider>

@@ -188,7 +188,7 @@ function Page() {
             return a + rowTotal
         }, 0)
 
-        const total = subtotal + Number(deliveryCharge || 0) - Number(discount || 0)
+        const total = Math.max(0, subtotal - Number(discount || 0)) + Number(deliveryCharge || 0)
 
         if (form.getValues("subtotal") !== subtotal) setValue("subtotal", subtotal)
         if (form.getValues("orderAmount") !== total) setValue("orderAmount", total)
@@ -208,7 +208,7 @@ function Page() {
 
                         if (user) {
                             setValue('userId', user._id)
-                            setValue('name', user.name || "")
+                            setValue('name', user.business?.businessName || user.name || "")
                             setValue('email', user.email || "")
                             setValue('gst', user.business?.gstNumber || "")
 
@@ -255,7 +255,7 @@ function Page() {
                         toast.success("GST already registered! Loading customer...")
                         const u = data.user
                         setValue('userId', u._id)
-                        setValue('name', u.name)
+                        setValue('name', u.businessName || u.name)
                         setValue('phoneNo', u.phoneNo)
                         setValue('email', u.email)
                         setValue('address', u.address)
@@ -304,6 +304,9 @@ function Page() {
                 const res = await createCustomer.mutateAsync({
                     name: values.name,
                     phoneNo: values.phoneNo,
+                    email: values.email,
+                    gstNumber: values.gst,
+                    isPos: true,
                     role: 'user',
                 })
                 finalUserId = res?.data?.data?._id

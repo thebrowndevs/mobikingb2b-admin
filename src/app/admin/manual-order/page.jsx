@@ -92,6 +92,7 @@ function page() {
     const { createManualOrder, permissionsManual: { canViewManual, canAddManual, canEditManual, canDeleteManual } } = useOrders()
     const [addedProducts, setAddedProducts] = useState([])
     const [addUserDialog, setAddUserDialog] = useState(false)
+    const [discountMode, setDiscountMode] = useState('flat')
 
     // form hook
     const form = useForm({
@@ -105,6 +106,7 @@ function page() {
             method: "Online",
             subtotal: 0,
             discount: 0,
+            discountPercent: 0,
             deliveryCharge: 0,
             orderAmount: 0,
             comments: '',
@@ -115,15 +117,16 @@ function page() {
     const { watch, setValue, reset } = form;
     const { fields, append, remove } = useFieldArray({ control: form.control, name: "items" })
     const items = useWatch({ control: form.control, name: "items" })
-    const discount = watch('discount')
-    const deliveryCharge = watch('deliveryCharge')
+    const discount = watch('discount') || 0
+    const deliveryCharge = watch('deliveryCharge') || 0
 
     useEffect(() => {
-        const subtotal = items.reduce((a, i) => a + (i.price || 0) * (i.quantity || 0), 0)
-        const orderAmount = subtotal - discount + deliveryCharge;
+        const calculatedSubtotal = items.reduce((a, i) => a + (i.price || 0) * (i.quantity || 0), 0)
+        const subtotalVal = parseFloat(calculatedSubtotal.toFixed(2))
+        const orderAmountVal = parseFloat((Math.max(0, subtotalVal - discount) + deliveryCharge).toFixed(2))
 
-        if (form.getValues("subtotal") !== subtotal) form.setValue("subtotal", subtotal)
-        if (form.getValues("orderAmount") !== orderAmount) form.setValue("orderAmount", orderAmount)
+        if (form.getValues("subtotal") !== subtotalVal) form.setValue("subtotal", subtotalVal)
+        if (form.getValues("orderAmount") !== orderAmountVal) form.setValue("orderAmount", orderAmountVal)
     }, [items, discount, form, deliveryCharge])
 
     const watchSubTotal = watch('subtotal')
@@ -139,7 +142,10 @@ function page() {
                 const res = await createCustomer.mutateAsync({
                     name: values.name,
                     phoneNo: values.phoneNo,
+                    email: values.email || undefined,
+                    gstNumber: values.gst || undefined,
                     role: 'user',
+                    isPos: true
                 })
                 finalUserId = res?.data?.data?._id
                 form.setValue('userId', finalUserId)
@@ -390,28 +396,77 @@ function page() {
                                             </div>
 
                                             {/* discount */}
-                                            <FormField
-                                                control={form.control}
-                                                name="discount"
-                                                render={({ field }) => (
-                                                    <FormItem className="flex items-center justify-between gap-2">
-                                                        <FormLabel>Discount</FormLabel>
-                                                        <FormControl>
-                                                            <Input
-                                                                type={'number'}
-                                                                {...field}
-                                                                onChange={(e) => {
-                                                                    const value = e.target.value;
-                                                                    field.onChange(value === '' ? '' : Number(value));
-                                                                }}
-                                                                placeholder="Eg. 240"
-                                                                className="max-w-24 text-right border-none border-b rounded-none border-black appearance-none"
-                                                            />
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
+                                            <div className="flex items-center justify-between gap-2 text-sm">
+                                                <FormLabel>Discount ({discountMode === 'percent' ? '%' : '₹'})</FormLabel>
+                                                <div className="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden h-9 max-w-32">
+                                                    {discountMode === 'percent' ? (
+                                                        <FormField
+                                                            control={form.control}
+                                                            name="discountPercent"
+                                                            render={({ field }) => (
+                                                                <FormItem>
+                                                                    <FormControl>
+                                                                        <Input
+                                                                            type="number"
+                                                                            min={0}
+                                                                            max={100}
+                                                                            {...field}
+                                                                            onChange={(e) => {
+                                                                                const valStr = e.target.value;
+                                                                                if (valStr === "") {
+                                                                                    field.onChange("");
+                                                                                    setValue('discount', 0);
+                                                                                } else {
+                                                                                    const valPercent = parseFloat(valStr) || 0;
+                                                                                    field.onChange(valPercent);
+                                                                                    setValue('discount', parseFloat((watchSubTotal * (valPercent / 100)).toFixed(2)));
+                                                                                }
+                                                                            }}
+                                                                            className="text-center font-semibold h-full w-20 border-0 focus:ring-0 rounded-none text-sm p-0"
+                                                                        />
+                                                                    </FormControl>
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    ) : (
+                                                        <FormField
+                                                            control={form.control}
+                                                            name="discount"
+                                                            render={({ field }) => (
+                                                                <FormItem>
+                                                                    <FormControl>
+                                                                        <Input
+                                                                            type="number"
+                                                                            min={0}
+                                                                            {...field}
+                                                                            onChange={(e) => {
+                                                                                const valStr = e.target.value;
+                                                                                if (valStr === "") {
+                                                                                    field.onChange("");
+                                                                                    setValue('discountPercent', 0);
+                                                                                } else {
+                                                                                    const valFlat = parseFloat(valStr) || 0;
+                                                                                    field.onChange(valFlat);
+                                                                                    setValue('discountPercent', parseFloat((watchSubTotal > 0 ? (valFlat / watchSubTotal) * 100 : 0).toFixed(2)));
+                                                                                }
+                                                                            }}
+                                                                            className="text-right font-semibold h-full w-20 border-0 focus:ring-0 rounded-none text-sm p-1"
+                                                                        />
+                                                                    </FormControl>
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    )}
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setDiscountMode(prev => prev === 'percent' ? 'flat' : 'percent')}
+                                                        className="bg-slate-100 hover:bg-slate-200 border-l border-slate-200 text-xs font-black h-full w-10 flex items-center justify-center text-slate-600 transition-colors"
+                                                    >
+                                                        {discountMode === 'percent' ? '%' : '₹'}
+                                                    </button>
+                                                </div>
+                                            </div>
 
                                             {/* delivery charges */}
                                             <FormField

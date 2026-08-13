@@ -89,7 +89,7 @@ export function OrderViewDialog({ order, children }) {
                     {children}
                 </DialogTrigger>
 
-                <DialogContent className="max-w-3xl overflow-auto max-h-[90vh]">
+                <DialogContent className="sm:max-w-3xl overflow-auto max-h-[90vh]">
                     <DialogHeader>
                         <div className="flex justify-between items-center">
                             <DialogTitle>Order #{safe(order?.orderId)}</DialogTitle>
@@ -261,7 +261,7 @@ export function OrderViewDialog({ order, children }) {
                                 <TableRow key={i}>
                                     <TableCell>{i + 1}</TableCell>
                                     <TableCell>
-                                        <div className='max-w-50 text-wrap flex items-center gap-1.5'>
+                                        <div className='max-w-[200px] break-words whitespace-normal flex items-center gap-1.5'>
                                             <span>{safe(it?.productId?.fullName || it?.fullName)}</span>
                                             {it?.isScratchy && (
                                                 <span className="bg-green-100 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded leading-none">
@@ -270,7 +270,7 @@ export function OrderViewDialog({ order, children }) {
                                             )}
                                         </div>
                                     </TableCell>
-                                    <TableCell><p className='max-w-40 text-wrap'>{safe(it?.variantName)}</p></TableCell>
+                                    <TableCell><p className='max-w-[160px] break-words whitespace-normal'>{safe(it?.variantName)}</p></TableCell>
                                     <TableCell>{safe(it?.quantity)}</TableCell>
                                     <TableCell>{it?.price != null ? `₹${it?.price}` : '-'}</TableCell>
                                     <TableCell>{it?.price != null && it?.quantity != null ? `₹${(it?.price * it?.quantity)?.toFixed(2)}` : '-'}</TableCell>
