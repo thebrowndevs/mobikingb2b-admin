@@ -326,8 +326,8 @@ export default function QuotationDetailsPage() {
     // Save Pricing charges, global discount, and per-item discounts
     const handleSaveInlineQty = async (idx) => {
         const parsed = parseInt(tempQty);
-        if (isNaN(parsed) || parsed <= 0) {
-            toast.error("Please enter a valid quantity.");
+        if (isNaN(parsed) || parsed < 0) {
+            toast.error("Please enter a valid quantity (0 to delete).");
             return;
         }
         const originalItem = quotation.items[idx];
@@ -355,7 +355,7 @@ export default function QuotationDetailsPage() {
                 id: quotation._id,
                 data: { items: updatedItemsList, discountType: quotation?.discountType || 'flat' }
             });
-            toast.success("Quantity updated successfully.");
+            toast.success(parsed === 0 ? "Item removed successfully." : "Quantity updated successfully.");
             setEditingQtyIndex(null);
             refetch();
         } catch (err) {
@@ -800,7 +800,7 @@ export default function QuotationDetailsPage() {
                                                                 <div className="flex items-center justify-center gap-1">
                                                                     <Input
                                                                         type="number"
-                                                                        min={1}
+                                                                        min={0}
                                                                         value={tempQty}
                                                                         onChange={(e) => setTempQty(e.target.value)}
                                                                         className="w-16 h-8 text-center text-xs font-bold border-slate-200"
