@@ -3,30 +3,42 @@
 import React, { useState } from 'react'
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell, } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Pencil, Trash } from 'lucide-react'
+import { Eye, Pencil, Trash } from 'lucide-react'
 import Loader from '@/components/Loader'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog '
 import { format } from 'date-fns';
 import TableSkeleton from '@/components/custom/TableSkeleton'
-import Link from 'next/link'
 
 export default function UsersListView({
     isLoading,
     error,
     users = [],
-    // page,
-    // pageCount,
-    // onPageChange,
     onEdit,
     onDelete,
     isDeleting,
     deleteError,
     canDelete,
     canEdit,
-    onlyAdmin
+    onViewDetails,
 }) {
 
-    console.log(users)
+    // Business status badge component
+    function BusinessStatusBadge({ business }) {
+        if (!business?.active) {
+            return <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none bg-slate-100 text-slate-400 border border-bdr2">Not Started</span>;
+        }
+        if (business?.isApproved && business?.gstVerified) {
+            return <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none bg-blue-50 text-blue-600 border border-blue-200">GST Verified</span>;
+        }
+        if (business?.isApproved) {
+            return <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none bg-emerald-50 text-emerald-600 border border-emerald-200">Verified</span>;
+        }
+        if (business?.rejectionReason) {
+            return <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none bg-red-50 text-red-600 border border-red-200 font-semibold">Rejected</span>;
+        }
+        return <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none bg-amber-50 text-amber-600 border border-amber-200">Pending</span>;
+    }
+
     const [deletingUserId, setDeletingUserId] = useState(null)
 
     const handleDeleteClick = (userId) => {
@@ -56,97 +68,100 @@ export default function UsersListView({
 
     if (users.length === 0)
         return (
-            <div className="text-center text-gray-500 p-4">
+            <div className="text-center text-slate-450 p-4 text-xs font-semibold">
                 No users found!
             </div>
         )
 
     return (
-        <section className="space-y-4">
-            {/* Data Table */}
-            <div className="overflow-hidden rounded-md border border-gray-200">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>#</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Phone No</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Joined Date</TableHead>
-                            <TableHead className={'text-center'}>Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {users.map((user, idx) => (
-                            <TableRow key={user?._id}>
-                                <TableCell>{idx + 1}</TableCell>
-                                <TableCell>{user?.name || "-"} <span className='bg-gray-200 px-2 text-xs py-1 rounded-full'>{user?.orders?.length}</span></TableCell>
-                                <TableCell>
-                                    <Link href={`/admin/customers/${user?._id}`}>
-                                        {user?.phoneNo}
-                                    </Link>
-                                </TableCell>
-                                <TableCell>{user?.email}</TableCell>
-                                <TableCell>
-                                    {(() => {
-                                        try {
-                                            return format(new Date(user?.createdAt), "dd MMM yyyy, hh:mm a");
-                                        } catch (e) {
-                                            return "-";
-                                        }
-                                    })()}
-                                </TableCell>
-                                <TableCell className="flex justify-center items-center gap-2">
-                                    {canEdit &&
+        <section className="w-full bg-back2 border border-bdr2 rounded-xl overflow-hidden shadow-none">
+            <Table containerClassName="border-0 bg-transparent" className="overflow-visible text-xs">
+                <TableHeader className="bg-slate-50/75 border-b border-bdr2">
+                    <TableRow>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-10">#</TableHead>
+                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Name</TableHead>
+                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Business Name</TableHead>
+                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-36">Phone No</TableHead>
+                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Email</TableHead>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-36">Business Status</TableHead>
+                        <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-40">Joined Date</TableHead>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-28">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {users.map((user, idx) => (
+                        <TableRow
+                            key={user?._id}
+                            className="border-b border-bdr2 last:border-b-0 hover:bg-slate-50/40 transition-colors cursor-pointer"
+                            onClick={() => onViewDetails(user?._id)}
+                        >
+                            <TableCell className="text-center text-slate-455 font-medium">{idx + 1}</TableCell>
+                            <TableCell className="align-middle font-bold text-slate-800">
+                                <div className="flex items-center gap-1.5">
+                                    <span>{user?.name || "-"}</span>
+                                    {user?.orders?.length > 0 && (
+                                        <span className="bg-slate-100 border border-bdr2 px-1.5 py-0.2 text-[9px] font-bold text-slate-500 rounded-md">
+                                            {user?.orders?.length} orders
+                                        </span>
+                                    )}
+                                </div>
+                            </TableCell>
+                            <TableCell className="align-middle text-left font-bold text-slate-700">{user?.business?.businessName || "—"}</TableCell>
+                            <TableCell className="align-middle text-left font-semibold text-slate-600">{user?.phoneNo}</TableCell>
+                            <TableCell className="align-middle text-left text-slate-550">{user?.email || "—"}</TableCell>
+                            <TableCell className="align-middle text-center" onClick={(e) => e.stopPropagation()}>
+                                <BusinessStatusBadge business={user?.business} />
+                            </TableCell>
+                            <TableCell className="align-middle text-left text-slate-500 font-medium">
+                                {(() => {
+                                    try {
+                                        return format(new Date(user?.createdAt), "dd MMM yyyy, hh:mm a");
+                                    } catch (e) {
+                                        return "-";
+                                    }
+                                })()}
+                            </TableCell>
+                            <TableCell className="align-middle text-center" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex items-center justify-center gap-1.5">
+                                    <Button
+                                        size="icon"
+                                        variant="outline"
+                                        className="h-7 w-7 text-slate-500 border-bdr2 rounded-lg hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
+                                        onClick={() => onViewDetails(user?._id)}
+                                        title="View Profile"
+                                    >
+                                        <Eye size={12} />
+                                    </Button>
+                                    {canEdit && (
                                         <Button
                                             size="icon"
                                             variant="outline"
+                                            className="h-7 w-7 text-slate-500 border-bdr2 rounded-lg hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
                                             onClick={() => onEdit(user)}
+                                            title="Edit Customer"
                                         >
-                                            <Pencil size={16} />
+                                            <Pencil size={12} />
                                         </Button>
-                                    }
-                                    {canDelete &&
+                                    )}
+                                    {canDelete && (
                                         <Button
                                             size="icon"
-                                            variant="destructive"
+                                            variant="outline"
+                                            className="h-7 w-7 text-red-500 border-bdr2 rounded-lg hover:text-red-650 hover:border-red-300 hover:bg-red-50 transition-colors"
                                             onClick={() => handleDeleteClick(user?._id)}
                                             disabled={isDeleting}
+                                            title="Delete Customer"
                                         >
-                                            <Trash size={16} />
+                                            <Trash size={12} />
                                         </Button>
-                                    }
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
+                                    )}
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
 
-            {/* Pagination Controls */}
-            {/* <div className="flex items-center justify-between px-2">
-                <p className="text-sm text-muted-foreground">
-                    Page {page} of {pageCount}
-                </p>
-                <div className="space-x-2">
-                    <Button
-                        size="sm"
-                        disabled={page <= 1}
-                        onClick={() => onPageChange(page - 1)}
-                    >
-                        Previous
-                    </Button>
-                    <Button
-                        size="sm"
-                        disabled={page >= pageCount}
-                        onClick={() => onPageChange(page + 1)}
-                    >
-                        Next
-                    </Button>
-                </div>
-            </div> */}
-
-            {/* Delete Confirmation */}
             <DeleteConfirmationDialog
                 isOpen={!!deletingUserId}
                 onOpenChange={(open) => !open && setDeletingUserId(null)}

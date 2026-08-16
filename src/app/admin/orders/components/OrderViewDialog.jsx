@@ -244,7 +244,6 @@ export function OrderViewDialog({ order, children }) {
                         </section>
                     )}
 
-                    {/* Items Table */}
                     <Table className="text-sm">
                         <TableHeader>
                             <TableRow className="bg-gray-100">
@@ -253,6 +252,7 @@ export function OrderViewDialog({ order, children }) {
                                 <TableHead>Variant</TableHead>
                                 <TableHead>Qty</TableHead>
                                 <TableHead>Price</TableHead>
+                                <TableHead>Discount</TableHead>
                                 <TableHead>Total</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -273,7 +273,19 @@ export function OrderViewDialog({ order, children }) {
                                     <TableCell><p className='max-w-[160px] break-words whitespace-normal'>{safe(it?.variantName)}</p></TableCell>
                                     <TableCell>{safe(it?.quantity)}</TableCell>
                                     <TableCell>{it?.price != null ? `₹${it?.price}` : '-'}</TableCell>
-                                    <TableCell>{it?.price != null && it?.quantity != null ? `₹${(it?.price * it?.quantity)?.toFixed(2)}` : '-'}</TableCell>
+                                    <TableCell className="text-emerald-600 font-semibold">
+                                        {it?.discount > 0 ? (
+                                            <>
+                                                <span>-₹{it.discount}</span>
+                                                {it.discountPercent > 0 && (
+                                                    <span className="text-[10px] text-slate-400 font-medium ml-1">({it.discountPercent}%)</span>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <span className="text-slate-400 font-medium">—</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>{it?.price != null && it?.quantity != null ? `₹${((parseFloat(it.price || 0) - parseFloat(it.discount || 0)) * (parseFloat(it.quantity) || 0)).toFixed(2)}` : '-'}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

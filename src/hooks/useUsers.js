@@ -105,7 +105,7 @@ export const useUsers = () => {
     //     }
     // });
 
-    // Create User mutation
+    // Create Customer mutation
     const createCustomer = useMutation({
         mutationFn: (data) => api.post('/users/createCustomer', data),
         enabled: canAdd,
@@ -117,6 +117,24 @@ export const useUsers = () => {
             toast.error(err?.response?.data?.message || 'Failed to create customer');
         }
     });
+
+    // Approve/Reject Business Verification mutation
+    const approveCustomerBusiness = useMutation({
+        mutationFn: ({ id, action, rejectionReason }) =>
+            api.patch(`/users/${id}/business/verify`, { action, rejectionReason }),
+        enabled: canEdit,
+        onSuccess: (_, { id }) => {
+            // Invalidate both single user and users list queries
+            queryClient.invalidateQueries({ queryKey: ['singleUser', id] });
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            toast.success('Business verification updated');
+        },
+        onError: (err) => {
+            toast.error(err?.response?.data?.message || 'Verification action failed');
+        },
+    });
+
+
 
     // get single user by Id
     const getSingleUserQuery = (id) =>
@@ -148,6 +166,7 @@ export const useUsers = () => {
         // changePassword,
         getSingleUserQuery,
         createCustomer,
+        approveCustomerBusiness,
         permissions: {
             canView,
             canAdd,
@@ -160,4 +179,5 @@ export const useUsers = () => {
             onlyAdmin
         }
     };
+
 };

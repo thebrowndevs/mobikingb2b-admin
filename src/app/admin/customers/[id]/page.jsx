@@ -2,6 +2,7 @@
 import React from 'react'
 import { useParams } from 'next/navigation';
 import InnerDashboardLayout from '@/components/dashboard/InnerDashboardLayout';
+import BusinessVerificationCard from './components/BusinessVerificationCard';
 import { useUsers } from '@/hooks/useUsers';
 import OrderSkeletonPage from '../../orders/[id]/components/OrderSkeletonPage';
 import UserOrdersTable from './components/UserOrdersTable';
@@ -10,7 +11,7 @@ import Loader from '@/components/Loader';
 function page() {
     const params = useParams();
     const id = params.id;
-    const { getSingleUserQuery } = useUsers()
+    const { getSingleUserQuery, approveCustomerBusiness } = useUsers();
     const { data: userResp, isLoading, error } = getSingleUserQuery(id)
     const user = userResp?.data || {};
 
@@ -96,6 +97,13 @@ function page() {
                         )}
                     </div>
                 </div>
+                {user?.business?.active && (
+                    <BusinessVerificationCard
+                        user={user}
+                        onVerify={approveCustomerBusiness.mutateAsync}
+                    // isLoading can be managed via approveCustomerBusiness.isPending if needed
+                    />
+                )}
                 <UserOrdersTable orders={user?.orders} />
             </div>
         </InnerDashboardLayout>
