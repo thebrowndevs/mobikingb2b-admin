@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { CirclePlus, Search, Filter, X, RotateCcw } from 'lucide-react';
+import { CirclePlus, Search, Filter, X, RotateCcw, FileSpreadsheet } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import { useProducts } from "@/hooks/useProducts";
 import { useSubCategories } from "@/hooks/useSubCategories";
@@ -25,6 +25,7 @@ import { LayoutGroup } from 'framer-motion';
 import NotAuthorizedPage from "@/components/notAuthorized";
 import StockUpdate from "./components/StockUpdate";
 import ProductDetailsDrawer from "./components/ProductDetailsDrawer";
+import ProductBulkUploadDialog from "./components/ProductBulkUploadDialog";
 
 const TABS = [
     { key: '', label: 'ALL PRODUCTS' },
@@ -50,6 +51,7 @@ export default function Page() {
 
     const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
     const [selectedViewProductId, setSelectedViewProductId] = useState(null);
+    const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
 
     const [stockEditing, setStockEditing] = useState(false);
     const [selectedStockProductId, setSelectedStockProductId] = useState(null);
@@ -216,12 +218,22 @@ export default function Page() {
                             Total: {products.data?.pagination?.totalProducts || 0}
                         </Button>
                         {canAdd && (
-                            <Button
-                                onClick={handleAddClick}
-                                className="shrink-0 bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text shadow-none font-semibold text-xs h-9"
-                            >
-                                <CirclePlus className="mr-1.5 h-4 w-4" /> Add New
-                            </Button>
+                            <div className="flex gap-2 shrink-0">
+                                <Button
+                                    onClick={() => setBulkUploadOpen(true)}
+                                    variant="outline"
+                                    className="shrink-0 bg-back2 border-bdr2 text-slate-700 shadow-none font-semibold text-xs h-9 gap-1.5"
+                                >
+                                    <FileSpreadsheet className="h-4 w-4 text-indigo-600" />
+                                    Bulk Upload
+                                </Button>
+                                <Button
+                                    onClick={handleAddClick}
+                                    className="shrink-0 bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text shadow-none font-semibold text-xs h-9"
+                                >
+                                    <CirclePlus className="mr-1.5 h-4 w-4" /> Add New
+                                </Button>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -354,6 +366,15 @@ export default function Page() {
                         open={stockEditing}
                         onOpenChange={setStockEditing}
                         productId={selectedStockProductId}
+                    />
+                )}
+
+                {/* Bulk Upload Dialog */}
+                {bulkUploadOpen && (
+                    <ProductBulkUploadDialog
+                        open={bulkUploadOpen}
+                        onOpenChange={setBulkUploadOpen}
+                        onSuccess={() => products.refetch()}
                     />
                 )}
             </div>
