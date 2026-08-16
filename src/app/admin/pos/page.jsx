@@ -181,9 +181,7 @@ function Page() {
 
             // Calculate item subtotal
             const baseSum = unitPrice * qty
-            const rowTotal = itemDiscPercent > 0
-                ? baseSum * (1 - itemDiscPercent / 100)
-                : Math.max(0, baseSum - itemDiscFlat);
+            const rowTotal = Math.max(0, unitPrice - itemDiscFlat) * qty;
 
             return a + rowTotal
         }, 0)
@@ -316,16 +314,15 @@ function Page() {
             const finalItems = values.items.map(item => {
                 const itemQty = Number(item.quantity || 1)
                 const itemPrice = Number(item.price || 0)
-                const baseSum = itemQty * itemPrice
 
                 let calculatedFlat = Number(item.discount || 0)
                 let calculatedPercent = Number(item.discountPercent || 0)
 
                 // If user entered percentage, compute flat. Else compute percentage.
                 if (calculatedPercent > 0 && calculatedFlat === 0) {
-                    calculatedFlat = baseSum * (calculatedPercent / 100)
+                    calculatedFlat = itemPrice * (calculatedPercent / 100)
                 } else if (calculatedFlat > 0 && calculatedPercent === 0) {
-                    calculatedPercent = baseSum > 0 ? (calculatedFlat / baseSum) * 100 : 0
+                    calculatedPercent = itemPrice > 0 ? (calculatedFlat / itemPrice) * 100 : 0
                 }
 
                 return {
@@ -341,7 +338,7 @@ function Page() {
 
             let finalGlobalFlat = Number(values.discount || 0)
             let finalGlobalPercent = Number(values.discountPercent || 0)
-            const calculatedSubtotal = finalItems.reduce((acc, it) => acc + (it.price * it.quantity - it.discount), 0)
+            const calculatedSubtotal = finalItems.reduce((acc, it) => acc + (Math.max(0, it.price - it.discount) * it.quantity), 0)
 
             if (finalGlobalPercent > 0 && finalGlobalFlat === 0) {
                 finalGlobalFlat = calculatedSubtotal * (finalGlobalPercent / 100)

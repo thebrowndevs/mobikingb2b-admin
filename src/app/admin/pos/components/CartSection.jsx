@@ -93,7 +93,7 @@ export default function CartSection({
 
                                             const itemTotal = mode === 'percent'
                                                 ? baseSum * (1 - Number(discPercent) / 100)
-                                                : Math.max(0, baseSum - Number(discVal));
+                                                : Math.max(0, Number(prc) - Number(discVal)) * Number(qty);
 
                                             const isLowStock = qty > maxStock;
 
@@ -159,16 +159,6 @@ export default function CartSection({
                                                                                 onChange={(e) => {
                                                                                     const nextQty = parseInt(e.target.value) || 1
                                                                                     field.onChange(nextQty)
-                                                                                    // Re-calculate cross fields
-                                                                                    const currentPrice = watch(`items.${originalIndex}.price`) || 0
-                                                                                    const currentSum = currentPrice * nextQty
-                                                                                    if (mode === 'percent') {
-                                                                                        const currentPercent = watch(`items.${originalIndex}.discountPercent`) || 0
-                                                                                        setValue(`items.${originalIndex}.discount`, currentSum * (currentPercent / 100))
-                                                                                    } else {
-                                                                                        const currentFlat = watch(`items.${originalIndex}.discount`) || 0
-                                                                                        setValue(`items.${originalIndex}.discountPercent`, currentSum > 0 ? (currentFlat / currentSum) * 100 : 0)
-                                                                                    }
                                                                                 }}
                                                                                 className="text-center font-extrabold h-7 w-11 border-slate-200 focus:border-slate-450 focus:ring-0 rounded-md text-xs p-0 bg-white"
                                                                             />
@@ -193,15 +183,12 @@ export default function CartSection({
                                                                                 onChange={(e) => {
                                                                                     const nextPrice = parseFloat(e.target.value) || 0
                                                                                     field.onChange(nextPrice)
-                                                                                    // Re-calculate cross fields
-                                                                                    const currentQty = watch(`items.${originalIndex}.quantity`) || 0
-                                                                                    const currentSum = nextPrice * currentQty
                                                                                     if (mode === 'percent') {
                                                                                         const currentPercent = watch(`items.${originalIndex}.discountPercent`) || 0
-                                                                                        setValue(`items.${originalIndex}.discount`, currentSum * (currentPercent / 100))
+                                                                                        setValue(`items.${originalIndex}.discount`, nextPrice * (currentPercent / 100))
                                                                                     } else {
                                                                                         const currentFlat = watch(`items.${originalIndex}.discount`) || 0
-                                                                                        setValue(`items.${originalIndex}.discountPercent`, currentSum > 0 ? (currentFlat / currentSum) * 100 : 0)
+                                                                                        setValue(`items.${originalIndex}.discountPercent`, nextPrice > 0 ? (currentFlat / nextPrice) * 100 : 0)
                                                                                     }
                                                                                 }}
                                                                                 className="text-right font-bold h-7 w-18 border-slate-200 focus:border-slate-450 focus:ring-0 rounded-md text-xs p-1 bg-white"
@@ -214,7 +201,7 @@ export default function CartSection({
 
                                                         {/* Discount Input & Toggle */}
                                                         <div className="flex items-center gap-1 flex-1">
-                                                            <span className="text-[8.5px] text-slate-450 font-bold uppercase">Disc:</span>
+                                                            <span className="text-[8.5px] text-slate-455 font-bold uppercase">Disc:</span>
 
                                                             <div className="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden h-7">
                                                                 {mode === 'percent' ? (
@@ -232,7 +219,7 @@ export default function CartSection({
                                                                                         onChange={(e) => {
                                                                                             const valPercent = parseFloat(e.target.value) || 0
                                                                                             field.onChange(valPercent)
-                                                                                            setValue(`items.${originalIndex}.discount`, baseSum * (valPercent / 100))
+                                                                                            setValue(`items.${originalIndex}.discount`, prc * (valPercent / 100))
                                                                                         }}
                                                                                         className="text-center font-bold h-full w-10 border-0 focus:ring-0 rounded-none text-xs p-0"
                                                                                     />
@@ -254,7 +241,7 @@ export default function CartSection({
                                                                                         onChange={(e) => {
                                                                                             const valFlat = parseFloat(e.target.value) || 0
                                                                                             field.onChange(valFlat)
-                                                                                            setValue(`items.${originalIndex}.discountPercent`, baseSum > 0 ? (valFlat / baseSum) * 100 : 0)
+                                                                                            setValue(`items.${originalIndex}.discountPercent`, prc > 0 ? (valFlat / prc) * 100 : 0)
                                                                                         }}
                                                                                         className="text-right font-bold h-full w-12 border-0 focus:ring-0 rounded-none text-xs p-1"
                                                                                     />
