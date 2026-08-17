@@ -33,9 +33,20 @@ export const useReports = () => {
         },
     })
 
+    const stockFlowReportMutation = useMutation({
+        mutationFn: ({ productId, data }) => api.post(`/reports/stock-flow/${productId}`, data),
+        onSuccess: () => {
+            toast.success("Stock flow report generated successfully.")
+        },
+        onError: (err) => {
+            toast.error(err?.response?.data?.message || "Failed to generate stock flow report")
+        },
+    })
+
     return {
         reportMutation,
         productSalesReportMutation,
+        stockFlowReportMutation,
         permissions: {
             canView,
             canAdd,

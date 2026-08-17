@@ -28,6 +28,11 @@ import {
   FaCamera,
   FaReceipt,
   FaBookOpen,
+  FaBox,
+  FaClipboardList,
+  FaUsers,
+  FaMoneyBillWave,
+  FaEllipsisH
 } from "react-icons/fa";
 import { FaSailboat } from "react-icons/fa6";
 import { FiMessageSquare } from "react-icons/fi";
@@ -46,34 +51,16 @@ export const ADMIN_SIDEBAR_LINKS = [
     icon: <FaReceipt />,
   },
   {
-    key: "posOrders",
-    label: "POS Orders",
-    href: "/admin/posOrders",
-    icon: <FaReceipt />,
-  },
-  {
-    key: "manual-order",
-    label: "Manual Order",
-    href: "/admin/manual-order",
-    icon: <FaFileInvoiceDollar />,
-  },
-  {
     key: "orders",
     label: "Orders",
     href: "/admin/orders",
     icon: <FaShoppingCart />,
   },
-    {
+  {
     key: "quotations",
     label: "Order Requests",
     href: "/admin/quotations",
     icon: <FaFileInvoiceDollar />,
-  },
-  {
-    key: "return-requests",
-    label: "Return Requests",
-    href: "/admin/return-requests",
-    icon: <FaExchangeAlt />,
   },
   {
     key: "partial-return-requests",
@@ -142,11 +129,11 @@ export const ADMIN_SIDEBAR_LINKS = [
     icon: <FaHome />,
   },
   {
-  key: "couponCodes",
-  label: "Coupon Codes",
-  href: "/admin/couponCodes",
-  icon: <FaTags />,
-},
+    key: "couponCodes",
+    label: "Coupon Codes",
+    href: "/admin/couponCodes",
+    icon: <FaTags />,
+  },
   {
     key: "customers",
     label: "Customers",
@@ -166,10 +153,34 @@ export const ADMIN_SIDEBAR_LINKS = [
     icon: <FaBell />,
   },
   {
-    key: "reports",
-    label: "Reports",
-    href: "/admin/reports",
-    icon: <FaChartLine />,
+    key: "reports-products",
+    label: "Product Reports",
+    href: "/admin/reports/products",
+    icon: <FaBox />,
+  },
+  {
+    key: "reports-orders-quotations",
+    label: "Orders & Quotations",
+    href: "/admin/reports/orders-quotations",
+    icon: <FaClipboardList />,
+  },
+  {
+    key: "reports-customers",
+    label: "Customer Reports",
+    href: "/admin/reports/customers",
+    icon: <FaUsers />,
+  },
+  {
+    key: "reports-profit-loss-stock",
+    label: "Profit & Loss / Stock",
+    href: "/admin/reports/profit-loss-stock",
+    icon: <FaMoneyBillWave />,
+  },
+  {
+    key: "reports-others",
+    label: "Other Reports",
+    href: "/admin/reports/others",
+    icon: <FaEllipsisH />,
   },
   {
     key: "policies",
@@ -190,63 +201,3 @@ export const ADMIN_SIDEBAR_LINKS = [
     icon: <FaCogs />,
   },
 ];
-
-
-
-  // {
-  //     key: 'media',
-  //     label: 'Media',
-  //     href: '/admin/media',
-  //     icon: <FaPaintBrush />,
-  // },
-  
-  // {
-  //     key: 'about-us',
-  //     label: 'About Us',
-  //     href: '/admin/about-us',
-  //     icon: <FaInfoCircle />,
-  // },
-  // {
-  //     key: 'contact-us',
-  //     label: 'Contact Us',
-  //     href: '/admin/contact-us',
-  //     icon: <FaPhoneAlt />,
-  // },
-
-// {
-//     key: 'payments',
-//     label: 'Payments',
-//     href: '/admin/payments',
-//     icon: <FaMoneyCheckAlt />,
-// },
-// {
-//     key: 'app-releases',
-//     label: 'App Releases',
-//     href: '/admin/app-releases',
-//     icon: <FaRocket />,
-// },
-// {
-//     key: 'transactions',
-//     label: 'Transactions',
-//     href: '/admin/transactions',
-//     icon: <FaExchangeAlt />,
-// },
-
-// {
-//     key: 'coupons',
-//     label: 'Coupons',
-//     href: '/admin/coupons',
-//     icon: <FaFileInvoiceDollar />,
-// },
-// {
-//     key: 'design-studio',
-//     label: 'Design Studio',
-//     href: '/admin/design-studio',
-//     icon: <FaPaintBrush />,
-// },
-// {
-//     key: 'billing',
-//     label: 'Billing',
-//     href: '/admin/billing',
-//     icon: <FaFileInvoiceDollar />,
-// },

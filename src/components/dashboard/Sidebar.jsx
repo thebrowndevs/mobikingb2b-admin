@@ -20,7 +20,7 @@ const GROUPS = [
     {
         title: "Overview & Sales",
         icon: <ShoppingBag className="w-4 h-4 text-indigo-500" />,
-        keys: ["dashboard", "pos", "posOrders", "manual-order", "orders", "return-requests", "partial-return-requests", "cancel-requests", "queries", "payment-links"]
+        keys: ["dashboard", "pos", "quotations", "orders", "partial-return-requests", "cancel-requests", "queries", "payment-links"]
     },
     {
         title: "Catalog",
@@ -35,8 +35,13 @@ const GROUPS = [
     {
         title: "Operations & Config",
         icon: <FolderCog className="w-4 h-4 text-violet-600" />,
-        keys: ["customers", "employees", "notifications", "reports", "policies", "blogs", "settings"]
-    }
+        keys: ["customers", "employees", "notifications", "policies", "blogs", "settings"]
+    },
+    {
+        title: "Reports",
+        icon: <FolderCog className="w-4 h-4 text-violet-600" />,
+        keys: ["reports-products", "reports-orders-quotations", "reports-customers", "reports-profit-loss-stock", "reports-others"]
+    },
 ];
 
 export default function Sidebar({ isOpen, setIsSidebarOpen }) {
@@ -55,7 +60,7 @@ export default function Sidebar({ isOpen, setIsSidebarOpen }) {
         return false;
     }
 
-    const allowedLinks = ADMIN_SIDEBAR_LINKS.filter(link => can(link.key, 'view'));
+    const allowedLinks = ADMIN_SIDEBAR_LINKS.filter(link => can(link.key.startsWith("reports-") ? "reports" : link.key, 'view'));
 
     function onLinkClick() {
         setIsSidebarOpen(false);
