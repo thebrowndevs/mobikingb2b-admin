@@ -1,6 +1,6 @@
 'use client';
 
-import {  Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { CartesianGrid, AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useOrderCount, useSalesByFilterDates } from '@/hooks/useDashboard'
 import React, { useEffect, useState } from 'react'
@@ -19,15 +19,15 @@ import DateRangeSelector from '@/components/custom/DateRangeSelector'
 export const description = "An area gradient chart"
 
 function CustomTooltip({ active, payload, label }) {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white p-2 rounded-md shadow text-sm">
-        <p className="font-medium text-muted-foreground">{format(new Date(label), 'dd MMM yyyy')}</p>
-        <p className="text-primary">Sales: {payload[0].value}</p>
-      </div>
-    );
-  }
-  return null;
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-white p-2 rounded-md shadow text-sm">
+                <p className="font-medium text-muted-foreground">{format(new Date(label), 'dd MMM yyyy')}</p>
+                <p className="text-primary">Sales: {payload[0].value}</p>
+            </div>
+        );
+    }
+    return null;
 }
 
 export function SalesChartByDate() {
@@ -37,7 +37,7 @@ export function SalesChartByDate() {
 
     // Ensure chart renders on initial mount
     useEffect(() => {
-      setRange(initialRange)
+        setRange(initialRange)
     }, [])
 
     const formattedStart = format(range.from, 'dd MMM yyyy')
@@ -51,7 +51,7 @@ export function SalesChartByDate() {
     })) || []
 
     return (
-        <Card>
+        <Card className="border border-slate-200 dark:border-slate-800 rounded-sm shadow-none transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                     <CardTitle>Sales</CardTitle>
@@ -87,7 +87,7 @@ export function SalesChartByDate() {
                                     tickLine={false}
                                     axisLine={false}
                                     tickMargin={8}
-                                      tick={{ fontSize: 12 }}
+                                    tick={{ fontSize: 12 }}
                                     tickFormatter={(value) => format(new Date(value), 'dd MMM')}
                                 />
                                 <YAxis hide />

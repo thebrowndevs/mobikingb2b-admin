@@ -1,8 +1,8 @@
 'use client';
 
 import { Loader2 } from "lucide-react";
-import { CartesianGrid, AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
-import { useOrderCount } from '@/hooks/useDashboard'
+import { CartesianGrid, LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import { useQuotationCount } from '@/hooks/useDashboard'
 import React, { useEffect, useState } from 'react'
 import {
     Card,
@@ -21,14 +21,14 @@ function CustomTooltip({ active, payload, label }) {
         return (
             <div className="bg-white dark:bg-slate-900 p-3 rounded-sm border border-slate-100 dark:border-slate-800 text-sm">
                 <p className="font-semibold text-slate-500 dark:text-slate-400 mb-1">{format(new Date(label), 'dd MMM yyyy')}</p>
-                <p className="text-blue-500 font-extrabold">Orders: {payload[0].value}</p>
+                <p className="text-amber-500 font-extrabold">Quotations: {payload[0].value}</p>
             </div>
         );
     }
     return null;
 }
 
-export function OrdersChart() {
+export function QuotationsChart() {
     const today = new Date()
     const initialRange = { from: startOfMonth(today), to: today }
     const [range, setRange] = useState(initialRange)
@@ -40,20 +40,20 @@ export function OrdersChart() {
     const formattedStart = format(range.from, 'dd MMM yyyy')
     const formattedEnd = format(range.to, 'dd MMM yyyy')
 
-    const { isLoading, error, data: ordersData } = useOrderCount(format(range.from, 'yyyy-MM-dd'), format(range.to, 'yyyy-MM-dd'))
+    const { isLoading, error, data: quotationsData } = useQuotationCount(format(range.from, 'yyyy-MM-dd'), format(range.to, 'yyyy-MM-dd'))
 
-    const chartData = ordersData?.dates?.map((date, index) => ({
+    const chartData = quotationsData?.dates?.map((date, index) => ({
         month: date,
-        desktop: ordersData.dailyCounts[index] || 0,
+        desktop: quotationsData.dailyCounts[index] || 0,
     })) || []
 
     return (
         <Card className="border border-slate-100 dark:border-slate-800 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
-                    <CardTitle className="text-lg font-bold text-slate-800 dark:text-slate-100">Orders Flow</CardTitle>
+                    <CardTitle className="text-lg font-bold text-slate-800 dark:text-slate-100">Quotations Flow</CardTitle>
                     <CardDescription className="text-xs text-slate-400 mt-1">
-                        Timeline of completed B2B orders
+                        Timeline of requested B2B quotations
                     </CardDescription>
                 </div>
                 <DateRangeSelector onChange={setRange} defaultRange={initialRange} />
@@ -62,7 +62,7 @@ export function OrdersChart() {
             <CardContent>
                 {isLoading ? (
                     <div className="w-full h-[300px] flex items-center justify-center">
-                        <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                        <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
                     </div>
                 ) : error ? (
                     <div className="w-full h-[300px] flex items-center justify-center text-red-500 text-xs">
@@ -71,13 +71,7 @@ export function OrdersChart() {
                 ) : (
                     <div className="w-full h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData} margin={{ left: 12, right: 12 }}>
-                                <defs>
-                                    <linearGradient id="colorOrder" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
+                            <LineChart data={chartData} margin={{ left: 12, right: 12 }}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-slate-100 dark:stroke-slate-800" />
                                 <XAxis
                                     dataKey="month"
@@ -89,16 +83,15 @@ export function OrdersChart() {
                                 />
                                 <YAxis hide />
                                 <Tooltip content={<CustomTooltip />} cursor={false} />
-                                <Area
+                                <Line
                                     type="monotone"
                                     dataKey="desktop"
-                                    stroke="#3b82f6"
-                                    fillOpacity={1}
-                                    fill="url(#colorOrder)"
-                                    strokeWidth={2}
-                                    dot={false}
+                                    stroke="#f59e0b"
+                                    strokeWidth={3}
+                                    dot={{ r: 4, stroke: '#f59e0b', strokeWidth: 1, fill: '#fff' }}
+                                    activeDot={{ r: 6 }}
                                 />
-                            </AreaChart>
+                            </LineChart>
                         </ResponsiveContainer>
                     </div>
                 )}

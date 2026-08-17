@@ -58,7 +58,7 @@ function FilteredOrdersChart() {
     }
 
     return (
-        <Card>
+        <Card className="border border-slate-200 dark:border-slate-800 rounded-sm shadow-none transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                     <CardTitle>Orders</CardTitle>

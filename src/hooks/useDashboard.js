@@ -141,3 +141,49 @@ export const useFilteredOrderCount = (startDate, endDate) => {
         }
     })
 }
+
+// Total Quotations
+export const useTotalQuotations = () => {
+    return useQuery({
+        queryKey: ["dashboard-quotations", "quotations", "count"],
+        queryFn: async () => {
+            const res = await api.get("/reports/quotations/count").then(res => res.data);
+            return res.data;
+        },
+        staleTime: 20 * 1000,
+    });
+};
+
+// Quotations count for chart
+export const useQuotationCount = (startDate, endDate) => {
+    return useQuery({
+        queryKey: ['dashboard-quotationsCount', startDate, endDate],
+        queryFn: async () => {
+            const res = await api.get('reports/quotations', {
+                params: { startDate, endDate }
+            }).then(res => res.data)
+            return res.data;
+        },
+        enabled: !!startDate && !!endDate,
+        staleTime: 60 * 1000,
+    })
+}
+
+// filtered quotations
+export const useFilteredQuotationCount = (startDate, endDate) => {
+    return useQuery({
+        queryKey: ['dashboard-filteredQuotationsCount', startDate, endDate],
+        queryFn: async () => {
+            const res = await api.get('reports/quotations/filtered', {
+                params: { startDate, endDate }
+            }).then(res => res.data)
+            return res.data;
+        },
+        enabled: !!startDate && !!endDate,
+        staleTime: 60 * 1000,
+        onError: (err) => {
+            console.log(err)
+            toast.error(err?.response?.data?.message)
+        }
+    })
+}
