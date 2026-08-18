@@ -159,10 +159,10 @@ function WebBannersTab({ layout, onSave, isSaving }) {
                                     </div>
                                 </div>
 
-                                {/* App Banner Aspect 5:3 */}
+                                {/* App Banner Aspect 5:2 */}
                                 <div className="lg:col-span-5 space-y-2">
-                                    <Label className="text-xs font-semibold text-slate-700">App Banner (5:3 Ratio)</Label>
-                                    <div className="relative w-full aspect-[5/3] border border-bdr2 rounded-xl bg-back1 overflow-hidden flex flex-col items-center justify-center">
+                                    <Label className="text-xs font-semibold text-slate-700">App Banner (5:2 Ratio)</Label>
+                                    <div className="relative w-full aspect-[5/2] border border-bdr2 rounded-xl bg-back1 overflow-hidden flex flex-col items-center justify-center">
                                         {banner.mobileUrl ? (
                                             <div className="relative w-full h-full">
                                                 <Image
@@ -194,7 +194,7 @@ function WebBannersTab({ layout, onSave, isSaving }) {
                                                 ) : (
                                                     <>
                                                         <UploadCloud size={24} className="text-slate-400 mb-1" />
-                                                        <span className="text-[10px] text-slate-400 font-semibold">Upload 5:3 App Banner</span>
+                                                        <span className="text-[10px] text-slate-400 font-semibold">Upload 5:2 App Banner</span>
                                                     </>
                                                 )}
                                             </label>

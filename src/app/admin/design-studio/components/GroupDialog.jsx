@@ -298,7 +298,10 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                                 {/* Web Banner */}
                                 <div className="space-y-2 border border-bdr2 rounded-lg p-3 bg-back1">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[11px] font-bold text-slate-700">Web Banner Image</span>
+                                        <div className="flex flex-col">
+                                            <span className="text-[11px] font-bold text-slate-700">Web Banner Image</span>
+                                            <span className="text-[10px] text-slate-400 font-medium">Recommended Aspect Ratio: 16:3 (e.g. 1920x360)</span>
+                                        </div>
                                         <FormField
                                             control={control}
                                             name="isWebBannerVisible"
@@ -313,14 +316,14 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                                     <div className="relative">
                                         <input type="file" id="webBannerFile" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'webBanner')} />
                                         {watch('webBanner') ? (
-                                            <div className="relative h-24 w-full border border-bdr2 rounded-lg overflow-hidden bg-white">
-                                                <Image src={watch('webBanner')} alt="web banner" fill className="object-contain" />
-                                                <button type="button" onClick={() => setValue('webBanner', '')} className="absolute right-1 top-1 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200"><X size={12} /></button>
+                                            <div className="relative w-full border border-bdr2 rounded-lg overflow-hidden bg-white aspect-[16/3]">
+                                                <Image src={watch('webBanner')} alt="web banner" fill className="object-cover" unoptimized />
+                                                <button type="button" onClick={() => setValue('webBanner', '')} className="absolute right-2 top-2 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200 z-10"><X size={12} /></button>
                                             </div>
                                         ) : (
-                                            <label htmlFor="webBannerFile" className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer bg-white hover:border-slate-350 transition-all">
+                                            <label htmlFor="webBannerFile" className="flex flex-col items-center justify-center w-full aspect-[16/3] border-2 border-dashed border-slate-200 rounded-lg cursor-pointer bg-white hover:border-slate-350 transition-all">
                                                 {uploadingField === 'webBanner' ? <Loader2 className="animate-spin text-primary" /> : <UploadCloud size={20} className="text-slate-400" />}
-                                                <span className="text-[11px] text-slate-400 mt-1">Upload Web Banner</span>
+                                                <span className="text-[11px] text-slate-400 mt-1">Upload Web Banner (16:3)</span>
                                             </label>
                                         )}
                                     </div>
@@ -354,16 +357,19 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                                 </div>
                             </div>
 
-                            {/* SECTION 3: APP CUSTOMIZATION CARD */}
+                             {/* SECTION 3: APP CUSTOMIZATION CARD */}
                             <div className="bg-back2 border border-bdr2 rounded-xl p-5 space-y-4 shadow-none">
                                 <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600 border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                                    <Smartphone size={14} /> 3. Mobile App Configuration
+                                    <Smartphone size={14} /> 3. Mobile Web & App Configuration
                                 </h3>
 
                                 {/* App Banner */}
                                 <div className="space-y-2 border border-bdr2 rounded-lg p-3 bg-back1">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[11px] font-bold text-slate-700">App Banner Image</span>
+                                        <div className="flex flex-col">
+                                            <span className="text-[11px] font-bold text-slate-700">Mobile Web & App Banner Image</span>
+                                            <span className="text-[10px] text-slate-400 font-medium">Recommended Aspect Ratio: 5:2 (e.g. 1000x400)</span>
+                                        </div>
                                         <FormField
                                             control={control}
                                             name="isAppBannerVisible"
@@ -378,14 +384,14 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                                     <div className="relative">
                                         <input type="file" id="appBannerFile" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'appBanner')} />
                                         {watch('appBanner') ? (
-                                            <div className="relative h-24 w-full border border-bdr2 rounded-lg overflow-hidden bg-white">
-                                                <Image src={watch('appBanner')} alt="app banner" fill className="object-contain" />
-                                                <button type="button" onClick={() => setValue('appBanner', '')} className="absolute right-1 top-1 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200"><X size={12} /></button>
+                                            <div className="relative w-full border border-bdr2 rounded-lg overflow-hidden bg-white aspect-[5/2]">
+                                                <Image src={watch('appBanner')} alt="app banner" fill className="object-cover" unoptimized />
+                                                <button type="button" onClick={() => setValue('appBanner', '')} className="absolute right-2 top-2 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200 z-10"><X size={12} /></button>
                                             </div>
                                         ) : (
-                                            <label htmlFor="appBannerFile" className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer bg-white hover:border-slate-350 transition-all">
+                                            <label htmlFor="appBannerFile" className="flex flex-col items-center justify-center w-full aspect-[5/2] border-2 border-dashed border-slate-200 rounded-lg cursor-pointer bg-white hover:border-slate-350 transition-all">
                                                 {uploadingField === 'appBanner' ? <Loader2 className="animate-spin text-primary" /> : <UploadCloud size={20} className="text-slate-400" />}
-                                                <span className="text-[11px] text-slate-400 mt-1">Upload App Banner</span>
+                                                <span className="text-[11px] text-slate-400 mt-1">Upload Mobile Web & App Banner (5:2)</span>
                                             </label>
                                         )}
                                     </div>
@@ -394,7 +400,7 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                                 {/* App Background Color */}
                                 <div className="space-y-2 border border-bdr2 rounded-lg p-3 bg-back1">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[11px] font-bold text-slate-700">App Background Color</span>
+                                        <span className="text-[11px] font-bold text-slate-700">Mobile Web & App Background Color</span>
                                         <FormField
                                             control={control}
                                             name="isAppBgColorVisible"
