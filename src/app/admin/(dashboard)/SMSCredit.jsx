@@ -27,14 +27,18 @@ export default function SMSCredit() {
                 if (!rawCredit) throw new Error("No data")
 
                 const numericCredit = parseFloat(rawCredit.replace('INR', ''))
+
+                // Check for low balance
                 if (numericCredit < 50) {
                     setLowCredit(true)
                 }
 
+                // Format with commas and 2 decimal places
                 const formatted = numericCredit.toLocaleString('en-IN', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                 })
+
                 setCredit(formatted)
             } catch (err) {
                 setError('FAIL')
@@ -51,39 +55,34 @@ export default function SMSCredit() {
     const formattedDate = format(now, 'dd MMM yyyy')
 
     return (
-        <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2.5 rounded-sm font-mono text-sm tracking-wider text-slate-800 dark:text-slate-200">
+        <div className="flex items-center gap-3 bg-white border border-grey-100 px-3.5 py-1.5 rounded-full text-xs font-medium text-grey-600 w-fit md:ml-auto select-none">
             {/* Live Clock Section */}
-            <div className="flex items-center gap-2 pr-4 border-r border-slate-200 dark:border-slate-800">
-                <Clock className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 select-none mr-1">{formattedDate}</span>
-                <span className="text-sky-600 dark:text-sky-400 font-bold tabular-nums min-w-[95px]">{formattedTime}</span>
+            <div className="flex items-center gap-2 pr-3 border-r border-slate-200">
+                <Clock className="h-3.5 w-3.5 text-slate-400" />
+                <span className="text-[10px] text-slate-400 font-semibold">{formattedDate}</span>
+                <span className="text-slate-700 font-bold tabular-nums tracking-wide">{formattedTime}</span>
             </div>
 
             {/* SMS Balance Section */}
-            <div className="flex items-center gap-3">
-                <span className={`h-2 w-2 rounded-full ${isLoading
-                        ? 'bg-amber-500 animate-pulse'
-                        : error
-                            ? 'bg-red-500'
-                            : lowCredit
-                                ? 'bg-red-500 animate-pulse'
-                                : 'bg-emerald-500 animate-pulse'
+            <div className="flex items-center gap-2">
+                <span className={`h-1.5 w-1.5 rounded-full ${isLoading
+                    ? 'bg-amber-400 animate-pulse'
+                    : error
+                        ? 'bg-rose-400'
+                        : lowCredit
+                            ? 'bg-rose-400 animate-pulse'
+                            : 'bg-emerald-400'
                     }`}></span>
-
-                <div className="flex items-center gap-1 select-none">
-                    <MessageSquare className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-sans uppercase font-bold tracking-normal">SMS:</span>
-                </div>
-
-                <span className={`font-extrabold ${isLoading
-                        ? 'text-amber-500'
-                        : error
-                            ? 'text-red-600 dark:text-red-500'
-                            : lowCredit
-                                ? 'text-red-600 dark:text-red-500'
-                                : 'text-emerald-600 dark:text-emerald-400'
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">SMS:</span>
+                <span className={`font-bold tracking-tight ${isLoading
+                    ? 'text-amber-500'
+                    : error
+                        ? 'text-rose-500'
+                        : lowCredit
+                            ? 'text-rose-500'
+                            : 'text-slate-800'
                     }`}>
-                    {isLoading ? 'LOADING...' : error ? 'FAIL' : `₹${credit}`}
+                    {isLoading ? '...' : error ? 'FAIL' : `₹${credit}`}
                 </span>
             </div>
         </div>

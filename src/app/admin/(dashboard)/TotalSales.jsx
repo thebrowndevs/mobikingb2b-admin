@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { Card } from '@/components/ui/card'
 import { useTotalSales } from '@/hooks/useDashboard'
 import { Loader2, IndianRupee } from 'lucide-react'
 
@@ -15,20 +16,28 @@ export default function TotalSales() {
   }).format(data?.totalSales || 0)
 
   return (
-    <div className="flex items-center justify-between p-6 rounded-sm border border-slate-200 dark:border-slate-800 bg-white transition-all duration-300 hover:scale-[1.02]">
-      <div className="flex flex-col items-start mb-0">
+    <Card className="relative overflow-hidden bg-gradient-to-br from-amber-50/80 via-white to-amber-50/20 border-amber-100 hover:border-amber-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 rounded-xl p-3 sm:p-4 flex flex-row items-center justify-between gap-2 group">
+      {/* Decorative background glow */}
+      <div className="absolute -right-6 -bottom-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500" />
+      
+      <div className="flex flex-col items-start z-10 min-w-0">
+        <p className="text-[10px] sm:text-xs font-bold text-amber-600/80 uppercase tracking-wider truncate w-full">Total Sales</p>
         {isLoading ? (
-          <Loader2 className="animate-spin h-8 w-8 text-emerald-500" />
+          <div className="h-7 flex items-center mt-0.5">
+            <Loader2 className="animate-spin h-5 w-5 text-amber-500" />
+          </div>
         ) : isError ? (
-          <p className="text-sm text-red-500">Error loading</p>
+          <p className="text-xs font-semibold text-rose-500 mt-0.5">Error</p>
         ) : (
-          <p className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">{formattedSales}</p>
+          <p className="text-base sm:text-xl font-extrabold text-slate-800 tracking-tight mt-0.5 truncate">
+            {formattedSales}
+          </p>
         )}
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Total Sales</p>
       </div>
-      <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl">
-        <IndianRupee className="h-6 w-6 text-emerald-500" />
+
+      <div className="p-2 sm:p-3 rounded-xl bg-amber-500/10 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all duration-350 shadow-inner z-10 shrink-0">
+        <IndianRupee className="h-5 w-5 sm:h-6 sm:w-6" />
       </div>
-    </div>
+    </Card>
   )
 }

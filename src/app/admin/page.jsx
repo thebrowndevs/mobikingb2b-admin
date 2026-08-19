@@ -26,17 +26,17 @@ export default function Home() {
 
   return (
     <InnerDashboardLayout>
-      <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div className="w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-5">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Mobiking Admin</h1>
+          <h1 className="text-3xl font-bold text-slate-800 tracking-tighter">Mobiking Admin</h1>
           <p className="text-sm text-slate-500 mt-1">Complete Platform for B2B Sales Management</p>
         </div>
-        <div className="w-full sm:w-auto min-w-[280px]">
+        <div className="w-full md:w-auto min-w-[280px]">
           <SMSCredit />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <TotalOrders />
         <TotalQuotations />
         <TotalCustomers />
@@ -45,13 +45,12 @@ export default function Home() {
         <SalesOfOneMonth />
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CustomersChart />
-        {/* <OrdersChart /> */}
         <SalesChartByDate />
       </div>
 
-      <div className="mt-8 space-y-8">
+      <div className="mt-6 space-y-6">
         <FilteredQuotationsChart />
         <FilteredOrdersChart />
       </div>

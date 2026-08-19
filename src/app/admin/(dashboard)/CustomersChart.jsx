@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, CalendarIcon, Loader2 } from "lucide-react";
+import { TrendingUp, CalendarIcon, Loader2, Users } from "lucide-react";
 import { CartesianGrid, AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useCustomerCount } from '@/hooks/useDashboard'
 import React, { useEffect, useState } from 'react'
@@ -21,9 +21,12 @@ export const description = "An area gradient chart"
 function CustomTooltip({ active, payload, label }) {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white p-2 rounded-md shadow text-sm">
-                <p className="font-medium text-muted-foreground">{format(new Date(label), 'dd MMM yyyy')}</p>
-                <p className="text-primary">Customers: {payload[0].value}</p>
+            <div className="bg-white/95 border border-slate-100 p-2.5 rounded-xl shadow-lg shadow-slate-200/50 text-xs backdrop-blur-sm z-50">
+                <p className="font-semibold text-slate-500 mb-0.5">{format(new Date(label), 'dd MMM yyyy')}</p>
+                <p className="font-extrabold text-indigo-600 flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                    Customers: {payload[0].value}
+                </p>
             </div>
         );
     }
@@ -35,7 +38,6 @@ export function CustomersChart() {
     const initialRange = { from: startOfMonth(today), to: today }
     const [range, setRange] = useState(initialRange)
 
-    // Ensure chart renders on initial mount
     useEffect(() => {
         setRange(initialRange)
     }, [])
@@ -51,54 +53,61 @@ export function CustomersChart() {
     })) || []
 
     return (
-        <Card className="border border-slate-200 dark:border-slate-800 rounded-sm shadow-none transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle>Customer</CardTitle>
-                    <CardDescription>
-                        Data shows the number of customers
-                    </CardDescription>
+        <Card className="py-0 overflow-hidden border border-slate-100 shadow-sm shadow-slate-100 hover:shadow-md transition-shadow duration-300 rounded-2xl bg-white">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 px-6 pt-5">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+                        <Users className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <CardTitle className="text-base font-bold text-slate-800">New Customers</CardTitle>
+                        <CardDescription className="text-xs text-slate-400">
+                            Growth of customer base over time
+                        </CardDescription>
+                    </div>
                 </div>
-                <DateRangeSelector onChange={setRange} defaultRange={initialRange} />
+                <div className="scale-90 origin-left sm:origin-right">
+                    <DateRangeSelector onChange={setRange} defaultRange={initialRange} />
+                </div>
             </CardHeader>
 
-            <CardContent>
+            <CardContent className="px-6 pb-2">
                 {isLoading ? (
-                    <div className="w-full h-[300px] flex items-center justify-center">
-                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <div className="w-full h-[240px] flex items-center justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
                     </div>
                 ) : error ? (
-                    <div className="w-full h-[300px] flex items-center justify-center text-red-500">
+                    <div className="w-full h-[240px] flex items-center justify-center text-rose-500 text-xs font-semibold">
                         Error loading chart data
                     </div>
                 ) : (
-                    <div className="w-full h-[300px]">
+                    <div className="w-full h-[240px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData} margin={{ left: 12, right: 12 }}>
+                            <AreaChart data={chartData} margin={{ left: 0, right: 0, top: 10, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorCustomer" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="var(--color-chart-2)" stopOpacity={0.6} />
-                                        <stop offset="95%" stopColor="var(--color-chart-2)" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
+                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0.01} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid vertical={false} />
+                                <CartesianGrid vertical={false} stroke="#f8fafc" strokeWidth={1.5} />
                                 <XAxis
                                     dataKey="month"
                                     tickLine={false}
                                     axisLine={false}
                                     tickMargin={8}
-                                    tick={{ fontSize: 12 }}
+                                    tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
                                     tickFormatter={(value) => format(new Date(value), 'dd MMM')}
                                 />
                                 <YAxis hide />
-                                <Tooltip content={<CustomTooltip />} cursor={false} />
+                                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#e2e8f0', strokeWidth: 1, strokeDasharray: '4 4' }} />
                                 <Area
                                     type="monotone"
                                     dataKey="desktop"
-                                    stroke="var(--color-chart-2)"
+                                    stroke="#6366f1"
                                     fillOpacity={1}
                                     fill="url(#colorCustomer)"
-                                    strokeWidth={1}
+                                    strokeWidth={2}
                                     dot={false}
                                 />
                             </AreaChart>
@@ -107,10 +116,9 @@ export function CustomersChart() {
                 )}
             </CardContent>
 
-            <CardFooter className="flex-col items-start gap-2 text-sm">
-                <div className="text-muted-foreground leading-none">
-                    Showing data between {formattedStart} to {formattedEnd}
-                </div>
+            <CardFooter className="pt-2 pb-4 px-6 border-t border-slate-50 flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
+                <CalendarIcon className="h-3.5 w-3.5 text-slate-400" />
+                <span>Showing data: {formattedStart} - {formattedEnd}</span>
             </CardFooter>
         </Card>
     );
