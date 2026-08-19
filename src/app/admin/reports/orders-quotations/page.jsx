@@ -308,11 +308,13 @@ export default function OrdersQuotationsReportPage() {
 
     return (
         <InnerDashboardLayout>
-            <div className="flex items-center justify-between mb-4">
-                <h1 className="text-primary font-bold text-2xl">
-                    Orders & Quotations Reports
-                </h1>
-                <div className="flex gap-2">
+            {/* Header Section matching Dashboard/Payment Links/Queries format */}
+            <div className="w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-5 border-b border-grey-200 mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tighter">Orders & Quotations Reports</h1>
+                    <p className="text-sm text-slate-500 mt-1">Generate and export custom order entries and client quotation summaries to Excel</p>
+                </div>
+                <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
                     {selectedModel === "Order" && (
                         <Button
                             type="button"
@@ -325,6 +327,7 @@ export default function OrdersQuotationsReportPage() {
                                     setValue("columns", REQUIRED_GST_BACKEND_COLUMNS)
                                 }
                             }}
+                            className="rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold h-10 px-4"
                         >
                             {isGSTMode ? "Exit GST Mode" : "GST Report Mode"}
                         </Button>
@@ -333,6 +336,7 @@ export default function OrdersQuotationsReportPage() {
                         <LoaderButton
                             loading={reportMutation.isPending}
                             onClick={handleSubmit(onSubmit)}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-600/10 font-semibold px-5 h-10 border-0 flex items-center gap-2"
                         >
                             Generate Report
                         </LoaderButton>
@@ -340,9 +344,9 @@ export default function OrdersQuotationsReportPage() {
                 </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
                 <Form {...form}>
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                         {/* Model Selection */}
                         <PCard>
                             <FormField
@@ -350,14 +354,14 @@ export default function OrdersQuotationsReportPage() {
                                 name="model"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="font-bold">Select Module</FormLabel>
+                                        <FormLabel className="font-bold text-slate-800 text-sm">Select Module</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
-                                                <SelectTrigger className="w-full">
+                                                <SelectTrigger className="w-full rounded-xl border-slate-200/85">
                                                     <SelectValue placeholder="Select a model" />
                                                 </SelectTrigger>
                                             </FormControl>
-                                            <SelectContent>
+                                            <SelectContent className="rounded-xl">
                                                 <SelectItem value="Order">Orders</SelectItem>
                                                 <SelectItem value="Quotation">Quotations</SelectItem>
                                             </SelectContent>
@@ -375,29 +379,31 @@ export default function OrdersQuotationsReportPage() {
                                 render={() => (
                                     <FormItem>
                                         <div className="flex justify-between items-center mb-4">
-                                            <FormLabel className="font-bold">Columns to Export</FormLabel>
+                                            <FormLabel className="font-bold text-slate-800 text-sm">Columns to Export</FormLabel>
                                             {!isGSTMode && (
                                                 <Button
                                                     type="button"
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={toggleSelectAll}
+                                                    className="rounded-xl border-slate-200 text-slate-650 hover:bg-slate-50 text-xs font-semibold h-8"
                                                 >
                                                     {selectAll ? "Deselect All" : "Select All"}
                                                 </Button>
                                             )}
                                         </div>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[250px] overflow-y-auto p-4 border rounded-lg">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[250px] overflow-y-auto p-4 border border-slate-100 rounded-2xl bg-slate-50/50 scrollbar-hide">
                                             {(columnOptions[selectedModel] || []).map((column) => (
-                                                <div key={column} className="flex items-center space-x-2">
+                                                <div key={column} className="flex items-center space-x-2.5 p-2 rounded-xl hover:bg-white hover:shadow-sm hover:shadow-slate-100 transition-all duration-200">
                                                     <Checkbox
                                                         id={column}
                                                         disabled={isGSTMode}
                                                         checked={selectedCols.includes(column)}
                                                         onCheckedChange={() => toggleColumn(column)}
+                                                        className="rounded-md border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                                                     />
-                                                    <label htmlFor={column} className="text-sm capitalize font-medium cursor-pointer">
+                                                    <label htmlFor={column} className="text-xs font-bold text-slate-700 capitalize cursor-pointer select-none">
                                                         {column}
                                                     </label>
                                                 </div>
@@ -416,16 +422,16 @@ export default function OrdersQuotationsReportPage() {
                                     name="startDate"
                                     render={({ field }) => (
                                         <FormItem className="flex flex-col">
-                                            <FormLabel className="font-bold">From Date</FormLabel>
+                                            <FormLabel className="font-bold text-slate-800 text-sm mb-1.5">From Date</FormLabel>
                                             <Popover>
                                                 <PopoverTrigger asChild>
                                                     <FormControl>
-                                                        <Button variant="outline" className="w-full text-left pl-3 font-normal">
+                                                        <Button variant="outline" className="w-full text-left pl-3 font-semibold text-slate-700 rounded-xl border-slate-200/85">
                                                             {field.value || "Pick a date"}
                                                         </Button>
                                                     </FormControl>
                                                 </PopoverTrigger>
-                                                <PopoverContent align="start" className="p-0">
+                                                <PopoverContent align="start" className="p-0 rounded-xl">
                                                     <Calendar
                                                         mode="single"
                                                         selected={parseDateString(field.value)}
@@ -442,16 +448,16 @@ export default function OrdersQuotationsReportPage() {
                                     name="endDate"
                                     render={({ field }) => (
                                         <FormItem className="flex flex-col">
-                                            <FormLabel className="font-bold">To Date</FormLabel>
+                                            <FormLabel className="font-bold text-slate-800 text-sm mb-1.5">To Date</FormLabel>
                                             <Popover>
                                                 <PopoverTrigger asChild>
                                                     <FormControl>
-                                                        <Button variant="outline" className="w-full text-left pl-3 font-normal">
+                                                        <Button variant="outline" className="w-full text-left pl-3 font-semibold text-slate-700 rounded-xl border-slate-200/85">
                                                             {field.value || "Pick a date"}
                                                         </Button>
                                                     </FormControl>
                                                 </PopoverTrigger>
-                                                <PopoverContent align="start" className="p-0">
+                                                <PopoverContent align="start" className="p-0 rounded-xl">
                                                     <Calendar
                                                         mode="single"
                                                         selected={parseDateString(field.value)}
@@ -473,16 +479,16 @@ export default function OrdersQuotationsReportPage() {
                                     name="type"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="font-bold">
+                                            <FormLabel className="font-bold text-slate-800 text-sm">
                                                 {selectedModel === "Order" ? "Order Type" : "Quotation Type"}
                                             </FormLabel>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                 <FormControl>
-                                                    <SelectTrigger className="w-full">
+                                                    <SelectTrigger className="w-full rounded-xl border-slate-200/85">
                                                         <SelectValue placeholder="Select type" />
                                                     </SelectTrigger>
                                                 </FormControl>
-                                                <SelectContent>
+                                                <SelectContent className="rounded-xl">
                                                     {orderTypes.map((t) => (
                                                         <SelectItem key={t} value={t} className="capitalize">
                                                             {t}
@@ -498,59 +504,59 @@ export default function OrdersQuotationsReportPage() {
 
                         {/* Extra Order Specific Filters */}
                         {selectedModel === "Order" && !isGSTMode && (
-                            <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <PCard>
+                                    <FormLabel className="font-bold text-slate-800 text-sm block mb-4">Payment Status</FormLabel>
+                                    <div className="flex gap-4">
+                                        {paymentStatusOptions.map(p => (
+                                            <div key={p} className="flex items-center space-x-2.5 p-2 rounded-xl hover:bg-slate-50/50 transition-colors duration-150">
+                                                <Checkbox
+                                                    id={`payment-${p}`}
+                                                    checked={(watch("paymentStatus") || []).includes(p)}
+                                                    onCheckedChange={() => toggleArrayValue("paymentStatus", p)}
+                                                    className="rounded-md border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                                                />
+                                                <label htmlFor={`payment-${p}`} className="text-xs font-bold text-slate-700 cursor-pointer select-none">{p}</label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </PCard>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <PCard>
-                                        <FormLabel className="font-bold block mb-2">Payment Status</FormLabel>
-                                        <div className="flex gap-4">
-                                            {paymentStatusOptions.map(p => (
-                                                <div key={p} className="flex items-center space-x-2">
-                                                    <Checkbox
-                                                        id={`payment-${p}`}
-                                                        checked={(watch("paymentStatus") || []).includes(p)}
-                                                        onCheckedChange={() => toggleArrayValue("paymentStatus", p)}
-                                                    />
-                                                    <label htmlFor={`payment-${p}`} className="text-sm font-medium cursor-pointer">{p}</label>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </PCard>
-
-                                    <PCard>
-                                        <FormLabel className="font-bold block mb-2">Payment Methods</FormLabel>
-                                        <div className="flex gap-4 flex-wrap">
-                                            {methodOptions.map(m => (
-                                                <div key={m} className="flex items-center space-x-2">
-                                                    <Checkbox
-                                                        id={`method-${m}`}
-                                                        checked={(watch("method") || []).includes(m)}
-                                                        onCheckedChange={() => toggleArrayValue("method", m)}
-                                                    />
-                                                    <label htmlFor={`method-${m}`} className="text-sm font-medium cursor-pointer">{m}</label>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </PCard>
-                                </div>
-                            </>
+                                <PCard>
+                                    <FormLabel className="font-bold text-slate-800 text-sm block mb-4">Payment Methods</FormLabel>
+                                    <div className="flex gap-4 flex-wrap">
+                                        {methodOptions.map(m => (
+                                            <div key={m} className="flex items-center space-x-2.5 p-2 rounded-xl hover:bg-slate-50/50 transition-colors duration-150">
+                                                <Checkbox
+                                                    id={`method-${m}`}
+                                                    checked={(watch("method") || []).includes(m)}
+                                                    onCheckedChange={() => toggleArrayValue("method", m)}
+                                                    className="rounded-md border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                                                />
+                                                <label htmlFor={`method-${m}`} className="text-xs font-bold text-slate-700 cursor-pointer select-none">{m}</label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </PCard>
+                            </div>
                         )}
 
                         {/* Status Checkboxes */}
                         {!isGSTMode && (
                             <PCard>
-                                <FormLabel className="font-bold block mb-2">
+                                <FormLabel className="font-bold text-slate-800 text-sm block mb-4">
                                     {selectedModel === "Order" ? "Order Status" : "Quotation Status"}
                                 </FormLabel>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                     {(selectedModel === "Order" ? orderStatusOptions : quotationStatusOptions).map((s) => (
-                                        <div key={s} className="flex items-center space-x-2">
+                                        <div key={s} className="flex items-center space-x-2.5 p-2 rounded-xl hover:bg-slate-50/50 transition-colors duration-150">
                                             <Checkbox
                                                 id={`status-${s}`}
                                                 checked={(watch("status") || []).includes(s)}
                                                 onCheckedChange={() => toggleArrayValue("status", s)}
+                                                className="rounded-md border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                                             />
-                                            <label htmlFor={`status-${s}`} className="text-sm font-medium cursor-pointer capitalize">{s}</label>
+                                            <label htmlFor={`status-${s}`} className="text-xs font-bold text-slate-700 cursor-pointer select-none capitalize">{s}</label>
                                         </div>
                                     ))}
                                 </div>
@@ -562,3 +568,4 @@ export default function OrdersQuotationsReportPage() {
         </InnerDashboardLayout>
     )
 }
+

@@ -68,12 +68,15 @@ function Page() {
 
     return (
         <InnerDashboardLayout>
-            <div className="w-full flex items-center justify-between text-primary mb-5">
+            {/* Header Section matching Dashboard/Payment Links format */}
+            <div className="w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-5 border-b border-grey-200 mb-6">
                 <div>
-                    <h1 className="font-bold sm:text-2xl lg:text-4xl w-full">Queries</h1>
-                    <p className='text-xs text-gray-600 mt-2'>Showing Summary: <strong>{formattedStart}</strong> - <strong>{formattedEnd}</strong></p>
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tighter">Queries</h1>
+                    <p className="text-sm text-slate-500 mt-1">Showing Summary: <strong>{formattedStart}</strong> - <strong>{formattedEnd}</strong></p>
                 </div>
-                <DateRangeSelector onChange={setRange} defaultRange={initialRange} />
+                <div className="w-full md:w-auto ">
+                    <DateRangeSelector onChange={setRange} defaultRange={initialRange} />
+                </div>
             </div>
 
             <div className="flex items-center gap-2 mb-3">
@@ -84,7 +87,7 @@ function Page() {
                         placeholder="Search queries by title, description, or Order ID..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 pr-8 bg-white border-gray-300 w-full text-sm"
+                        className="pl-9 pr-8 bg-white border-slate-200/80 w-full text-sm rounded-xl focus-visible:ring-indigo-500/40"
                     />
                     {searchTerm && (
                         <button

@@ -1,14 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { Pencil, TrendingUp, Star, Trash } from 'lucide-react';
-import { Table, TableHeader, TableRow, TableCell, TableHead, TableBody, } from '@/components/ui/table';
+import { Pencil, Trash, Tag } from 'lucide-react';
+import { Table, TableHeader, TableRow, TableCell, TableHead, TableBody } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import Loader from '@/components/Loader';
-// import DeleteConfirmationDialog from './DeleteConfirmationDialog ';
-import toast from 'react-hot-toast';
-import { format } from 'date-fns';
 import { formatInTimeZone } from "date-fns-tz";
 import DeleteConfirmationDialog from './DeleteConfirmationDialog ';
 
@@ -20,29 +15,34 @@ export default function CouponsTable({
     deleteError,
     onEdit,
     canDelete,
-    canEdit,
-    setSelectedCoupon,
-    onUpdate
+    canEdit
 }) {
-
-    const STATUS_VARIANTS = {
-        general: 'yellow',           // yellow
-        online: 'green',        // green
-        oneTime: 'blue', // red
-        oneTimeUser: 'blue',
-        firstTime: 'purple',      // purple/outline
-        // Hold: 'gray',        // gray or custom secondary
-    }
 
     const [deletingId, setDeletingId] = useState(null);
 
+    // Static badge style mappings for robust Tailwind compiler support
+    const getBadgeStyles = (type) => {
+        switch (type) {
+            case 'online':
+                return 'bg-emerald-50 text-emerald-700 border-emerald-100/60 hover:bg-emerald-50';
+            case 'oneTime':
+            case 'oneTimeUser':
+                return 'bg-blue-50 text-blue-700 border-blue-100/60 hover:bg-blue-50';
+            case 'firstTime':
+                return 'bg-purple-50 text-purple-700 border-purple-100/60 hover:bg-purple-50';
+            default:
+                return 'bg-amber-50 text-amber-700 border-amber-100/60 hover:bg-amber-50';
+        }
+    };
+
     function formatDateParts(date) {
+        if (!date) return { date: '-', time: '-' };
         const d = new Date(date);
         d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); // shift to local
 
         return {
-            date: formatInTimeZone(d, "UTC", "dd MMM yyyy"),   // e.g. "18 Sep 2025"
-            time: formatInTimeZone(d, "UTC", "HH:mm")        // e.g. "01:45 PM"
+            date: formatInTimeZone(d, "UTC", "dd MMM yyyy"),
+            time: formatInTimeZone(d, "UTC", "hh:mm a")
         };
     }
 
@@ -57,136 +57,127 @@ export default function CouponsTable({
 
     if (error) {
         return (
-            <div className="text-red-600 p-4">
-                Error: {error.message}
+            <div className="text-rose-600 p-4 border border-rose-100 bg-rose-50/50 rounded-2xl text-sm font-semibold">
+                Error: {error.message || "Failed to load coupons"}
             </div>
         );
     }
 
     return (
         <section className="w-full mb-4">
-            <div className="overflow-x-auto rounded-md border border-gray-200">
+            <div className="overflow-hidden border border-slate-100 rounded-2xl shadow-sm shadow-slate-100/50 bg-white">
                 <Table className="w-full">
-                    <TableHeader>
-                        <TableRow className="bg-gray-50 ">
-                            <TableHead className="w-[50px]">#</TableHead>
-                            <TableHead className="">Coupon Code</TableHead>
-                            <TableHead className="">Max Value (₹)</TableHead>
-                            <TableHead className="">Percent (%)</TableHead>
-                            <TableHead className="">Type</TableHead>
-                            <TableHead className="">Start Date</TableHead>
-                            <TableHead className="">End Date</TableHead>
-                            <TableHead className="text-center">Actions</TableHead>
+                    <TableHeader className="bg-slate-50/75 border-b border-slate-100">
+                        <TableRow className="hover:bg-transparent">
+                            <TableHead className="w-[60px] text-center text-slate-500 font-bold uppercase tracking-wider text-[11px]">#</TableHead>
+                            <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[11px]">Coupon Code</TableHead>
+                            <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[11px] w-[140px]">Max Value (₹)</TableHead>
+                            <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[11px] w-[110px]">Percent (%)</TableHead>
+                            <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[11px]">Type</TableHead>
+                            <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[11px] w-[100px] text-center">Status</TableHead>
+                            <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[11px] w-[140px]">Start Date</TableHead>
+                            <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[11px] w-[140px]">End Date</TableHead>
+                            <TableHead className="text-center text-slate-500 font-bold uppercase tracking-wider text-[11px] w-[110px]">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
-
 
                     <TableBody>
                         {coupons?.map((coupon, index) => (
                             <TableRow
-                                key={index}
-                                className="even:bg-gray-50 hover:bg-gray-100 transition"
+                                key={coupon._id || index}
+                                className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors duration-150 last:border-0"
                             >
                                 {/* 1. Index */}
-                                <TableCell className="text-sm">
+                                <TableCell className="text-center font-semibold text-slate-400 text-xs py-3.5">
                                     {index + 1}
                                 </TableCell>
 
                                 {/* 2. Coupon Code */}
-                                <TableCell className="">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="font-semibold">{coupon?.code}</span>
+                                <TableCell className="py-3.5">
+                                    <div className="flex flex-col gap-1 min-w-[120px]">
+                                        <div className="flex items-center gap-1.5 font-bold text-slate-800 text-sm">
+                                            <Tag className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                                            <span>{coupon?.code}</span>
+                                        </div>
                                         {coupon?.isAdminOnly && (
-                                            <span className="text-[10px] w-fit font-medium bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded border border-gray-300">
+                                            <span className="text-[9px] w-fit font-extrabold uppercase tracking-wider bg-slate-50 text-slate-500 px-1.5 py-0.5 rounded-lg border border-slate-250">
                                                 Admin Only
                                             </span>
                                         )}
                                     </div>
                                 </TableCell>
 
-                                {/* 3. value */}
-                                <TableCell className="text-sm">
-                                    {coupon?.value}
+                                {/* 3. Max Value */}
+                                <TableCell className="font-bold text-slate-800 text-sm py-3.5">
+                                    ₹{coupon?.value || 0}
                                 </TableCell>
 
-                                {/* 3. Max Percent % */}
-                                <TableCell className="">
-                                    {coupon?.percent}
+                                {/* 4. Percent */}
+                                <TableCell className="font-bold text-slate-850 text-sm py-3.5">
+                                    {coupon?.percent}%
                                 </TableCell>
 
-                                {/* 3. Type */}
-                                <TableCell className="">
-                                    {
-                                        coupon?.type &&
-                                        <Badge className={`bg-${STATUS_VARIANTS[coupon?.type] || 'gray'}-100 text-black`} >{
-                                            coupon?.type == "online" ? "Prepaid"
-                                                : coupon?.type == "oneTime" ? "One Time"
-                                                    : coupon?.type == "oneTimeUser" ? `One Time User (${coupon?.phoneNumber || ''})`
-                                                        : coupon?.type == "firstTime" ? "First Time"
-                                                            : "General"
-                                        }</Badge>
-                                    }
+                                {/* 5. Type */}
+                                <TableCell className="py-3.5">
+                                    {coupon?.type && (
+                                        <Badge variant="outline" className={`font-bold capitalize rounded-lg px-2 py-0.5 border text-[10px] ${getBadgeStyles(coupon?.type)}`}>
+                                            {coupon?.type === "online" ? "Prepaid"
+                                                : coupon?.type === "oneTime" ? "One Time"
+                                                    : coupon?.type === "oneTimeUser" ? `One Time User (${coupon?.phoneNumber || ''})`
+                                                        : coupon?.type === "firstTime" ? "First Time"
+                                                            : "General"}
+                                        </Badge>
+                                    )}
                                 </TableCell>
 
-                                {/* 3. Status */}
-                                <TableCell className="">
-                                    {coupon?.active ?
-                                        <Badge className={'bg-emerald-600 text-white'} >Active</Badge>
-                                        : <Badge variant="destructive">In Active</Badge>
-                                    }
+                                {/* 6. Status */}
+                                <TableCell className="text-center py-3.5">
+                                    {coupon?.active ? (
+                                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-100/60 font-bold rounded-lg text-[10px] px-2 py-0.5">
+                                            Active
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-100/60 font-bold rounded-lg text-[10px] px-2 py-0.5">
+                                            Inactive
+                                        </Badge>
+                                    )}
                                 </TableCell>
 
-                                {/* start date */}
-                                <TableCell className="">
-                                    <p>
-                                        {formatDateParts(coupon?.startDate)?.date}
-                                    </p>
-                                    <p className='text-gray-500'>
-                                        {formatDateParts(coupon?.startDate)?.time}
-                                    </p>
+                                {/* 7. Start Date */}
+                                <TableCell className="text-slate-600 font-medium text-xs py-3.5">
+                                    <span className="block font-semibold text-slate-700">{formatDateParts(coupon?.startDate)?.date}</span>
+                                    <span className="block text-[10px] text-slate-400 mt-0.5">{formatDateParts(coupon?.startDate)?.time}</span>
                                 </TableCell>
 
-                                {/* end date */}
-                                <TableCell className="">
-                                    <p>
-                                        {formatDateParts(coupon?.endDate)?.date}
-                                    </p>
-                                    <p className='text-gray-500'>
-                                        {formatDateParts(coupon?.endDate)?.time}
-                                    </p>
+                                {/* 8. End Date */}
+                                <TableCell className="text-slate-600 font-medium text-xs py-3.5">
+                                    <span className="block font-semibold text-slate-700">{formatDateParts(coupon?.endDate)?.date}</span>
+                                    <span className="block text-[10px] text-slate-400 mt-0.5">{formatDateParts(coupon?.endDate)?.time}</span>
                                 </TableCell>
 
-                                {/* 6. Actions Dropdown */}
-                                <TableCell className="">
+                                {/* 9. Actions */}
+                                <TableCell className="py-3.5">
                                     <div className="flex items-center justify-center gap-2">
-                                        {/* <ServiceDetailsDialog coupon={coupon} /> */}
-                                        {/* 
-                                        <Button
-                                            size="icon"
-                                            variant="outline"
-                                            className="hover:bg-gray-100"
-                                            onClick={() => handleView(coupon)}
-                                        >
-                                            <Eye size={18} className="text-gray-600" />
-                                        </Button> */}
-
-                                        {canEdit &&
+                                        {canEdit && (
                                             <Button
-                                                size="icon"
+                                                size="sm"
                                                 variant="outline"
                                                 onClick={() => onEdit(coupon)}
+                                                className="h-8 w-8 p-0 border-slate-200 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/50 rounded-xl transition-all duration-200"
                                             >
-                                                <Pencil size={16} />
+                                                <Pencil className="h-4 w-4" />
                                             </Button>
-                                        }
-                                        {canDelete &&
+                                        )}
+                                        {canDelete && (
                                             <Button
-                                                variant="destructive"
+                                                size="sm"
+                                                variant="outline"
                                                 onClick={() => handleDeleteClick(coupon._id)}
+                                                className="h-8 w-8 p-0 border-slate-200 text-slate-500 hover:text-rose-600 hover:bg-rose-50/50 rounded-xl transition-all duration-200"
                                             >
-                                                <Trash size={16} />
+                                                <Trash className="h-4 w-4" />
                                             </Button>
-                                        }
+                                        )}
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -204,7 +195,7 @@ export default function CouponsTable({
                 isLoading={isDeleting}
                 error={deleteError}
                 title="Delete Coupon"
-                description="Are you sure you want to delete this Coupon?"
+                description="Are you sure you want to delete this coupon? This action cannot be undone."
             />
         </section>
     );

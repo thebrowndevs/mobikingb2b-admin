@@ -1,4 +1,5 @@
 "use client"
+
 import React, { useState, useEffect } from "react"
 import InnerDashboardLayout from "@/components/dashboard/InnerDashboardLayout"
 import { Button } from "@/components/ui/button"
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/select"
 import NotAuthorizedPage from "@/components/notAuthorized"
 import PCard from "@/components/custom/PCard"
+import { FileDown } from 'lucide-react'
 
 const reportSchema = z.object({
     model: z.enum(["Category", "SubCategory", "Group", "Brand"]),
@@ -148,23 +150,29 @@ export default function OtherReportsPage() {
 
     return (
         <InnerDashboardLayout>
-            <div className="flex items-center justify-between mb-4">
-                <h1 className="text-primary font-bold text-2xl">
-                    Metadata & Other Reports
-                </h1>
+            {/* Header Section matching Dashboard/Payment Links/Queries format */}
+            <div className="w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-5 border-b border-grey-200 mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tighter">Metadata & Other Reports</h1>
+                    <p className="text-sm text-slate-500 mt-1">Generate and export Categories, Sub-categories, Product Groups, and Brands reports</p>
+                </div>
                 {canAdd && (
-                    <LoaderButton
-                        loading={reportMutation.isPending}
-                        onClick={handleSubmit(onSubmit)}
-                    >
-                        Generate Report
-                    </LoaderButton>
+                    <div className="w-full md:w-auto shrink-0">
+                        <LoaderButton
+                            loading={reportMutation.isPending}
+                            onClick={handleSubmit(onSubmit)}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-600/10 font-semibold px-5 h-10 border-0 flex items-center gap-2"
+                        >
+                            <FileDown className="h-4 w-4" />
+                            Generate Report
+                        </LoaderButton>
+                    </div>
                 )}
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
                 <Form {...form}>
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                         {/* Model Selection */}
                         <PCard>
                             <FormField
@@ -172,14 +180,14 @@ export default function OtherReportsPage() {
                                 name="model"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="font-bold">Select Module</FormLabel>
+                                        <FormLabel className="font-bold text-slate-800 text-sm">Select Module</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
-                                                <SelectTrigger className="w-full">
+                                                <SelectTrigger className="w-full rounded-xl border-slate-200/85 text-xs h-10">
                                                     <SelectValue placeholder="Select a model" />
                                                 </SelectTrigger>
                                             </FormControl>
-                                            <SelectContent>
+                                            <SelectContent className="rounded-xl">
                                                 <SelectItem value="Category">Categories</SelectItem>
                                                 <SelectItem value="SubCategory">Sub-categories</SelectItem>
                                                 <SelectItem value="Group">Product Groups</SelectItem>
@@ -199,26 +207,28 @@ export default function OtherReportsPage() {
                                 render={() => (
                                     <FormItem>
                                         <div className="flex justify-between items-center mb-4">
-                                            <FormLabel className="font-bold">Columns to Export</FormLabel>
+                                            <FormLabel className="font-bold text-slate-800 text-sm">Columns to Export</FormLabel>
                                             <Button
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={toggleSelectAll}
+                                                className="rounded-xl border-slate-200 text-slate-650 hover:bg-slate-50 text-xs font-semibold h-8"
                                             >
                                                 {selectAll ? "Deselect All" : "Select All"}
                                             </Button>
                                         </div>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[350px] overflow-y-auto p-4 border rounded-lg">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[350px] overflow-y-auto p-4 border border-slate-100 rounded-2xl bg-slate-50/50 scrollbar-hide">
                                             {(columnOptions[selectedModel] || []).map((column) => (
-                                                <div key={column} className="flex items-center space-x-2">
+                                                <div key={column} className="flex items-center space-x-2.5 p-2 rounded-xl hover:bg-white hover:shadow-sm hover:shadow-slate-100 transition-all duration-200">
                                                     <Checkbox
                                                         id={column}
                                                         checked={selectedCols.includes(column)}
                                                         onCheckedChange={() => toggleColumn(column)}
+                                                        className="rounded-md border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                                                     />
-                                                    <label htmlFor={column} className="text-sm capitalize font-medium cursor-pointer">
+                                                    <label htmlFor={column} className="text-xs font-bold text-slate-700 capitalize cursor-pointer select-none">
                                                         {column}
                                                     </label>
                                                 </div>

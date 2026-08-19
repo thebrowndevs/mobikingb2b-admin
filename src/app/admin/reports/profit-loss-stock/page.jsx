@@ -144,15 +144,17 @@ export default function ProfitLossStockReportPage() {
 
     return (
         <InnerDashboardLayout>
-            <div className="mb-6">
-                <h1 className="text-primary font-bold text-2xl">
-                    Profit & Loss / Stock Flow Reports
-                </h1>
+            {/* Header Section matching Dashboard/Payment Links/Queries format */}
+            <div className="w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-5 border-b border-grey-200 mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tighter">Profit & Loss / Stock Flow Reports</h1>
+                    <p className="text-sm text-slate-500 mt-1">Export product margins, purchase costs, and track stock ledger entries</p>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Profit & Loss Report Card */}
-                <PCard className="p-6 space-y-4">
+                <PCard>
                     <h3 className="text-lg font-bold text-slate-800 border-b pb-2">
                         Profit & Loss Report
                     </h3>
@@ -162,15 +164,15 @@ export default function ProfitLossStockReportPage() {
 
                     <div className="space-y-4 pt-2">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="flex flex-col gap-1">
-                                <label className="text-xs font-bold">From Date</label>
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-slate-700">From Date</label>
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                        <Button variant="outline" size="sm" className="w-full text-left font-normal text-xs">
+                                        <Button variant="outline" size="sm" className="w-full text-left font-semibold text-slate-700 rounded-xl border-slate-200/85 text-xs h-9">
                                             {plDate.from || "Pick a date"}
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="p-0" align="start">
+                                    <PopoverContent className="p-0 rounded-xl" align="start">
                                         <Calendar
                                             mode="single"
                                             selected={parseDateString(plDate.from)}
@@ -179,15 +181,15 @@ export default function ProfitLossStockReportPage() {
                                     </PopoverContent>
                                 </Popover>
                             </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-xs font-bold">To Date</label>
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-slate-700">To Date</label>
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                        <Button variant="outline" size="sm" className="w-full text-left font-normal text-xs">
+                                        <Button variant="outline" size="sm" className="w-full text-left font-semibold text-slate-700 rounded-xl border-slate-200/85 text-xs h-9">
                                             {plDate.to || "Pick a date"}
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="p-0" align="start">
+                                    <PopoverContent className="p-0 rounded-xl" align="start">
                                         <Calendar
                                             mode="single"
                                             selected={parseDateString(plDate.to)}
@@ -201,7 +203,7 @@ export default function ProfitLossStockReportPage() {
                         <LoaderButton
                             loading={productSalesReportMutation.isPending}
                             onClick={handleDownloadPL}
-                            className="w-full mt-4"
+                            className="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-600/10 font-semibold h-10 border-0 flex items-center justify-center gap-2"
                         >
                             Download Profit & Loss Report
                         </LoaderButton>
@@ -209,7 +211,7 @@ export default function ProfitLossStockReportPage() {
                 </PCard>
 
                 {/* Stock Flow Logs Report Card */}
-                <PCard className="p-6 space-y-4">
+                <PCard>
                     <h3 className="text-lg font-bold text-slate-800 border-b pb-2">
                         Stock Flow Logs
                     </h3>
@@ -218,15 +220,15 @@ export default function ProfitLossStockReportPage() {
                     </p>
 
                     <div className="space-y-4 pt-2">
-                        <div className="flex flex-col gap-1">
-                            <label className="text-xs font-bold">Select Product</label>
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-bold text-slate-700">Select Product</label>
                             <Select onValueChange={setSelectedProductId} value={selectedProductId}>
-                                <SelectTrigger className="w-full">
+                                <SelectTrigger className="w-full rounded-xl border-slate-200/85 text-xs h-9">
                                     <SelectValue placeholder="Select a product" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="rounded-xl">
                                     {(productsQuery.data || []).map((prod) => (
-                                        <SelectItem key={prod._id} value={prod._id}>
+                                        <SelectItem key={prod._id} value={prod._id} className="text-xs">
                                             {prod.fullName || prod.name} ({prod.sku || "No SKU"})
                                         </SelectItem>
                                     ))}
@@ -235,15 +237,15 @@ export default function ProfitLossStockReportPage() {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="flex flex-col gap-1">
-                                <label className="text-xs font-bold">From Date (Optional)</label>
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-slate-700">From Date (Optional)</label>
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                        <Button variant="outline" size="sm" className="w-full text-left font-normal text-xs">
+                                        <Button variant="outline" size="sm" className="w-full text-left font-semibold text-slate-700 rounded-xl border-slate-200/85 text-xs h-9">
                                             {stockDate.from || "Pick a date"}
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="p-0" align="start">
+                                    <PopoverContent className="p-0 rounded-xl" align="start">
                                         <Calendar
                                             mode="single"
                                             selected={parseDateString(stockDate.from)}
@@ -252,15 +254,15 @@ export default function ProfitLossStockReportPage() {
                                     </PopoverContent>
                                 </Popover>
                             </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-xs font-bold">To Date (Optional)</label>
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-slate-700">To Date (Optional)</label>
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                        <Button variant="outline" size="sm" className="w-full text-left font-normal text-xs">
+                                        <Button variant="outline" size="sm" className="w-full text-left font-semibold text-slate-700 rounded-xl border-slate-200/85 text-xs h-9">
                                             {stockDate.to || "Pick a date"}
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="p-0" align="start">
+                                    <PopoverContent className="p-0 rounded-xl" align="start">
                                         <Calendar
                                             mode="single"
                                             selected={parseDateString(stockDate.to)}
@@ -274,8 +276,7 @@ export default function ProfitLossStockReportPage() {
                         <LoaderButton
                             loading={stockFlowReportMutation.isPending}
                             onClick={handleDownloadStock}
-                            className="w-full mt-4"
-                            variant="secondary"
+                            className="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-600/10 font-semibold h-10 border-0 flex items-center justify-center gap-2"
                         >
                             Download Stock Flow Logs
                         </LoaderButton>

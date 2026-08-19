@@ -11,95 +11,140 @@ import RefreshButton from '@/components/custom/RefreshButton'
 import PaymentSkeleton from './components/PaymentSkeleton'
 import { format } from 'date-fns'
 import { OrderViewDialog } from './components/OrderViewDialog'
-import { Eye } from 'lucide-react'
+import { Eye, Mail, Phone, CalendarRange } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import NotAuthorizedPage from '@/components/notAuthorized'
 
 function Page() {
-    const { getPaymentLinks, permissionsPayment: { canViewPayment, canAddPaymentPayment, canEditPayment, canDeletePayment } } = useOrders();
+    const { getPaymentLinks, permissionsPayment: { canViewPayment } } = useOrders();
     const isLoading = getPaymentLinks.isLoading;
     const linksData = getPaymentLinks?.data?.data || [];
 
     if (!canViewPayment) return <NotAuthorizedPage />
 
-    // console.log(linksData)
+    // Function to get status badge variant/classes
+    const getStatusStyles = (status) => {
+        const lower = status?.toLowerCase();
+        if (lower === 'paid' || lower === 'completed' || lower === 'success') {
+            return 'bg-emerald-50 text-emerald-700 border-emerald-200/60 hover:bg-emerald-50';
+        }
+        if (lower === 'pending' || lower === 'created') {
+            return 'bg-amber-50 text-amber-700 border-amber-200/60 hover:bg-amber-50';
+        }
+        return 'bg-rose-50 text-rose-700 border-rose-200/60 hover:bg-rose-50';
+    };
+
     return (
         <InnerDashboardLayout>
-            <div className="flex items-center justify-between w-full mb-4">
-                <h1 className="text-primary font-bold sm:text-2xl lg:text-3xl">Payment Links</h1>
-                <RefreshButton queryPrefix='paymentLinks' />
+            {/* Header Section matching Dashboard format */}
+            <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-grey-200 mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tighter">Payment Links</h1>
+                    <p className="text-sm text-slate-500 mt-1">Track and manage client payments and custom payment gateways</p>
+                </div>
+                <div className="shrink-0">
+                    <RefreshButton queryPrefix='paymentLinks' />
+                </div>
             </div>
 
-            {isLoading
-                ? <PaymentSkeleton />
-                : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 bg-gray-100 rounded-md pb-4">
+            {isLoading ? (
+                <PaymentSkeleton />
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                     {linksData.length === 0 ? (
-                        <p className="text-muted-foreground">No payment links found.</p>
+                        <div className="col-span-full flex flex-col items-center justify-center p-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                            <p className="text-sm text-slate-400 font-medium">No payment links found.</p>
+                        </div>
                     ) : (
                         linksData.map((link) => (
-                            <Card key={link._id} className="bg-white shadow-md rounded-xl p-4">
-                                <CardContent className="p-0">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <div>
-                                            <h2 className="font-semibold text-lg text-gray-800">{link.name}</h2>
-                                            <p className="text-sm text-gray-500">{link.email}</p>
-                                            <p className="text-sm text-gray-500">{link.phoneNo}</p>
+                            <Card key={link._id} className="relative overflow-hidden bg-white border border-slate-100 hover:border-slate-200/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 rounded-2xl p-5 flex flex-col group">
+                                <CardContent className="p-0 flex flex-col h-full">
+                                    {/* Card Header: Client Details + Badges */}
+                                    <div className="flex justify-between items-start gap-3 mb-4">
+                                        <div className="min-w-0">
+                                            <h2 className="font-bold text-base text-slate-800 tracking-tight truncate">{link.name}</h2>
+                                            <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1">
+                                                <Mail className="h-3 w-3 shrink-0" />
+                                                <span className="truncate">{link.email}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
+                                                <Phone className="h-3 w-3 shrink-0" />
+                                                <span>{link.phoneNo}</span>
+                                            </div>
                                         </div>
-                                        <div className='flex flex-col gap-2'>
-                                            <Badge variant="outline" className="capitalize">
+                                        <div className='flex flex-col items-end gap-1.5 shrink-0'>
+                                            <Badge variant="outline" className={`font-semibold capitalize rounded-lg px-2 py-0.5 border text-[10px] ${getStatusStyles(link.status)}`}>
                                                 {link.status}
                                             </Badge>
+
+                                            {/* Gateway Tagging */}
                                             {(link?.razorpayOrderId || link?.orderId?.razorpayOrderId) && (
-                                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase text-center w-fit mt-1 bg-[#0052cc] text-white">
+                                                <span className="px-2 py-0.5 rounded-lg text-[9px] font-extrabold uppercase tracking-wider bg-blue-50 border border-blue-100 text-blue-600">
                                                     Razorpay
                                                 </span>
                                             )}
                                             {(link?.phonepeOrderId || link?.orderId?.phonepeOrderId) && (
-                                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase text-center w-fit mt-1 bg-[#5f259f] text-white">
+                                                <span className="px-2 py-0.5 rounded-lg text-[9px] font-extrabold uppercase tracking-wider bg-purple-50 border border-purple-100 text-purple-600">
                                                     PhonePe
                                                 </span>
                                             )}
-
-                                            <OrderViewDialog order={link?.orderId}>
-                                                <Button variant="secondary" className={'h-7  border border-gray-400'}>
-                                                    <Eye size={5} className='text-gray-400' />
-                                                </Button>
-                                            </OrderViewDialog>
                                         </div>
                                     </div>
 
-                                    <Separator className="my-3" />
+                                    <Separator className="bg-slate-100 mb-4" />
 
-                                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                                        <FaRupeeSign className="text-primary" />
-                                        <span className="font-medium">Amount:</span>
-                                        ₹{link.amount}
+                                    {/* Payment Details */}
+                                    <div className="space-y-2.5 mb-4">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <div className="flex items-center gap-2 text-slate-500">
+                                                <FaRupeeSign className="text-slate-400 h-3.5 w-3.5" />
+                                                <span className="font-medium text-xs">Amount:</span>
+                                            </div>
+                                            <span className="font-extrabold text-slate-800 text-base">₹{link.amount}</span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-slate-500 font-medium text-xs">Order Status:</span>
+                                            <Badge variant="secondary" className="capitalize text-[10px] font-semibold bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-100">
+                                                {link.orderId?.status || 'N/A'}
+                                            </Badge>
+                                        </div>
+
+                                        <div className="flex items-center justify-between gap-4 text-sm min-w-0">
+                                            <div className="flex items-center gap-2 text-slate-500 shrink-0">
+                                                <FaLink className="text-slate-400 h-3.5 w-3.5" />
+                                                <span className="font-medium text-xs">Payment Link:</span>
+                                            </div>
+                                            <a href={link.link} target="_blank" rel="noopener noreferrer" className="underline text-indigo-600 hover:text-indigo-700 text-xs font-semibold truncate max-w-[160px] text-right">
+                                                {link.link}
+                                            </a>
+                                        </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                                        <span className="font-medium">Order Status:</span>
-                                        <Badge variant="secondary" className="capitalize">{link.orderId?.status}</Badge>
-                                    </div>
+                                    {/* Footer Details: Timestamps & Order Action */}
+                                    <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+                                        <div className="text-[10px] text-slate-400 space-y-0.5">
+                                            <div className="flex items-center gap-1 font-medium">
+                                                <CalendarRange className="h-3 w-3 text-slate-350" />
+                                                <span>Created: {format(new Date(link?.createdAt), 'dd MMM yyyy, hh:mm a')}</span>
+                                            </div>
+                                            <div className="pl-4">
+                                                Updated: {format(new Date(link?.updatedAt), 'dd MMM yyyy, hh:mm a')}
+                                            </div>
+                                        </div>
 
-                                    <div className="flex items-center gap-2 text-sm text-gray-600 truncate">
-                                        <FaLink className="text-blue-500" />
-                                        <a href={link.link} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 truncate">
-                                            {link.link}
-                                        </a>
+                                        <OrderViewDialog order={link?.orderId}>
+                                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 border-slate-200 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/50 rounded-xl transition-all duration-200">
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                        </OrderViewDialog>
                                     </div>
-
-                                    <p className="text-xs text-gray-400 mt-3">
-                                        Created: {format(new Date(link?.createdAt), 'dd MMM, yyyy hh:mm a')}
-                                    </p>
-                                    <p className="text-xs text-gray-400">
-                                        Updated: {format(new Date(link?.updatedAt), 'dd MMM, yyyy hh:mm a')}
-                                    </p>
                                 </CardContent>
                             </Card>
                         ))
                     )}
                 </div>
-            }
+            )}
         </InnerDashboardLayout>
     );
 }

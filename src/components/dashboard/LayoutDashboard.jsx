@@ -8,7 +8,7 @@ function LayoutDashboard({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <main className="flex flex-col lg:flex-row h-screen overflow-hidden bg-back1">
+        <main className="fixed inset-0 flex flex-col lg:flex-row overflow-hidden bg-back1">
             {/* Mobile Header Bar */}
             <div className="flex px-6 py-4 justify-between items-center bg-back2 border-b border-bdr2 shadow-sm gap-3 lg:hidden z-50">
                 <div className="flex items-center gap-3 relative">

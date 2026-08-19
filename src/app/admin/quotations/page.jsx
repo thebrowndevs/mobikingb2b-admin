@@ -95,11 +95,11 @@ export default function QuotationsListPage() {
 
     return (
         <InnerDashboardLayout>
-            <div className="flex flex-col gap-6 p-6">
+            <div className="flex flex-col gap-6">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+                        <h1 className="text-3xl font-bold tracking-tighter text-slate-900 flex items-center gap-2">
                             <FileText className="w-8 h-8 text-slate-800" />
                             Order Requests
                         </h1>

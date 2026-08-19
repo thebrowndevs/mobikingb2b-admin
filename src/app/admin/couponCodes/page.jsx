@@ -1,4 +1,5 @@
 "use client"
+
 import React, { useState, useEffect } from 'react'
 import InnerDashboardLayout from '@/components/dashboard/InnerDashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -7,12 +8,13 @@ import { useCoupons } from '@/hooks/useCoupons';
 import { getPaginationRange } from '@/lib/services/getPaginationRange';
 import TableSkeleton from '@/components/custom/TableSkeleton';
 import CouponsTable from './components/CouponsTable';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, } from "@/components/ui/select"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, } from "@/components/ui/pagination"
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import NotAuthorizedPage from '@/components/notAuthorized';
+import { Tag } from 'lucide-react'
 
-function page() {
+function Page() {
     const [couponDialogOpen, setCouponDialogOpen] = useState(false)
     const [selectedCoupon, setSelectedCoupon] = useState(undefined)
     const [page, setPage] = useState(1)
@@ -54,58 +56,68 @@ function page() {
 
     return (
         <InnerDashboardLayout>
-            <div className="w-full flex flex-col gap-4 pb-4">
-                <div className='flex items-center justify-between w-full mb-3'>
-                    <h1 className="text-primary font-bold sm:text-2xl lg:text-3xl mb-3">Coupon Codes</h1>
-                    {canAdd &&
-                        <Button onClick={() => {
-                            setCouponDialogOpen(true)
-                            setSelectedCoupon(undefined)
-                        }}>
+            {/* Header Section matching Dashboard/Payment Links/Queries format */}
+            <div className="w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-5 border-b border-grey-200 mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tighter">Coupon Codes</h1>
+                    <p className="text-sm text-slate-500 mt-1">Create and manage discounts, promotions, and store coupon codes</p>
+                </div>
+                {canAdd && (
+                    <div className="w-full md:w-auto shrink-0">
+                        <Button 
+                            onClick={() => {
+                                setCouponDialogOpen(true)
+                                setSelectedCoupon(undefined)
+                            }}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-600/10 font-semibold px-5 h-10 border-0 flex items-center gap-2"
+                        >
+                            <Tag className="h-4 w-4" />
                             Add New
                         </Button>
-                    }
-                </div>
+                    </div>
+                )}
+            </div>
+
+            <div className="w-full flex flex-col gap-4 pb-4">
                 {/* Toolbar */}
-                <div className="flex flex-wrap justify-between items-center gap-2">
-                    {/* Total */}
-                    <Button variant="outline">
-                        Total: {coupons.data?.data?.totalCount || 0}
-                    </Button>
+                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                    {/* Total Badge */}
+                    <div className="text-xs font-bold bg-slate-50 border border-slate-200/60 text-slate-600 px-4 py-2.5 rounded-xl shrink-0 text-center sm:text-left select-none">
+                        Total Coupons: {coupons.data?.data?.totalCount || 0}
+                    </div>
 
                     {/* Search Bar */}
                     <Input
-                        placeholder="Search coupons..."
+                        placeholder="Search coupons by code..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full flex-1 bg-white"
+                        className="w-full flex-1 bg-white border-slate-200/80 rounded-xl focus-visible:ring-indigo-500/40 text-sm h-10"
                     />
                 </div>
             </div>
 
-            {(coupons.isLoading)
-                ? <TableSkeleton showHeader={false} />
-                : <>
-                    <CouponsTable
-                        error={coupons.error}
-                        coupons={allCoupons}
-                        onDelete={deleteCoupon.mutateAsync}
-                        isDeleting={deleteCoupon.isPending}
-                        deleteError={deleteCoupon.error}
-                        onEdit={handleEditCoupon}
-                        canEdit={canEdit}
-                        canDelete={canDelete}
-                    />
-                </>
-            }
+            {coupons.isLoading ? (
+                <TableSkeleton showHeader={false} />
+            ) : (
+                <CouponsTable
+                    error={coupons.error}
+                    coupons={allCoupons}
+                    onDelete={deleteCoupon.mutateAsync}
+                    isDeleting={deleteCoupon.isPending}
+                    deleteError={deleteCoupon.error}
+                    onEdit={handleEditCoupon}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                />
+            )}
 
-            <div className="flex w-full justify-end gap-2 items-center">
+            <div className="flex w-full justify-end gap-2 items-center mt-4">
                 {/* Limit Dropdown */}
                 <Select value={String(limit)} onValueChange={(val) => { setPage(1); setLimit(Number(val)) }}>
-                    <SelectTrigger className="w-[120px]">
+                    <SelectTrigger className="w-[120px] rounded-xl border-slate-200/80">
                         <SelectValue placeholder="Items per page" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-xl">
                         {[1, 5, 10, 20, 50].map((n) => (
                             <SelectItem key={n} value={String(n)}>
                                 {n} / page
@@ -119,7 +131,7 @@ function page() {
                     <PaginationContent>
                         {page > 1 && (
                             <PaginationItem>
-                                <PaginationPrevious href="#" onClick={() => setPage((p) => p - 1)} />
+                                <PaginationPrevious href="#" onClick={() => setPage((p) => p - 1)} className="rounded-xl" />
                             </PaginationItem>
                         )}
 
@@ -135,6 +147,7 @@ function page() {
                                             e.preventDefault()
                                             setPage(p)
                                         }}
+                                        className="rounded-xl"
                                     >
                                         {p}
                                     </PaginationLink>
@@ -144,7 +157,7 @@ function page() {
 
                         {page < totalPages && (
                             <PaginationItem>
-                                <PaginationNext href="#" onClick={() => setPage((p) => p + 1)} />
+                                <PaginationNext href="#" onClick={() => setPage((p) => p + 1)} className="rounded-xl" />
                             </PaginationItem>
                         )}
                     </PaginationContent>
@@ -160,4 +173,4 @@ function page() {
     )
 }
 
-export default page
+export default Page;
