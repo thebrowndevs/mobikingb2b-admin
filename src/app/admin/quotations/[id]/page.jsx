@@ -20,6 +20,7 @@ import { useQuotations } from '@/hooks/useQuotations'
 import { toast } from 'sonner'
 import LoaderButton from '@/components/custom/LoaderButton'
 import CallAttemptDialog from '@/components/CallAttemptDialog'
+import BookOrderDialog from '@/components/BookOrderDialog'
 import ActivityLogDrawer from '@/components/ActivityLogDrawer'
 import { PhoneCall, Clock } from 'lucide-react'
 
@@ -104,17 +105,6 @@ export default function QuotationDetailsPage() {
     const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
     const [rejectReason, setRejectReason] = useState('')
     const [bookingDialogOpen, setBookingDialogOpen] = useState(false)
-    const [numberOfStages, setNumberOfStages] = useState(1)
-    const [stages, setStages] = useState([
-        { amount: '', method: 'COD', status: 'Pending', notes: '' }
-    ])
-
-    const [bookingPaymentMode, setBookingPaymentMode] = useState("complete")
-    const [bookingPaymentMethod, setBookingPaymentMethod] = useState("COD")
-    const [bookingLength, setBookingLength] = useState(19)
-    const [bookingBreadth, setBookingBreadth] = useState(16)
-    const [bookingHeight, setBookingHeight] = useState(6)
-    const [bookingWeight, setBookingWeight] = useState(0.5)
 
     // Load quotation values into edit states on load
     useEffect(() => {
@@ -133,12 +123,7 @@ export default function QuotationDetailsPage() {
             setEditDiscountPercent(quotation.discountPercent || 0)
             setDiscountMode(quotation.discountPercent > 0 ? 'percent' : 'flat')
 
-            setBookingLength(quotation.length || 19)
-            setBookingBreadth(quotation.breadth || 16)
-            setBookingHeight(quotation.height || 6)
-            setBookingWeight(quotation.weight || 0.5)
-            setBookingPaymentMode(quotation.paymentMode || "complete")
-            setBookingPaymentMethod(quotation.method || "COD")
+
 
             const discounts = {}
             const discountPercents = {}
@@ -224,24 +209,7 @@ export default function QuotationDetailsPage() {
         orderAmount: quotation?.orderAmount || 0
     };
 
-    // Handle stage payments generation
-    useEffect(() => {
-        if (quotation) {
-            const orderAmount = quotation.orderAmount
-            const perStageAmount = (orderAmount / numberOfStages).toFixed(2)
 
-            const newStages = []
-            for (let i = 0; i < numberOfStages; i++) {
-                newStages.push({
-                    amount: perStageAmount,
-                    method: 'COD',
-                    status: 'Pending',
-                    notes: `Stage ${i + 1} payment`
-                })
-            }
-            setStages(newStages)
-        }
-    }, [numberOfStages, bookingDialogOpen, quotation])
 
     const handleProductSearch = async (val) => {
         setSearchQuery(val)
@@ -404,18 +372,15 @@ export default function QuotationDetailsPage() {
         refetch()
     };
 
-    const handleBookingSubmit = async () => {
-        await bookQuotation.mutateAsync({
-            quotationId: quotation._id,
-            paymentMode: bookingPaymentMode,
-            method: bookingPaymentMethod,
-            length: Number(bookingLength),
-            breadth: Number(bookingBreadth),
-            height: Number(bookingHeight),
-            weight: Number(bookingWeight)
-        })
-        setBookingDialogOpen(false)
-        router.push("/admin/orders")
+    const handleBookingSubmit = async (payload) => {
+        try {
+            await bookQuotation.mutateAsync(payload)
+            setBookingDialogOpen(false)
+            toast.success("Order booked successfully!")
+            router.push("/admin/orders")
+        } catch (err) {
+            console.error(err)
+        }
     };
 
     if (isLoading) {
@@ -1290,110 +1255,14 @@ export default function QuotationDetailsPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* Dialog to Book Order */}
-            <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
-                <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="text-indigo-900 flex items-center gap-2">
-                            <Check className="w-6 h-6 p-1 bg-indigo-50 rounded-full text-indigo-600 border border-indigo-100" />
-                            Book Order Requests
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="flex flex-col gap-4 py-4 text-sm text-slate-700">
-                        <div className="flex justify-between bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <span className="font-semibold text-slate-500">Total Order Amount:</span>
-                            <span className="font-bold text-slate-900 text-lg">₹{quotation.orderAmount?.toLocaleString()}</span>
-                        </div>
-
-                        {/* B2B Order Options */}
-                        <div className="grid grid-cols-2 gap-3 bg-indigo-50/55 p-3 rounded-lg border border-indigo-100/50 mb-1">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-xs text-indigo-900 font-bold">PAYMENT MODE</span>
-                                <Select onValueChange={(val) => setBookingPaymentMode(val)} defaultValue={bookingPaymentMode}>
-                                    <SelectTrigger className="border-slate-200 h-9 bg-white">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="complete">Complete</SelectItem>
-                                        <SelectItem value="parcel">Parcel</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <span className="text-xs text-indigo-900 font-bold">PAYMENT METHOD</span>
-                                <Select onValueChange={(val) => setBookingPaymentMethod(val)} defaultValue={bookingPaymentMethod}>
-                                    <SelectTrigger className="border-slate-200 h-9 bg-white">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="COD">COD</SelectItem>
-                                        <SelectItem value="Online">Online</SelectItem>
-                                        <SelectItem value="UPI">UPI</SelectItem>
-                                        <SelectItem value="Cash">Cash</SelectItem>
-                                        <SelectItem value="Mixed">Mixed</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-
-                        {/* Dimensions Fields */}
-                        <div className="bg-slate-50/50 p-3 rounded-lg border border-slate-100 flex flex-col gap-2">
-                            <span className="text-xs text-slate-400 font-bold">ORDER PACKAGING DIMENSIONS</span>
-                            <div className="grid grid-cols-4 gap-2">
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] text-slate-400 font-semibold">Length (cm)</span>
-                                    <Input
-                                        type="number"
-                                        value={bookingLength}
-                                        onChange={(e) => setBookingLength(e.target.value)}
-                                        className="h-8 border-slate-200 text-xs bg-white"
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] text-slate-400 font-semibold">Breadth (cm)</span>
-                                    <Input
-                                        type="number"
-                                        value={bookingBreadth}
-                                        onChange={(e) => setBookingBreadth(e.target.value)}
-                                        className="h-8 border-slate-200 text-xs bg-white"
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] text-slate-400 font-semibold">Height (cm)</span>
-                                    <Input
-                                        type="number"
-                                        value={bookingHeight}
-                                        onChange={(e) => setBookingHeight(e.target.value)}
-                                        className="h-8 border-slate-200 text-xs bg-white"
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] text-slate-400 font-semibold">Weight (kg)</span>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        value={bookingWeight}
-                                        onChange={(e) => setBookingWeight(e.target.value)}
-                                        className="h-8 border-slate-200 text-xs bg-white"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <DialogFooter className="gap-2 sm:gap-0 mt-4">
-                        <Button variant="ghost" onClick={() => setBookingDialogOpen(false)} className="text-slate-400 hover:bg-slate-100">
-                            Cancel
-                        </Button>
-                        <LoaderButton
-                            loading={bookQuotation.isPending}
-                            onClick={handleBookingSubmit}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
-                        >
-                            Book Order
-                        </LoaderButton>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {/* Book Order Dialog Component */}
+            <BookOrderDialog
+                isOpen={bookingDialogOpen}
+                onOpenChange={setBookingDialogOpen}
+                quotation={quotation}
+                onBook={handleBookingSubmit}
+                isPending={bookQuotation.isPending}
+            />
         </InnerDashboardLayout>
     )
 }
