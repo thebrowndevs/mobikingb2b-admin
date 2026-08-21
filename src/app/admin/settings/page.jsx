@@ -20,6 +20,8 @@ export default function SettingsPage() {
         androidAppLink: "",
         iosAppLink: "",
         logoImage: "",
+        minOrderLimit: "",
+        minQuotationLimit: ""
     });
 
     useEffect(() => {
@@ -52,6 +54,8 @@ export default function SettingsPage() {
                         androidAppLink: data.data.androidAppLink || "",
                         iosAppLink: data.data.iosAppLink || "",
                         logoImage: data.data.logoImage || "",
+                        minOrderLimit: data.data.minOrderLimit !== undefined ? String(data.data.minOrderLimit) : "0",
+                        minQuotationLimit: data.data.minQuotationLimit !== undefined ? String(data.data.minQuotationLimit) : "0",
                     });
                 }
             }
@@ -67,6 +71,11 @@ export default function SettingsPage() {
         setSaving(true);
         try {
             const token = localStorage.getItem("accessToken");
+            const payload = {
+                ...companyDetails,
+                minOrderLimit: Number(companyDetails.minOrderLimit || 0),
+                minQuotationLimit: Number(companyDetails.minQuotationLimit || 0)
+            };
             const res = await fetch(
                 (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1") + "/policy/company-details",
                 {
@@ -75,7 +84,7 @@ export default function SettingsPage() {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`
                     },
-                    body: JSON.stringify(companyDetails)
+                    body: JSON.stringify(payload)
                 }
             );
 
@@ -84,10 +93,21 @@ export default function SettingsPage() {
                 if (data.success) {
                     toast.success("Settings saved successfully!");
                     if (data.data) {
-                        setCompanyDetails(prev => ({
-                            ...prev,
-                            ...data.data
-                        }));
+                        setCompanyDetails({
+                            phoneNo: data.data.phoneNo || "",
+                            whatsappNo: data.data.whatsappNo || "",
+                            email: data.data.email || "",
+                            address: data.data.address || "",
+                            instaLink: data.data.instaLink || "",
+                            facebookLink: data.data.facebookLink || "",
+                            twitterLink: data.data.twitterLink || "",
+                            websiteLink: data.data.websiteLink || "",
+                            androidAppLink: data.data.androidAppLink || "",
+                            iosAppLink: data.data.iosAppLink || "",
+                            logoImage: data.data.logoImage || "",
+                            minOrderLimit: data.data.minOrderLimit !== undefined ? String(data.data.minOrderLimit) : "0",
+                            minQuotationLimit: data.data.minQuotationLimit !== undefined ? String(data.data.minQuotationLimit) : "0",
+                        });
                     }
                 } else {
                     toast.error(data.message || "Failed to save settings");
@@ -222,6 +242,40 @@ export default function SettingsPage() {
                                 value={companyDetails.iosAppLink || ""}
                                 onChange={(e) => setCompanyDetails(prev => ({ ...prev, iosAppLink: e.target.value }))}
                             />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Checkout Value Limits Section */}
+                <div className="bg-back2 p-6 rounded-xl border border-bdr2 space-y-5">
+                    <div className="border-b border-bdr2 pb-3">
+                        <h2 className="text-lg font-bold text-slate-800">
+                            Checkout Limits Configuration
+                        </h2>
+                        <p className="text-xs text-slate-400">Configure minimum checkout thresholds for Order Requests and Buy Now paths</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Minimum Order Amount (Buy Now)</label>
+                            <input
+                                type="number"
+                                min="0"
+                                className="w-full bg-back1 border border-bdr2 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
+                                value={companyDetails.minOrderLimit || ""}
+                                onChange={(e) => setCompanyDetails(prev => ({ ...prev, minOrderLimit: e.target.value }))}
+                            />
+                            <p className="text-[10px] text-slate-400 mt-1">Minimum cart subtotal required to use direct Buy Now / checkout</p>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Minimum Quotation Amount (Order Request)</label>
+                            <input
+                                type="number"
+                                min="0"
+                                className="w-full bg-back1 border border-bdr2 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
+                                value={companyDetails.minQuotationLimit || ""}
+                                onChange={(e) => setCompanyDetails(prev => ({ ...prev, minQuotationLimit: e.target.value }))}
+                            />
+                            <p className="text-[10px] text-slate-400 mt-1">Minimum cart subtotal required to submit an Order Request</p>
                         </div>
                     </div>
                 </div>
