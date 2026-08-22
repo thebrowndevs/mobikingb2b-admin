@@ -88,6 +88,8 @@ function page() {
     const [paymentNotes, setPaymentNotes] = useState("")
     const [paymentPaidAt, setPaymentPaidAt] = useState("")
     const [editingPayment, setEditingPayment] = useState(null)
+    const [paymentSubtotal, setPaymentSubtotal] = useState("")
+    const [paymentDiscount, setPaymentDiscount] = useState("")
 
     // Generate payment link state
     const [generateLinkOpen, setGenerateLinkOpen] = useState(false)
@@ -180,6 +182,26 @@ function page() {
             setGenerateLinkPaymentId(null);
         },
         onError: (err) => toast.error(err?.response?.data?.message || "Failed to generate payment link")
+    });
+
+    const applyCouponMutation = useMutation({
+        mutationFn: (data) => api.post("/coupon/admin/apply", data).then(res => res.data),
+        onSuccess: () => {
+            toast.success("Coupon applied successfully!");
+            queryClient.invalidateQueries({ queryKey: ["order", id] });
+            refetchPayments();
+        },
+        onError: (err) => toast.error(err?.response?.data?.message || "Failed to apply coupon")
+    });
+
+    const removeCouponMutation = useMutation({
+        mutationFn: (data) => api.post("/coupon/admin/remove", data).then(res => res.data),
+        onSuccess: () => {
+            toast.success("Coupon removed successfully!");
+            queryClient.invalidateQueries({ queryKey: ["order", id] });
+            refetchPayments();
+        },
+        onError: (err) => toast.error(err?.response?.data?.message || "Failed to remove coupon")
     });
 
     if (isLoading) return <OrderSkeletonPage />
@@ -360,6 +382,9 @@ function page() {
                         isNewOrder={isNewOrder}
                         canEdit={canEdit}
                         isAdmin={isAdmin}
+                        applyCouponMutation={applyCouponMutation}
+                        removeCouponMutation={removeCouponMutation}
+                        paymentsList={paymentsList}
                     />
 
                     {/* Payments & Transactions List */}
@@ -369,6 +394,8 @@ function page() {
                             {canEdit && (
                                 <Button
                                     onClick={() => {
+                                        setPaymentSubtotal(order.subtotal || "");
+                                        setPaymentDiscount(order.couponsApplied?.length > 0 ? 0 : (order.discount || 0));
                                         setPaymentAmount("");
                                         setPaymentNotes("");
                                         setPaymentMethod("Online");
@@ -394,6 +421,9 @@ function page() {
                                     <thead>
                                         <tr className="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] tracking-wider text-left">
                                             <th className="p-3">Date</th>
+                                            <th className="p-3">Subtotal</th>
+                                            <th className="p-3">Discount</th>
+                                            <th className="p-3">Coupon</th>
                                             <th className="p-3">Amount</th>
                                             <th className="p-3">Method</th>
                                             <th className="p-3">Status</th>
@@ -406,6 +436,15 @@ function page() {
                                             <tr key={payment._id} className="hover:bg-slate-50/50">
                                                 <td className="p-3 whitespace-nowrap">
                                                     {payment.paidAt ? format(new Date(payment.paidAt), 'dd MMM yyyy, hh:mm a') : format(new Date(payment.createdAt), 'dd MMM yyyy, hh:mm a')}
+                                                </td>
+                                                <td className="p-3 whitespace-nowrap text-slate-900">
+                                                    ₹{payment.subtotal?.toLocaleString() || "0"}
+                                                </td>
+                                                <td className="p-3 whitespace-nowrap text-slate-500">
+                                                    ₹{payment.discount?.toLocaleString() || "0"}
+                                                </td>
+                                                <td className="p-3 whitespace-nowrap text-slate-500">
+                                                    {payment.couponCode ? `${payment.couponCode} (-₹${payment.coupon})` : "—"}
                                                 </td>
                                                 <td className="p-3 text-slate-900 font-bold whitespace-nowrap">
                                                     ₹{payment.amount?.toLocaleString()}
@@ -420,12 +459,14 @@ function page() {
                                                     {payment.notes || "—"}
                                                 </td>
                                                 <td className="p-3 text-right whitespace-nowrap space-x-1.5">
-                                                    {payment.status !== "Paid" && (
+                                                    {payment.status !== "Paid" && !payment.couponId && (
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
                                                             onClick={() => {
                                                                 setEditingPayment(payment);
+                                                                setPaymentSubtotal(payment.subtotal || payment.amount || 0);
+                                                                setPaymentDiscount(payment.discount || 0);
                                                                 setPaymentAmount(payment.amount);
                                                                 setPaymentNotes(payment.notes || "");
                                                                 setPaymentMethod(payment.method);
@@ -745,9 +786,22 @@ function page() {
                             </DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4 py-3 text-sm">
-                            <div className="flex flex-col gap-1">
-                                <Label className="text-slate-500 font-semibold text-xs uppercase">Amount (₹)</Label>
-                                <Input type="number" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} placeholder="e.g. 5000" />
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="flex flex-col gap-1">
+                                    <Label className="text-slate-500 font-semibold text-xs uppercase">Subtotal (₹)</Label>
+                                    <Input type="number" value={paymentSubtotal} onChange={(e) => setPaymentSubtotal(e.target.value)} placeholder="e.g. 5000" />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <Label className="text-slate-500 font-semibold text-xs uppercase">Discount (₹)</Label>
+                                    <Input type="number" value={paymentDiscount} readOnly className="bg-slate-50 border-slate-200 cursor-not-allowed text-slate-500" />
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex justify-between items-center text-xs">
+                                <span className="font-bold text-slate-500 uppercase">Calculated Amount (₹)</span>
+                                <span className="font-bold text-slate-900 text-sm">
+                                    ₹{Math.max(0, Number(paymentSubtotal || 0) - Number(paymentDiscount || 0)).toLocaleString()}
+                                </span>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
@@ -796,7 +850,8 @@ function page() {
                             <LoaderButton
                                 onClick={() => addPaymentMutation.mutate({
                                     orderId: order._id,
-                                    amount: Number(paymentAmount),
+                                    subtotal: Number(paymentSubtotal),
+                                    discount: Number(paymentDiscount),
                                     method: paymentMethod,
                                     status: paymentStatus,
                                     notes: paymentNotes,
@@ -820,9 +875,29 @@ function page() {
                             </DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4 py-3 text-sm">
-                            <div className="flex flex-col gap-1">
-                                <Label className="text-slate-500 font-semibold text-xs uppercase">Amount (₹)</Label>
-                                <Input type="number" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} />
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="flex flex-col gap-1">
+                                    <Label className="text-slate-500 font-semibold text-xs uppercase">Subtotal (₹)</Label>
+                                    <Input type="number" value={paymentSubtotal} onChange={(e) => setPaymentSubtotal(e.target.value)} />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <Label className="text-slate-500 font-semibold text-xs uppercase">Discount (₹)</Label>
+                                    <Input type="number" value={paymentDiscount} readOnly className="bg-slate-50 border-slate-200 cursor-not-allowed text-slate-500" />
+                                </div>
+                            </div>
+
+                            {editingPayment?.coupon > 0 && (
+                                <div className="bg-emerald-50 p-2.5 rounded-lg border border-emerald-100/60 flex justify-between items-center text-xs text-emerald-800">
+                                    <span className="font-semibold">Coupon Discount Applied</span>
+                                    <span className="font-bold">-₹{editingPayment.coupon}</span>
+                                </div>
+                            )}
+
+                            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex justify-between items-center text-xs">
+                                <span className="font-bold text-slate-500 uppercase">Calculated Amount (₹)</span>
+                                <span className="font-bold text-slate-900 text-sm">
+                                    ₹{Math.max(0, Number(paymentSubtotal || 0) - Number(paymentDiscount || 0) - Number(editingPayment?.coupon || 0)).toLocaleString()}
+                                </span>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
@@ -872,7 +947,8 @@ function page() {
                                 onClick={() => editPaymentMutation.mutate({
                                     paymentId: editingPayment?._id,
                                     data: {
-                                        amount: Number(paymentAmount),
+                                        subtotal: Number(paymentSubtotal),
+                                        discount: Number(paymentDiscount),
                                         method: paymentMethod,
                                         status: paymentStatus,
                                         notes: paymentNotes,

@@ -28,7 +28,8 @@ const formSchema = z.object({
     endDate: z.string().min(1, "End Date is required"),
     phoneNumber: z.string().optional(),
     userId: z.string().optional(),
-    isAdminOnly: z.boolean().optional()
+    isAdminOnly: z.boolean().optional(),
+    minCartValue: z.string().optional()
 })
 
 export default function CouponDialog({ open, onOpenChange, selectedCoupon = null }) {
@@ -49,7 +50,8 @@ export default function CouponDialog({ open, onOpenChange, selectedCoupon = null
             endDate: "",
             phoneNumber: "",
             userId: "",
-            isAdminOnly: false
+            isAdminOnly: false,
+            minCartValue: "0"
         }
     })
 
@@ -85,7 +87,8 @@ export default function CouponDialog({ open, onOpenChange, selectedCoupon = null
                 endDate: formatDateTimeLocal(selectedCoupon.endDate),
                 phoneNumber: selectedCoupon.phoneNumber || "",
                 userId: selectedCoupon.userId || "",
-                isAdminOnly: !!selectedCoupon.isAdminOnly
+                isAdminOnly: !!selectedCoupon.isAdminOnly,
+                minCartValue: selectedCoupon.minCartValue || "0"
             })
             if (selectedCoupon.userId) {
                 // If it already has a userId, we fetch user info by ID to display
@@ -108,11 +111,12 @@ export default function CouponDialog({ open, onOpenChange, selectedCoupon = null
                 endDate: "",
                 phoneNumber: "",
                 userId: "",
-                isAdminOnly: false
+                isAdminOnly: false,
+                minCartValue: "0"
             })
             setFoundCustomer(null);
         }
-    }, [open, selectedCoupon?.code, selectedCoupon?.active, selectedCoupon?.type, selectedCoupon?.value, selectedCoupon?.percent, selectedCoupon?.startDate, selectedCoupon?.endDate, selectedCoupon?.phoneNumber, selectedCoupon?.userId, selectedCoupon?.isAdminOnly, form])
+    }, [open, selectedCoupon?.code, selectedCoupon?.active, selectedCoupon?.type, selectedCoupon?.value, selectedCoupon?.percent, selectedCoupon?.startDate, selectedCoupon?.endDate, selectedCoupon?.phoneNumber, selectedCoupon?.userId, selectedCoupon?.isAdminOnly, selectedCoupon?.minCartValue, form])
 
     useEffect(() => {
         if (watchType !== "oneTimeUser" || !watchPhone || watchPhone.length < 10) {
@@ -291,6 +295,12 @@ export default function CouponDialog({ open, onOpenChange, selectedCoupon = null
                                 disabled={!!selectedCoupon?._id}
                                 label="Discount Percent"
                                 placeholder="e.g. 10"
+                            />
+                            <FormInputField
+                                control={form.control}
+                                name="minCartValue"
+                                label="Minimum Cart Value (₹)"
+                                placeholder="e.g. 1000"
                             />
                             <FormInputField
                                 control={form.control}

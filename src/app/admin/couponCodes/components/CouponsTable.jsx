@@ -72,6 +72,7 @@ export default function CouponsTable({
                             <TableHead className="w-[60px] text-center text-slate-500 font-bold uppercase tracking-wider text-[11px]">#</TableHead>
                             <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[11px]">Coupon Code</TableHead>
                             <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[11px] w-[140px]">Max Value (₹)</TableHead>
+                            <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[11px] w-[130px]">Min Cart (₹)</TableHead>
                             <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[11px] w-[110px]">Percent (%)</TableHead>
                             <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[11px]">Type</TableHead>
                             <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[11px] w-[100px] text-center">Status</TableHead>
@@ -110,6 +111,11 @@ export default function CouponsTable({
                                 {/* 3. Max Value */}
                                 <TableCell className="font-bold text-slate-800 text-sm py-3.5">
                                     ₹{coupon?.value || 0}
+                                </TableCell>
+
+                                {/* Min Cart Value */}
+                                <TableCell className="font-bold text-slate-800 text-sm py-3.5">
+                                    ₹{coupon?.minCartValue || 0}
                                 </TableCell>
 
                                 {/* 4. Percent */}

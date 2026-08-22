@@ -41,7 +41,15 @@ const calculateB2BItemPrice = (product, quantity) => {
     return matchedPrice;
 };
 
-function ItemsTable({ order, isNewOrder, canEdit, isAdmin }) {
+function ItemsTable({
+    order,
+    isNewOrder,
+    canEdit,
+    isAdmin,
+    applyCouponMutation,
+    removeCouponMutation,
+    paymentsList = []
+}) {
     const { updateOrder, updateOrderItems } = useOrders()
     const [isEditing, setIsEditing] = useState(false)
     const [editItems, setEditItems] = useState([])
@@ -63,6 +71,8 @@ function ItemsTable({ order, isNewOrder, canEdit, isAdmin }) {
     // Inline Delivery Charge edit state
     const [editingDelCharge, setEditingDelCharge] = useState(false)
     const [tempDelCharge, setTempDelCharge] = useState(0)
+
+    const [couponCodeInput, setCouponCodeInput] = useState("")
 
     // Product search inside editor
     const [searchQuery, setSearchQuery] = useState("")
@@ -97,6 +107,7 @@ function ItemsTable({ order, isNewOrder, canEdit, isAdmin }) {
 
     const canEditOrderItems = () => {
         if (!isAdmin) return false;
+        if (order?.couponLocked) return false;
         if (order?.shippingType === 'Manual') {
             return !['Shipped', 'Delivered', 'Cancelled', 'Rejected', 'Returned'].includes(order?.status);
         } else {
@@ -836,6 +847,80 @@ function ItemsTable({ order, isNewOrder, canEdit, isAdmin }) {
                                 )}
                             </div>
                         )}
+                    </div>
+
+                    {/* Coupon Section */}
+                    <div className="flex flex-col gap-1 border-t border-slate-100 pt-3 text-slate-500 font-semibold">
+                        <div className="flex justify-between items-center">
+                            <span>Coupon:</span>
+                            {order?.couponsApplied?.length > 0 ? (
+                                <div className="flex items-center gap-1.5">
+                                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-100/60 font-bold px-2 py-0.5 rounded-lg text-xs">
+                                        {order.couponsApplied[0].code} (-₹{order.couponsApplied[0].appliedValue})
+                                    </span>
+                                    {(() => {
+                                        const appliedPayment = paymentsList.find(p => p.couponId && p.couponId === order.couponsApplied[0].couponId);
+                                        const isAppliedPaymentPaid = appliedPayment && appliedPayment.status === "Paid";
+                                        const showRemoveButton = isAdmin &&
+                                            order?.paymentStatus !== "Paid" &&
+                                            !isAppliedPaymentPaid &&
+                                            !['Shipped', 'Delivered', 'Cancelled', 'Rejected', 'Returned'].includes(order?.status);
+                                        return showRemoveButton && (
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                disabled={removeCouponMutation?.isPending}
+                                                onClick={() => {
+                                                    removeCouponMutation.mutate({
+                                                        orderId: order._id,
+                                                        couponId: order.couponsApplied[0].couponId,
+                                                        paymentId: appliedPayment?._id
+                                                    });
+                                                }}
+                                                className="text-red-500 hover:text-red-700 p-0 h-6 px-1.5 text-xs font-bold"
+                                            >
+                                                {removeCouponMutation?.isPending ? "Removing..." : "Remove"}
+                                            </Button>
+                                        );
+                                    })()}
+                                </div>
+                            ) : (
+                                order?.discount > 0 ? (
+                                    <span className="text-[10px] font-semibold text-amber-600 max-w-[180px] text-right">
+                                        Coupons cannot be applied when a global discount is active.
+                                    </span>
+                                ) : (
+                                    isAdmin && order?.paymentStatus !== "Paid" && !['Shipped', 'Delivered', 'Cancelled', 'Rejected', 'Returned'].includes(order?.status) ? (
+                                        <div className="flex items-center gap-1.5">
+                                            <Input
+                                                placeholder="Enter Coupon"
+                                                value={couponCodeInput}
+                                                onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+                                                className="w-28 h-7 text-xs uppercase px-2 border-slate-200"
+                                                disabled={applyCouponMutation?.isPending}
+                                            />
+                                            <Button
+                                                size="sm"
+                                                disabled={!couponCodeInput.trim() || applyCouponMutation?.isPending}
+                                                onClick={() => {
+                                                    applyCouponMutation.mutate({
+                                                        orderId: order._id,
+                                                        code: couponCodeInput.trim()
+                                                    }, {
+                                                        onSuccess: () => setCouponCodeInput("")
+                                                    });
+                                                }}
+                                                className="h-7 text-xs px-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-md"
+                                            >
+                                                {applyCouponMutation?.isPending ? "Applying..." : "Apply"}
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <span className="font-bold text-slate-400">—</span>
+                                    )
+                                )
+                            )}
+                        </div>
                     </div>
 
                     {/* Total Amount */}
