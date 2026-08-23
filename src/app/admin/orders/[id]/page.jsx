@@ -394,8 +394,9 @@ function page() {
                             {canEdit && (
                                 <Button
                                     onClick={() => {
-                                        setPaymentSubtotal(order.subtotal || "");
-                                        setPaymentDiscount(order.couponsApplied?.length > 0 ? 0 : (order.discount || 0));
+                                        const hasPayments = paymentsList.length > 0;
+                                        setPaymentSubtotal(hasPayments ? (order.remainingAmount || "") : (order.subtotal || ""));
+                                        setPaymentDiscount(hasPayments ? 0 : (order.couponsApplied?.length > 0 ? 0 : (order.discount || 0)));
                                         setPaymentAmount("");
                                         setPaymentNotes("");
                                         setPaymentMethod("Online");
