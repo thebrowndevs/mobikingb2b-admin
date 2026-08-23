@@ -49,7 +49,7 @@ function page() {
     const [cancelOpen, setCancelOpen] = useState(false)
     const [isActivityOpen, setIsActivityOpen] = useState(false)
 
-    const { getSingleOrderQuery, onlyAdmin, markAsDelivered, permissions: { canView, canAdd, canEdit, canDelete } } = useOrders()
+    const { getSingleOrderQuery, onlyAdmin, markAsDelivered, toggleLock, permissions: { canView, canAdd, canEdit, canDelete } } = useOrders()
     const { data: orderResp, isLoading, error } = getSingleOrderQuery(id)
     const order = orderResp?.data || {}
 
@@ -337,6 +337,16 @@ function page() {
                                 Mark Delivered
                             </Button>
                         }
+                        {isAdmin && (
+                            <Button
+                                onClick={() => toggleLock.mutate(order._id)}
+                                variant="outline"
+                                className={`gap-1.5 text-slate-700 border-slate-200 hover:bg-slate-50 font-semibold text-sm ${order.isLocked ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100' : ''}`}
+                                disabled={toggleLock.isPending}
+                            >
+                                {order.isLocked ? "Unlock Order" : "Lock Order"}
+                            </Button>
+                        )}
                         <Button
                             onClick={() => setIsActivityOpen(true)}
                             variant="outline"
@@ -391,7 +401,7 @@ function page() {
                     <PCard>
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-semibold text-gray-700">Payment Transactions</h2>
-                            {canEdit && (
+                            {canEdit && !order?.isLocked && !isAdmin && (
                                 <Button
                                     onClick={() => {
                                         const hasPayments = paymentsList.length > 0;

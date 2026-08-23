@@ -24,6 +24,7 @@ const permissionSections = [
     { id: 'posOrders', name: 'POS Orders' },
     { id: 'manual-order', name: 'Manual Order' },
     { id: 'orders', name: 'Orders' },
+    { id: 'quotations', name: 'Quotations / Order Requests' },
     { id: 'return-requests', name: 'Return Requests' },
     { id: 'partial-return-requests', name: 'Partial Return Requests' },
     { id: 'cancel-requests', name: 'Cancel Requests' },
@@ -54,6 +55,9 @@ const permissionTypes = [
 
 export default function UserDialog({ open, onOpenChange, selectedUser, onCreate, onUpdate, isSubmitting, error, canEdit, onlyAdmin }) {
     const { register, handleSubmit, reset, formState: { errors }, watch, setValue, } = useForm();
+    useEffect(() => {
+        register("permissions");
+    }, [register]);
     const watchRole = watch("role", "employee");
     const watchPermissions = watch("permissions", {});
 
@@ -63,13 +67,18 @@ export default function UserDialog({ open, onOpenChange, selectedUser, onCreate,
     useEffect(() => {
         if (open) {
             if (selectedUser) {
+                // Ensure Mongoose Map is converted to plain object if it isn't already
+                const rawPerms = selectedUser.permissions || {};
+                const parsedPerms = rawPerms instanceof Map ? Object.fromEntries(rawPerms) : rawPerms;
+
                 reset({
                     name: selectedUser.name || "",
                     email: selectedUser.email || "",
                     phoneNo: selectedUser.phoneNo || "",
                     password: selectedUser.password || "",
                     role: selectedUser.role || "employee",
-                    permissions: selectedUser.permissions
+                    maxDiscountPercent: selectedUser.maxDiscountPercent || 0,
+                    permissions: parsedPerms
                 });
             } else {
                 reset({
@@ -77,6 +86,7 @@ export default function UserDialog({ open, onOpenChange, selectedUser, onCreate,
                     email: "",
                     password: "",
                     role: "employee",
+                    maxDiscountPercent: 0,
                     permissions: {}
                 });
             }
@@ -87,7 +97,7 @@ export default function UserDialog({ open, onOpenChange, selectedUser, onCreate,
         const newPermissions = { ...watchPermissions };
         if (!newPermissions[section]) newPermissions[section] = {};
         newPermissions[section][type] = checked;
-        setValue("permissions", newPermissions);
+        setValue("permissions", newPermissions, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
     };
 
     const onSubmit = async (data) => {
@@ -249,6 +259,33 @@ export default function UserDialog({ open, onOpenChange, selectedUser, onCreate,
                                     </p>
                                 )}
                             </div>
+
+                            {/* Maximum Discount Percent Cap */}
+                            {watchRole === "employee" && (
+                                <div className="flex flex-col gap-1.5">
+                                    <Label htmlFor="maxDiscountPercent" className="text-xs font-bold text-slate-700">
+                                        Max Discount Cap (%) <span className="text-[10px] text-slate-400 font-semibold">(0 for Unlimited)</span>
+                                    </Label>
+                                    <Input
+                                        id="maxDiscountPercent"
+                                        type="number"
+                                        min={0}
+                                        max={100}
+                                        {...register("maxDiscountPercent", {
+                                            valueAsNumber: true,
+                                            min: { value: 0, message: "Minimum cap is 0%" },
+                                            max: { value: 100, message: "Maximum cap is 100%" }
+                                        })}
+                                        className={clsx("w-full bg-back1 border-bdr2 text-slate-855 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-none", { "border-red-500": errors.maxDiscountPercent })}
+                                        placeholder="0"
+                                    />
+                                    {errors.maxDiscountPercent && (
+                                        <p className="text-[11px] text-red-500 font-medium">
+                                            {errors.maxDiscountPercent.message}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Permissions (only for sub-admin) */}
@@ -335,7 +372,7 @@ export default function UserDialog({ open, onOpenChange, selectedUser, onCreate,
                                                                     isChecked ? colors.text : "text-slate-500"
                                                                 )}
                                                             >
-                                                                    {labelText}
+                                                                {labelText}
                                                             </Label>
                                                         </div>
                                                     );
@@ -352,10 +389,10 @@ export default function UserDialog({ open, onOpenChange, selectedUser, onCreate,
 
                     <div className="sticky bottom-0 bg-back2 border-t border-bdr2 p-4 flex items-center justify-end gap-2.5 shrink-0 z-20 shadow-none">
                         {onlyAdmin && selectedUser && (
-                            <Button 
-                                variant="outline" 
-                                type="button" 
-                                disabled={isSubmitting} 
+                            <Button
+                                variant="outline"
+                                type="button"
+                                disabled={isSubmitting}
                                 onClick={() => setPwdDialogOpen(true)}
                                 className="bg-back2 border-bdr2 text-slate-700 hover:bg-slate-50 font-semibold shadow-none text-xs h-9"
                             >
@@ -363,8 +400,8 @@ export default function UserDialog({ open, onOpenChange, selectedUser, onCreate,
                             </Button>
                         )}
 
-                        <Button 
-                            type="submit" 
+                        <Button
+                            type="submit"
                             disabled={isSubmitting}
                             className="bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text font-semibold shadow-none text-xs h-9 px-5"
                         >

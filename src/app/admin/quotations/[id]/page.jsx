@@ -22,7 +22,9 @@ import LoaderButton from '@/components/custom/LoaderButton'
 import CallAttemptDialog from '@/components/CallAttemptDialog'
 import BookOrderDialog from '@/components/BookOrderDialog'
 import ActivityLogDrawer from '@/components/ActivityLogDrawer'
-import { PhoneCall, Clock } from 'lucide-react'
+import { PhoneCall, Clock, Lock } from 'lucide-react'
+import { usePermissions } from '@/hooks/usePermissions'
+import { Resources } from '@/lib/permissions'
 
 const STATUS_CLASSES = {
     New: 'bg-blue-100 text-blue-800 border-blue-200',
@@ -46,14 +48,20 @@ export default function QuotationDetailsPage() {
         updateQuotationItems,
         addItemQuantity,
         removeItemQuantity,
+        toggleLock,
         permissions
     } = useQuotations()
+
+    const { checkEdit, onlyAdmin } = usePermissions()
+    const isAdmin = onlyAdmin()
+    const canEdit = checkEdit(Resources.QUOTATIONS)
 
     const { data: quotation, isLoading, refetch } = getSingleQuotation(quotationId)
 
     // Edit toggles
     const [isEditingCustomer, setIsEditingCustomer] = useState(false)
     const [isEditingItems, setIsEditingItems] = useState(false)
+    const [isAddingItem, setIsAddingItem] = useState(false)
     const [isActivityOpen, setIsActivityOpen] = useState(false)
 
     // Customer edit states
@@ -393,6 +401,16 @@ export default function QuotationDetailsPage() {
         );
     }
 
+    if (!permissions.canView) {
+        return (
+            <InnerDashboardLayout>
+                <div className="flex h-[60vh] items-center justify-center">
+                    <p className="text-lg font-semibold text-slate-500">You are not authorized to view this page.</p>
+                </div>
+            </InnerDashboardLayout>
+        );
+    }
+
     if (!quotation) {
         return (
             <InnerDashboardLayout>
@@ -404,6 +422,20 @@ export default function QuotationDetailsPage() {
     }
 
     const isActionable = !['Booked', 'Rejected', 'Cancelled'].includes(quotation.status)
+
+    const canAddItem = () => {
+        if (quotation.isLocked && !isAdmin) return false;
+        if (!isAdmin && !canEdit) return false;
+        return isActionable;
+    }
+
+    const canEditQuantity = () => {
+        if (quotation.isLocked && !isAdmin) return false;
+        if (!isAdmin && !canEdit) return false;
+        return isActionable;
+    }
+
+    const hasPerItemDiscounts = () => quotation?.items?.some(it => (it.discount || 0) > 0);
 
     return (
         <InnerDashboardLayout>
@@ -489,6 +521,16 @@ export default function QuotationDetailsPage() {
                                     Cancel Quotation
                                 </LoaderButton>
                             </>
+                        )}
+                        {isAdmin && (
+                            <Button
+                                onClick={() => toggleLock.mutate(quotation._id)}
+                                variant="outline"
+                                className={`gap-1.5 text-slate-700 border-slate-200 hover:bg-slate-50 font-semibold text-sm ${quotation.isLocked ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100' : ''}`}
+                                disabled={toggleLock.isPending}
+                            >
+                                {quotation.isLocked ? "Unlock Request" : "Lock Request"}
+                            </Button>
                         )}
                         <Button
                             onClick={() => setIsActivityOpen(true)}
@@ -619,43 +661,75 @@ export default function QuotationDetailsPage() {
                                 <CardTitle className="text-lg font-bold text-slate-800">Items List</CardTitle>
                                 {isActionable && (
                                     <div className="flex items-center gap-2">
-                                        {isEditingItems ? (
-                                            <>
-                                                <LoaderButton
-                                                    loading={updateQuotationItems.isPending}
-                                                    onClick={handleSaveCharges}
-                                                    size="sm"
-                                                    className="bg-slate-900 hover:bg-slate-800 text-white font-semibold flex items-center gap-1.5"
-                                                >
-                                                    <Check className="w-4 h-4" />
-                                                    Save
-                                                </LoaderButton>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => setIsEditingItems(false)}
-                                                    className="border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 gap-1.5"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                    Cancel
-                                                </Button>
-                                            </>
-                                        ) : (
+                                        {/* Add Item: visible to admin or permitted employees (not locked) */}
+                                        {canAddItem() && !isEditingItems && (
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => setIsEditingItems(true)}
+                                                onClick={() => {
+                                                    setIsAddingItem(prev => !prev)
+                                                    setSelectedProduct(null)
+                                                    setSelectedVariant(null)
+                                                    setAddQuantity(1)
+                                                    setSearchQuery('')
+                                                }}
                                                 className="border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 gap-1.5"
                                             >
-                                                <Edit className="w-4 h-4" />
-                                                Edit Items
+                                                <Plus className="w-4 h-4" />
+                                                {isAddingItem ? 'Cancel' : 'Add Item'}
                                             </Button>
+                                        )}
+                                        {/* Edit Items: admin only */}
+                                        {isAdmin && (
+                                            isEditingItems ? (
+                                                <>
+                                                    <LoaderButton
+                                                        loading={updateQuotationItems.isPending}
+                                                        onClick={handleSaveCharges}
+                                                        size="sm"
+                                                        className="bg-slate-900 hover:bg-slate-800 text-white font-semibold flex items-center gap-1.5"
+                                                    >
+                                                        <Check className="w-4 h-4" />
+                                                        Save
+                                                    </LoaderButton>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setIsEditingItems(false)}
+                                                        className="border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 gap-1.5"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                        Cancel
+                                                    </Button>
+                                                </>
+                                            ) : (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setIsEditingItems(true)
+                                                        setIsAddingItem(false)
+                                                    }}
+                                                    className="border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 gap-1.5"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                    Edit Items
+                                                </Button>
+                                            )
                                         )}
                                     </div>
                                 )}
                             </CardHeader>
                             <CardContent>
-                                {isEditingItems && (
+                                {/* Lock warning banner for employees */}
+                                {quotation.isLocked && !isAdmin && (
+                                    <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-xs text-amber-700">
+                                        <Lock className="w-4 h-4 shrink-0 text-amber-600" />
+                                        <span className="font-semibold">Quotation is locked. Contact admin to make changes.</span>
+                                    </div>
+                                )}
+
+                                {isAddingItem && (
                                     /* Product Search & Add (Legacy Add/Remove Flow implementation) */
                                     <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 flex flex-col gap-3 mb-6">
                                         <h4 className="text-xs font-bold text-slate-500 uppercase">Search & Add items</h4>
@@ -790,7 +864,7 @@ export default function QuotationDetailsPage() {
                                                             ) : (
                                                                 <div className="flex items-center justify-center gap-1.5">
                                                                     <span className="font-bold">{it.quantity}</span>
-                                                                    {!isEditingItems && isActionable && (
+                                                                    {!isEditingItems && canEditQuantity() && (
                                                                         <Button
                                                                             size="icon"
                                                                             variant="ghost"
@@ -1095,7 +1169,7 @@ export default function QuotationDetailsPage() {
                                                         {totals.discountPercent > 0 ? `(${totals.discountPercent}%) ` : ''}
                                                         ₹{totals.discount?.toLocaleString() || '0'}
                                                     </span>
-                                                    {isActionable && (
+                                                    {isActionable && !hasPerItemDiscounts() && (isAdmin || canEdit) && !quotation?.isLocked && !isAdmin && (
                                                         <Button
                                                             size="icon"
                                                             variant="ghost"
@@ -1165,7 +1239,7 @@ export default function QuotationDetailsPage() {
                                             ) : (
                                                 <div className="flex items-center gap-1.5">
                                                     <span className="font-bold text-slate-700">₹{totals.deliveryCharge?.toLocaleString() || '0'}</span>
-                                                    {isActionable && (
+                                                    {isActionable && (isAdmin || canEdit) && !quotation?.isLocked && !isAdmin && (
                                                         <Button
                                                             size="icon"
                                                             variant="ghost"

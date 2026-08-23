@@ -2,10 +2,10 @@
 export const Resources = {
     DASHBOARD: 'dashboard',
     POS: 'pos',
-    POS_ORDERS: 'posOrders',
-    MANUAL_ORDER: 'manual-order',
+    // POS_ORDERS: 'posOrders',
+    // MANUAL_ORDER: 'manual-order',
     ORDERS: 'orders',
-    RETURN_REQUESTS: 'return-requests',
+    // RETURN_REQUESTS: 'return-requests',
     CANCEL_REQUESTS: 'cancel-requests',
     PAYMENT_LINKS: 'payment-links',
     QUERIES: 'queries',
@@ -24,6 +24,7 @@ export const Resources = {
     BLOGS: 'blogs',
     REFUND: 'refund',
     PARTIAL_RETURN_REQUESTS: 'partial-return-requests',
+    QUOTATIONS: 'quotations',
 };
 
 // possible actions

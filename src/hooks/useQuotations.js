@@ -8,10 +8,10 @@ export const useQuotations = () => {
   const queryClient = useQueryClient();
   const { checkView, checkAdd, checkEdit, checkDelete } = usePermissions();
 
-  const canView = checkView(Resources.ORDERS);
-  const canAdd = checkAdd(Resources.ORDERS);
-  const canEdit = checkEdit(Resources.ORDERS);
-  const canDelete = checkDelete(Resources.ORDERS);
+  const canView = checkView(Resources.QUOTATIONS);
+  const canAdd = checkAdd(Resources.QUOTATIONS);
+  const canEdit = checkEdit(Resources.QUOTATIONS);
+  const canDelete = checkDelete(Resources.QUOTATIONS);
 
   // Get B2B quotations paginated
   const getQuotationsPaginated = ({ params }) => {
@@ -158,6 +158,17 @@ export const useQuotations = () => {
     });
   };
 
+  const toggleLockMutation = useMutation({
+    mutationFn: (id) => api.post(`/quotations/${id}/toggle-lock`),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(["quotations"]);
+      queryClient.invalidateQueries(["quotation", variables]);
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to toggle quotation lock.");
+    },
+  });
+
   return {
     getQuotationsPaginated,
     getSingleQuotation,
@@ -169,6 +180,7 @@ export const useQuotations = () => {
     addItemQuantity: addItemMutation,
     removeItemQuantity: removeItemMutation,
     recordCallAttempt: recordCallAttemptMutation,
+    toggleLock: toggleLockMutation,
     permissions: {
       canView,
       canAdd,

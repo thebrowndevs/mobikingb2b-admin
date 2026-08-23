@@ -81,6 +81,7 @@ function ItemsTable({
     const [selectedProduct, setSelectedProduct] = useState(null)
     const [selectedVariant, setSelectedVariant] = useState("")
     const [addQuantity, setAddQuantity] = useState(1)
+    const [isAddingItem, setIsAddingItem] = useState(false)
 
     // Initialize edit states
     useEffect(() => {
@@ -121,6 +122,22 @@ function ItemsTable({
         }
     }
 
+    const canAddItem = () => {
+        if (!isAdmin && !canEdit) return false;
+        if (order?.isLocked && !isAdmin) return false;
+        if (order?.couponLocked) return false;
+        if (order?.shippingType === 'Manual') {
+            return !['Shipped', 'Delivered', 'Cancelled', 'Rejected', 'Returned'].includes(order?.status);
+        }
+        return (
+            !order?.awbCode &&
+            !order?.shipmentId &&
+            !order?.pickupScheduled &&
+            !order?.courierName &&
+            !['Shipped', 'Delivered', 'Cancelled', 'Rejected', 'Returned'].includes(order?.status)
+        );
+    }
+
     const handleSearch = async (val) => {
         setSearchQuery(val)
         if (val.trim().length < 2) {
@@ -149,9 +166,11 @@ function ItemsTable({
 
             // Default variant selection
             if (fullProd?.variants) {
-                const keys = Object.keys(fullProd.variants)
-                if (keys.length > 0) {
-                    setSelectedVariant(keys[0])
+                const variantList = Array.isArray(fullProd.variants)
+                    ? fullProd.variants.map(v => v.name)
+                    : Object.keys(fullProd.variants);
+                if (variantList.length > 0) {
+                    setSelectedVariant(variantList[0])
                 } else {
                     setSelectedVariant("")
                 }
@@ -206,6 +225,67 @@ function ItemsTable({
         setSelectedVariant("")
         setAddQuantity(1)
         toast.success("Product added to list.")
+    }
+
+    const handleAddItemDirect = () => {
+        if (!selectedProduct || !selectedVariant) {
+            toast.error("Please select a product and variant.")
+            return
+        }
+        const qty = Math.floor(Number(addQuantity || 1))
+        if (qty <= 0) {
+            toast.error("Quantity must be at least 1.")
+            return
+        }
+        const variantName = selectedVariant
+
+        // Check duplicate
+        const exists = (order.items || []).find(
+            it => (it.productId?._id || it.productId) === selectedProduct._id && it.variantName === variantName
+        )
+        if (exists) {
+            toast.error("This product/variant is already in the order. Adjust its quantity instead.")
+            return
+        }
+
+        const basePrice = calculateB2BItemPrice(selectedProduct, qty)
+
+        // Build updated items list: existing items + new one
+        const updatedItems = [
+            ...(order.items || []).map(it => ({
+                productId: it.productId?._id || it.productId,
+                variantId: it.variantId?._id || it.variantId,
+                variantName: it.variantName,
+                quantity: it.quantity,
+                price: it.price || 0,
+                discount: it.discount || 0,
+                discountPercent: it.discountPercent || 0,
+                discountType: it.discountType || (it.discountPercent > 0 && it.discount === 0 ? 'percentage' : 'flat')
+            })),
+            {
+                productId: selectedProduct._id,
+                variantId: Array.isArray(selectedProduct.variants)
+                    ? selectedProduct.variants.find(v => v.name === variantName)?._id
+                    : null,
+                name: selectedProduct.fullName || selectedProduct.name,
+                variantName,
+                quantity: qty,
+                price: basePrice,
+                discount: 0,
+                discountPercent: 0,
+                discountType: 'flat'
+            }
+        ]
+
+        updateOrderItems.mutate({ data: { items: updatedItems, discountType: order?.discountType || 'flat' }, id: order._id }, {
+            onSuccess: () => {
+                setSelectedProduct(null)
+                setSelectedVariant("")
+                setAddQuantity(1)
+                setSearchQuery("")
+                setIsAddingItem(false)
+            }
+        })
     }
 
     const updateItemQty = (index, val) => {
@@ -362,46 +442,68 @@ function ItemsTable({
                     <h2 className="text-lg font-bold text-slate-800">Items & Charges</h2>
                     <p className="text-xs text-slate-400">Manage products, quantities, discounts, and shipping charges.</p>
                 </div>
-                {canEditOrderItems() && (
-                    <div className="flex gap-2">
-                        {isEditing ? (
-                            <>
-                                <Button
-                                    size="sm"
-                                    onClick={handleSaveChanges}
-                                    disabled={updateOrder.isPending}
-                                    className="bg-slate-900 hover:bg-slate-800 text-white gap-1 text-xs"
-                                >
-                                    {updateOrder.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                                    Save Changes
-                                </Button>
+                <div className="flex gap-2">
+                    {canAddItem() && !isEditing && (
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                                setIsAddingItem(prev => !prev)
+                                setSelectedProduct(null)
+                                setSelectedVariant("")
+                                setAddQuantity(1)
+                                setSearchQuery("")
+                            }}
+                            className="gap-1.5 text-xs text-slate-600 border-slate-200 hover:bg-slate-50"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            {isAddingItem ? 'Cancel Add' : 'Add Item'}
+                        </Button>
+                    )}
+                    {canEditOrderItems() && (
+                        <>
+                            {isEditing ? (
+                                <>
+                                    <Button
+                                        size="sm"
+                                        onClick={handleSaveChanges}
+                                        disabled={updateOrderItems.isPending}
+                                        className="bg-slate-900 hover:bg-slate-800 text-white gap-1 text-xs"
+                                    >
+                                        {updateOrderItems.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                                        Save Changes
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => setIsEditing(false)}
+                                        className="gap-1 text-xs text-slate-500 border-slate-200"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                        Cancel
+                                    </Button>
+                                </>
+                            ) : (
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => setIsEditing(false)}
-                                    className="gap-1 text-xs text-slate-500 border-slate-200"
+                                    onClick={() => {
+                                        setIsEditing(true)
+                                        setIsAddingItem(false)
+                                    }}
+                                    className="gap-1.5 text-xs text-slate-600 border-slate-200 hover:bg-slate-50"
                                 >
-                                    <X className="w-3.5 h-3.5" />
-                                    Cancel
+                                    <Edit className="w-3.5 h-3.5" />
+                                    Edit Items
                                 </Button>
-                            </>
-                        ) : (
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setIsEditing(true)}
-                                className="gap-1.5 text-xs text-slate-600 border-slate-200 hover:bg-slate-50"
-                            >
-                                <Edit className="w-3.5 h-3.5" />
-                                Edit Items
-                            </Button>
-                        )}
-                    </div>
-                )}
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
 
-            {/* Product Search (Editing Mode Only) */}
-            {isEditing && (
+            {/* Product Search (Add Item or Editing Mode) */}
+            {(isEditing || isAddingItem) && (
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Add New Product</h3>
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
@@ -439,6 +541,12 @@ function ItemsTable({
                         {/* selected Product Detail Block */}
                         {selectedProduct && (
                             <>
+                                <div className="md:col-span-12 bg-white p-3 rounded-lg border border-slate-200/60 mb-1">
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Selected Product</span>
+                                    <span className="text-xs font-bold text-slate-800">{selectedProduct.fullName || selectedProduct.name}</span>
+                                    <span className="text-[10px] text-slate-500 font-mono block mt-0.5">Base Price: ₹{selectedProduct.basePrice}</span>
+                                </div>
+
                                 {/* Variant Selection */}
                                 <div className="md:col-span-3">
                                     <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Select Variant</label>
@@ -448,11 +556,19 @@ function ItemsTable({
                                                 <SelectValue placeholder="Variant" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {Object.keys(selectedProduct.variants).map((key) => (
-                                                    <SelectItem key={key} value={key} className="text-xs">
-                                                        {key} (Stock: {selectedProduct.variants[key] || 0})
-                                                    </SelectItem>
-                                                ))}
+                                                {Array.isArray(selectedProduct.variants) ? (
+                                                    selectedProduct.variants.map((v) => (
+                                                        <SelectItem key={v.name || v._id} value={v.name} className="text-xs">
+                                                            {v.name} (Stock: {v.availableStock ?? 0})
+                                                        </SelectItem>
+                                                    ))
+                                                ) : (
+                                                    Object.keys(selectedProduct.variants).map((key) => (
+                                                        <SelectItem key={key} value={key} className="text-xs">
+                                                            {key} (Stock: {typeof selectedProduct.variants[key] === 'number' ? selectedProduct.variants[key] : 0})
+                                                        </SelectItem>
+                                                    ))
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     ) : (
@@ -475,10 +591,11 @@ function ItemsTable({
                                 {/* Add Button */}
                                 <div className="md:col-span-1">
                                     <Button
-                                        onClick={handleAddItem}
+                                        onClick={isEditing ? handleAddItem : handleAddItemDirect}
+                                        disabled={updateOrderItems.isPending}
                                         className="w-full h-9 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold"
                                     >
-                                        Add
+                                        {updateOrderItems.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Add'}
                                     </Button>
                                 </div>
                             </>
@@ -767,7 +884,7 @@ function ItemsTable({
                                         <span className={order?.discount > 0 ? "text-emerald-600 font-bold" : "font-bold text-slate-700"}>
                                             {order?.discount > 0 ? `-${order?.discountPercent > 0 ? `(${order.discountPercent}%) ` : ''}₹${order?.discount?.toLocaleString()}` : '—'}
                                         </span>
-                                        {canEditOrderItems() && (
+                                        {(isAdmin || canEdit) && !order?.couponLocked && !order?.isLocked && !isAdmin && !(order?.items?.some(it => (it.discount || 0) > 0)) && (
                                             <Button
                                                 size="icon"
                                                 variant="ghost"
@@ -830,7 +947,7 @@ function ItemsTable({
                                 ) : (
                                     <div className="flex items-center gap-1.5">
                                         <span className="font-bold text-slate-700">₹{totals.deliveryCharge?.toLocaleString()}</span>
-                                        {canEditOrderItems() && (
+                                        {(isAdmin || canEdit) && !order?.isLocked && !isAdmin && (
                                             <Button
                                                 size="icon"
                                                 variant="ghost"
@@ -861,7 +978,10 @@ function ItemsTable({
                                     {(() => {
                                         const appliedPayment = paymentsList.find(p => p.couponId && p.couponId === order.couponsApplied[0].couponId);
                                         const isAppliedPaymentPaid = appliedPayment && appliedPayment.status === "Paid";
-                                        const showRemoveButton = isAdmin &&
+                                        const isStaff = isAdmin || canEdit;
+                                        const canRemoveRoleBased = isAdmin || (canEdit && order?.couponAppliedByRole !== 'admin');
+                                        const showRemoveButton = isStaff &&
+                                            canRemoveRoleBased &&
                                             order?.paymentStatus !== "Paid" &&
                                             !isAppliedPaymentPaid &&
                                             !['Shipped', 'Delivered', 'Cancelled', 'Rejected', 'Returned'].includes(order?.status);
@@ -890,7 +1010,7 @@ function ItemsTable({
                                         Coupons cannot be applied when a global discount is active.
                                     </span>
                                 ) : (
-                                    isAdmin && order?.paymentStatus !== "Paid" && !['Shipped', 'Delivered', 'Cancelled', 'Rejected', 'Returned'].includes(order?.status) ? (
+                                    (isAdmin || canEdit) && order?.paymentStatus !== "Paid" && !['Shipped', 'Delivered', 'Cancelled', 'Rejected', 'Returned'].includes(order?.status) ? (
                                         <div className="flex items-center gap-1.5">
                                             <Input
                                                 placeholder="Enter Coupon"

@@ -390,6 +390,18 @@ export const useOrders = () => {
     },
   });
 
+  const toggleLock = useMutation({
+    mutationFn: (id) => api.post(`/orders/${id}/toggle-lock`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["order"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to toggle order lock");
+      console.error(err);
+    },
+  });
+
   const getOrderActivity = (orderId) => {
     return useQuery({
       queryKey: ["order-activity", orderId],
@@ -420,6 +432,7 @@ export const useOrders = () => {
     getSingleOrderQuery,
     updateOrder,
     updateOrderItems,
+    toggleLock,
     addItemInOrder,
     removeItemFromOrder,
     getCancelRequestOrders,
