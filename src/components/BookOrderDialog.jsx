@@ -27,15 +27,16 @@ export default function BookOrderDialog({
 
     // Payment Record Options
     const [recordPayment, setRecordPayment] = useState(true)
-    const [paymentAmount, setPaymentAmount] = useState("")
+    const [paymentSubtotal, setPaymentSubtotal] = useState("")
+    const [paymentDiscount, setPaymentDiscount] = useState("")
     const [paymentMethod, setPaymentMethod] = useState("Online")
     const [paymentStatus, setPaymentStatus] = useState("Pending")
 
-    // Prefill payment amount when quotation changes or dialog opens
+    // Prefill payment fields when quotation changes or dialog opens
     useEffect(() => {
-        if (quotation?.orderAmount) {
-            setPaymentAmount(String(quotation.orderAmount))
-            // Match the prefilled payment method when bookingPaymentMethod changes
+        if (quotation) {
+            setPaymentSubtotal(String(quotation.subtotal || quotation.orderAmount || ""))
+            setPaymentDiscount(String(quotation.discount || 0))
             if (bookingPaymentMethod && bookingPaymentMethod !== "COD") {
                 setPaymentMethod(bookingPaymentMethod)
             }
@@ -54,9 +55,15 @@ export default function BookOrderDialog({
         }
 
         if (recordPayment) {
+            const sub = Number(paymentSubtotal) || 0;
+            const disc = Number(paymentDiscount) || 0;
+            const amt = Math.max(0, sub - disc);
+
             payload.stages = [
                 {
-                    amount: Number(paymentAmount) || quotation.orderAmount || 0,
+                    subtotal: sub,
+                    discount: disc,
+                    amount: amt,
                     method: paymentMethod,
                     status: paymentStatus,
                     notes: "Auto-recorded during booking"
@@ -130,42 +137,62 @@ export default function BookOrderDialog({
                         </div>
 
                         {recordPayment && (
-                            <div className="grid grid-cols-3 gap-2 pt-1">
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] text-slate-400 font-semibold">Payment Amount (₹)</span>
-                                    <Input
-                                        type="number"
-                                        value={paymentAmount}
-                                        onChange={(e) => setPaymentAmount(e.target.value)}
-                                        className="h-8 border-slate-200 text-xs bg-white"
-                                        placeholder="Amount"
-                                    />
+                            <div className="pt-1 flex flex-col gap-2">
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[10px] text-slate-400 font-semibold">Subtotal (₹)</span>
+                                        <Input
+                                            type="number"
+                                            value={paymentSubtotal}
+                                            onChange={(e) => setPaymentSubtotal(e.target.value)}
+                                            className="h-8 border-slate-200 text-xs bg-white"
+                                            placeholder="Subtotal"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[10px] text-slate-400 font-semibold">Discount (₹)</span>
+                                        <Input
+                                            type="number"
+                                            value={paymentDiscount}
+                                            readOnly
+                                            className="h-8 border-slate-200 text-xs bg-slate-50 cursor-not-allowed text-slate-500"
+                                            placeholder="Discount"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[10px] text-slate-400 font-semibold">Amount (₹)</span>
+                                        <div className="h-8 flex items-center font-bold text-xs text-slate-900 bg-slate-50 px-2 rounded border border-slate-200">
+                                            ₹{Math.max(0, Number(paymentSubtotal || 0) - Number(paymentDiscount || 0)).toLocaleString()}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] text-slate-400 font-semibold">Method</span>
-                                    <Select onValueChange={setPaymentMethod} value={paymentMethod}>
-                                        <SelectTrigger className="border-slate-200 h-8 text-xs bg-white">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Online">Online</SelectItem>
-                                            <SelectItem value="UPI">UPI</SelectItem>
-                                            <SelectItem value="Cash">Cash</SelectItem>
-                                            <SelectItem value="Mixed">Mixed</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] text-slate-400 font-semibold">Status</span>
-                                    <Select onValueChange={setPaymentStatus} value={paymentStatus}>
-                                        <SelectTrigger className="border-slate-200 h-8 text-xs bg-white">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Pending">Pending</SelectItem>
-                                            <SelectItem value="Paid">Paid</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[10px] text-slate-400 font-semibold">Method</span>
+                                        <Select onValueChange={setPaymentMethod} value={paymentMethod}>
+                                            <SelectTrigger className="border-slate-200 h-8 text-xs bg-white">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Online">Online</SelectItem>
+                                                <SelectItem value="UPI">UPI</SelectItem>
+                                                <SelectItem value="Cash">Cash</SelectItem>
+                                                <SelectItem value="Mixed">Mixed</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[10px] text-slate-400 font-semibold">Status</span>
+                                        <Select onValueChange={setPaymentStatus} value={paymentStatus}>
+                                            <SelectTrigger className="border-slate-200 h-8 text-xs bg-white">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Pending">Pending</SelectItem>
+                                                <SelectItem value="Paid">Paid</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
                             </div>
                         )}
