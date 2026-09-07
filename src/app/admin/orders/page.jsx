@@ -39,7 +39,7 @@ const TABS = [
     { key: 'web', label: 'Website Orders' },
     { key: 'app', label: 'App Orders' },
     { key: 'pos', label: 'POS Orders' },
-    { key: 'manual', label: 'Manual Orders' },
+    { key: 'abandoned', label: 'Abandoned Orders' },
 ]
 
 const STATUS_CARDS = [

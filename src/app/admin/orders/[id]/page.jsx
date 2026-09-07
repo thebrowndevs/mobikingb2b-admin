@@ -401,7 +401,7 @@ function page() {
                     <PCard>
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-semibold text-gray-700">Payment Transactions</h2>
-                            {canEdit && !order?.isLocked && !isAdmin && (
+                            {(canEdit && !order?.isLocked && order.status != "Cancelled" && order.status != "Rejected" && order.paymentStatus != "Paid") && (
                                 <Button
                                     onClick={() => {
                                         const hasPayments = paymentsList.length > 0;
@@ -432,6 +432,9 @@ function page() {
                                     <thead>
                                         <tr className="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] tracking-wider text-left">
                                             <th className="p-3">Date</th>
+                                            <th className="p-3">Gateway</th>
+                                            <th className="p-3">Order ID</th>
+                                            <th className="p-3">Payment ID</th>
                                             <th className="p-3">Subtotal</th>
                                             <th className="p-3">Discount</th>
                                             <th className="p-3">Coupon</th>
@@ -447,6 +450,17 @@ function page() {
                                             <tr key={payment._id} className="hover:bg-slate-50/50">
                                                 <td className="p-3 whitespace-nowrap">
                                                     {payment.paidAt ? format(new Date(payment.paidAt), 'dd MMM yyyy, hh:mm a') : format(new Date(payment.createdAt), 'dd MMM yyyy, hh:mm a')}
+                                                </td>
+                                                <td className="p-3 whitespace-nowrap">
+                                                    <span className="capitalize font-bold text-slate-800">
+                                                        {payment.gateway || "—"}
+                                                    </span>
+                                                </td>
+                                                <td className="p-3 whitespace-nowrap text-xs font-mono text-slate-600">
+                                                    {payment.phonepeOrderId || payment.razorpayOrderId || "—"}
+                                                </td>
+                                                <td className="p-3 whitespace-nowrap text-xs font-mono text-slate-600">
+                                                    {payment.phonepePaymentId || payment.razorpayPaymentId || "—"}
                                                 </td>
                                                 <td className="p-3 whitespace-nowrap text-slate-900">
                                                     ₹{payment.subtotal?.toLocaleString() || "0"}

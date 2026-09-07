@@ -56,6 +56,8 @@ export default function SettingsPage() {
                         logoImage: data.data.logoImage || "",
                         minOrderLimit: data.data.minOrderLimit !== undefined ? String(data.data.minOrderLimit) : "0",
                         minQuotationLimit: data.data.minQuotationLimit !== undefined ? String(data.data.minQuotationLimit) : "0",
+                        enableRazorpay: data.data.paymentGatewaySettings?.enableRazorpay !== undefined ? data.data.paymentGatewaySettings.enableRazorpay : true,
+                        enablePhonepe: data.data.paymentGatewaySettings?.enablePhonepe !== undefined ? data.data.paymentGatewaySettings.enablePhonepe : true,
                     });
                 }
             }
@@ -74,7 +76,11 @@ export default function SettingsPage() {
             const payload = {
                 ...companyDetails,
                 minOrderLimit: Number(companyDetails.minOrderLimit || 0),
-                minQuotationLimit: Number(companyDetails.minQuotationLimit || 0)
+                minQuotationLimit: Number(companyDetails.minQuotationLimit || 0),
+                paymentGatewaySettings: {
+                    enableRazorpay: !!companyDetails.enableRazorpay,
+                    enablePhonepe: !!companyDetails.enablePhonepe
+                }
             };
             const res = await fetch(
                 (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1") + "/policy/company-details",
@@ -243,6 +249,49 @@ export default function SettingsPage() {
                                 onChange={(e) => setCompanyDetails(prev => ({ ...prev, iosAppLink: e.target.value }))}
                             />
                         </div>
+                    </div>
+                </div>
+
+                {/* Payment Gateways Toggle Section */}
+                <div className="bg-back2 p-6 rounded-xl border border-bdr2 space-y-5">
+                    <div className="border-b border-bdr2 pb-3">
+                        <h2 className="text-lg font-bold text-slate-800">
+                            Payment Gateway Status
+                        </h2>
+                        <p className="text-xs text-slate-400">Enable or disable payment gateways for website and app checkouts</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label className="flex items-center justify-between p-4 border border-bdr2 rounded-xl bg-back1 cursor-pointer hover:border-slate-300 transition-all">
+                            <div className="flex items-center gap-3">
+                                <img src="/razorpay-icon.png" alt="Razorpay" className="w-8 h-8 object-contain" />
+                                <div>
+                                    <p className="font-semibold text-sm text-slate-800">Razorpay</p>
+                                    <p className="text-xs text-slate-400">UPI, Cards, NetBanking, Wallets</p>
+                                </div>
+                            </div>
+                            <input
+                                type="checkbox"
+                                className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                checked={!!companyDetails.enableRazorpay}
+                                onChange={(e) => setCompanyDetails(prev => ({ ...prev, enableRazorpay: e.target.checked }))}
+                            />
+                        </label>
+
+                        <label className="flex items-center justify-between p-4 border border-bdr2 rounded-xl bg-back1 cursor-pointer hover:border-slate-300 transition-all">
+                            <div className="flex items-center gap-3">
+                                <img src="/phonepe-icon.webp" alt="PhonePe" className="w-8 h-8 object-contain" />
+                                <div>
+                                    <p className="font-semibold text-sm text-slate-800">PhonePe</p>
+                                    <p className="text-xs text-slate-400">PhonePe UPI, QR, Cards, NetBanking</p>
+                                </div>
+                            </div>
+                            <input
+                                type="checkbox"
+                                className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                checked={!!companyDetails.enablePhonepe}
+                                onChange={(e) => setCompanyDetails(prev => ({ ...prev, enablePhonepe: e.target.checked }))}
+                            />
+                        </label>
                     </div>
                 </div>
 
