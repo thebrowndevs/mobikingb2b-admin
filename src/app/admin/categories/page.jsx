@@ -31,6 +31,7 @@ export default function Page() {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const searchVal = searchParams.get('search') || '';
+    const activeVal = searchParams.get('active') || 'all';
 
     const [searchInput, setSearchInput] = useState(searchVal);
 
@@ -82,29 +83,36 @@ export default function Page() {
         updateParams({ limit: newLimit, page: 1 });
     };
 
+    const handleActiveChange = (val) => {
+        updateParams({ active: val, page: 1 });
+    };
+
     const handleReset = () => {
         setSearchInput('');
         router.push(pathname);
     };
 
-    // Fetch categories query with search and pagination params
-    const { 
-        categoriesPaginationQuery, 
-        createCategory, 
-        deleteCategory, 
-        updateCategory, 
+    const isFiltered = searchInput || (activeVal && activeVal !== 'all');
+
+    // Fetch categories query with search, active and pagination params
+    const {
+        categoriesPaginationQuery,
+        createCategory,
+        deleteCategory,
+        updateCategory,
         permissions: {
             canView,
             canAdd,
             canEdit,
             canDelete
-        } 
+        }
     } = useCategories();
 
     const paginatedCategories = categoriesPaginationQuery({
         page,
         limit,
-        searchQuery: searchVal
+        searchQuery: searchVal,
+        active: activeVal
     });
 
     const categoriesResponse = paginatedCategories.data || {};
@@ -170,33 +178,57 @@ export default function Page() {
 
     return (
         <InnerDashboardLayout>
-            <div className="w-full mb-6">
-                <h1 className="text-primary font-bold text-3xl tracking-tighter">Categories</h1>
-                <p className="text-sm text-slate-500 font-medium">Manage and organize product grouping categories</p>
+            <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h1 className="text-primary font-bold text-3xl tracking-tighter">Categories</h1>
+                    <p className="text-sm text-slate-500 font-medium">Manage and organize product grouping categories</p>
+                </div>
+                {canAdd && (
+                    <Button
+                        onClick={handleAddClick}
+                        className="shrink-0 bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text shadow-none font-semibold text-xs h-9"
+                    >
+                        <CirclePlus className="mr-1.5 h-4 w-4" /> Add New
+                    </Button>
+                )}
             </div>
 
             <div>
-                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-5 mt-4">
-                    <div className="flex items-center gap-3 flex-1">
-                        <div className="relative w-full">
-                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                            <Input
-                                placeholder="Search categories by name or slug..."
-                                value={searchInput}
-                                onChange={(e) => setSearchInput(e.target.value)}
-                                className="pl-9 pr-8 text-sm bg-back2 border-bdr2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-none"
-                            />
-                            {searchInput && (
-                                <button
-                                    onClick={handleReset}
-                                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-650 transition-colors"
-                                    title="Clear search"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
-                            )}
-                        </div>
+                <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 mb-5 mt-4 w-full">
+                    {/* Left Container: Search Input */}
+                    <div className="relative flex-1 min-w-0">
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <Input
+                            placeholder="Search categories by name or slug..."
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            className="pl-9 pr-8 text-sm bg-back2 border-bdr2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-none w-full"
+                        />
                         {searchInput && (
+                            <button
+                                onClick={() => setSearchInput('')}
+                                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-650 transition-colors"
+                                title="Clear search input"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Right Container: Filters + Total Badge + Reset */}
+                    <div className="flex items-center gap-2 flex-wrap justify-start md:justify-end">
+                        <Select value={activeVal} onValueChange={handleActiveChange}>
+                            <SelectTrigger className="w-auto min-w-[125px] bg-back2 border-bdr2 text-slate-800 text-xs font-medium h-9">
+                                <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-back2 border-bdr2 text-xs">
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="true">Active</SelectItem>
+                                <SelectItem value="false">Inactive</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {isFiltered && (
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -207,24 +239,14 @@ export default function Page() {
                                 Reset
                             </Button>
                         )}
-                    </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             className="shrink-0 bg-back2 border-bdr2 text-slate-700 shadow-none font-semibold text-xs h-9"
                             disabled
                         >
                             Total: {pagination?.totalCategories || 0}
                         </Button>
-                        {canAdd &&
-                            <Button 
-                                onClick={handleAddClick} 
-                                className="shrink-0 bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text shadow-none font-semibold text-xs h-9"
-                            >
-                                <CirclePlus className="mr-1.5 h-4 w-4" /> Add New
-                            </Button>
-                        }
                     </div>
                 </div>
 

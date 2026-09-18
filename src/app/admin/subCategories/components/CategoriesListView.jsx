@@ -62,6 +62,7 @@ export default function CategoriesListView({
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-28">Image</TableHead>
                         <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Name</TableHead>
                         <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-44">Parent Category</TableHead>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-36">Web Home</TableHead>
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-40">Status</TableHead>
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-40">Products</TableHead>
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-32">Action</TableHead>
@@ -99,6 +100,12 @@ export default function CategoriesListView({
                             </TableCell>
 
                             <TableCell className="text-center align-middle py-3">
+                                <Badge className={`text-[10px] px-2 py-0.5 font-bold shadow-none ${item.webHomeCategory ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-400'}`}>
+                                    {item.webHomeCategory ? 'In Web Home' : '-'}
+                                </Badge>
+                            </TableCell>
+
+                            <TableCell className="text-center align-middle py-3">
                                 <div className="flex items-center justify-center gap-2">
                                     <Switch
                                         checked={item.active !== false}
@@ -118,8 +125,8 @@ export default function CategoriesListView({
                                     />
                                     <Badge
                                         className={`text-[10px] px-2 py-0.5 font-bold uppercase shadow-none ${item.active !== false
-                                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
-                                                : 'bg-rose-50 text-rose-700 border border-rose-150'
+                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
+                                            : 'bg-rose-50 text-rose-700 border border-rose-150'
                                             }`}
                                     >
                                         {item.active !== false ? 'Active' : 'Inactive'}

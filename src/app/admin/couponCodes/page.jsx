@@ -12,7 +12,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Input } from "@/components/ui/input"
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import NotAuthorizedPage from '@/components/notAuthorized';
-import { Tag } from 'lucide-react'
+import { Tag, Search, X, RotateCcw } from 'lucide-react'
 
 function Page() {
     const [couponDialogOpen, setCouponDialogOpen] = useState(false)
@@ -31,7 +31,8 @@ function Page() {
 
         return debouncedValue;
     }
-    const [searchTerm, setSearchTerm] = useState("")
+    const [activeFilter, setActiveFilter] = useState('all');
+    const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearch = useDebouncedValue(searchTerm, 500);
 
     const { couponsQuery, deleteCoupon, updateCoupon, permissions: { canView, canAdd, canEdit, canDelete } } = useCoupons();
@@ -40,6 +41,7 @@ function Page() {
         page: page,
         limit: limit,
         searchQuery: debouncedSearch,
+        active: activeFilter === 'all' ? undefined : activeFilter,
     })
 
     const allCoupons = coupons.data?.data?.coupons || []
@@ -52,7 +54,22 @@ function Page() {
         setCouponDialogOpen(true);
     }
 
+    const handleToggleActive = async (coupon, newActive) => {
+        await updateCoupon.mutateAsync({
+            id: coupon._id,
+            active: newActive
+        });
+    };
+
+    const handleReset = () => {
+        setSearchTerm('');
+        setActiveFilter('all');
+        setPage(1);
+    };
+
     if (!canView) return <NotAuthorizedPage />
+
+    const isFiltered = searchTerm || activeFilter !== 'all';
 
     return (
         <InnerDashboardLayout>
@@ -64,7 +81,7 @@ function Page() {
                 </div>
                 {canAdd && (
                     <div className="w-full md:w-auto shrink-0">
-                        <Button 
+                        <Button
                             onClick={() => {
                                 setCouponDialogOpen(true)
                                 setSelectedCoupon(undefined)
@@ -80,19 +97,57 @@ function Page() {
 
             <div className="w-full flex flex-col gap-4 pb-4">
                 {/* Toolbar */}
-                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-                    {/* Total Badge */}
-                    <div className="text-xs font-bold bg-slate-50 border border-slate-200/60 text-slate-600 px-4 py-2.5 rounded-xl shrink-0 text-center sm:text-left select-none">
-                        Total Coupons: {coupons.data?.data?.totalCount || 0}
+                <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 w-full">
+                    {/* Left Container: Search Bar spanning full remaining width */}
+                    <div className="relative flex-1 min-w-0">
+                        <Input
+                            placeholder="Search coupons by code..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-white border-slate-200/80 rounded-xl focus-visible:ring-indigo-500/40 text-sm h-10 pr-8"
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-2.5 top-3 text-slate-400 hover:text-slate-650 transition-colors"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        )}
                     </div>
 
-                    {/* Search Bar */}
-                    <Input
-                        placeholder="Search coupons by code..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full flex-1 bg-white border-slate-200/80 rounded-xl focus-visible:ring-indigo-500/40 text-sm h-10"
-                    />
+                    {/* Right Container: Filters + Reset + Total */}
+                    <div className="flex items-center gap-2 flex-wrap justify-start md:justify-end">
+                        {/* Status Filter Dropdown */}
+                        <Select value={activeFilter} onValueChange={(val) => { setActiveFilter(val); setPage(1); }}>
+                            <SelectTrigger className="w-auto min-w-[125px] rounded-xl border-slate-200/80 bg-white text-xs font-medium h-10">
+                                <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl text-xs">
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="true">Active</SelectItem>
+                                <SelectItem value="false">Inactive</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {/* Reset Button */}
+                        {isFiltered && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleReset}
+                                className="h-10 text-xs text-slate-500 hover:text-slate-900 gap-1.5 shrink-0 bg-transparent hover:bg-slate-100/50 shadow-none border-0"
+                            >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                                Reset
+                            </Button>
+                        )}
+
+                        {/* Total Badge */}
+                        <div className="text-xs font-bold bg-slate-50 border border-slate-200/60 text-slate-600 px-4 py-2.5 rounded-xl shrink-0 text-center sm:text-left select-none">
+                            Total Coupons: {coupons.data?.data?.pagination?.totalCount || coupons.data?.data?.totalCount || 0}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -106,6 +161,7 @@ function Page() {
                     isDeleting={deleteCoupon.isPending}
                     deleteError={deleteCoupon.error}
                     onEdit={handleEditCoupon}
+                    onToggleActive={handleToggleActive}
                     canEdit={canEdit}
                     canDelete={canDelete}
                 />

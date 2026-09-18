@@ -2,10 +2,7 @@
 import { useState } from 'react';
 import { Pencil, Trash, Tag } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableCell, TableHead, TableBody } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { formatInTimeZone } from "date-fns-tz";
-import DeleteConfirmationDialog from './DeleteConfirmationDialog ';
+import { Switch } from '@/components/ui/switch';
 
 export default function CouponsTable({
     error,
@@ -14,11 +11,13 @@ export default function CouponsTable({
     isDeleting,
     deleteError,
     onEdit,
+    onToggleActive,
     canDelete,
     canEdit
 }) {
 
     const [deletingId, setDeletingId] = useState(null);
+    const [togglingId, setTogglingId] = useState(null);
 
     // Static badge style mappings for robust Tailwind compiler support
     const getBadgeStyles = (type) => {
@@ -53,6 +52,16 @@ export default function CouponsTable({
     const handleDeleteConfirm = async () => {
         await onDelete(deletingId);
         setDeletingId(null);
+    };
+
+    const handleToggle = async (coupon) => {
+        if (!onToggleActive || togglingId) return;
+        setTogglingId(coupon._id);
+        try {
+            await onToggleActive(coupon, !coupon.active);
+        } finally {
+            setTogglingId(null);
+        }
     };
 
     if (error) {
@@ -138,15 +147,22 @@ export default function CouponsTable({
 
                                 {/* 6. Status */}
                                 <TableCell className="text-center py-3.5">
-                                    {coupon?.active ? (
-                                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-100/60 font-bold rounded-lg text-[10px] px-2 py-0.5">
-                                            Active
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Switch
+                                            checked={coupon?.active}
+                                            disabled={!canEdit || togglingId === coupon._id}
+                                            onCheckedChange={() => handleToggle(coupon)}
+                                        />
+                                        <Badge
+                                            variant="outline"
+                                            className={`font-bold rounded-lg text-[10px] px-2 py-0.5 ${coupon?.active
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100/60'
+                                                    : 'bg-rose-50 text-rose-700 border-rose-100/60'
+                                                }`}
+                                        >
+                                            {coupon?.active ? 'Active' : 'Inactive'}
                                         </Badge>
-                                    ) : (
-                                        <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-100/60 font-bold rounded-lg text-[10px] px-2 py-0.5">
-                                            Inactive
-                                        </Badge>
-                                    )}
+                                    </div>
                                 </TableCell>
 
                                 {/* 7. Start Date */}

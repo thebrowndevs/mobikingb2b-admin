@@ -26,11 +26,11 @@ export const useCategories = () => {
         }
     });
 
-    const categoriesPaginationQuery = ({ page = 1, limit = 10, searchQuery = "" }) => useQuery({
-        queryKey: ['categories', 'paginatedList', page, limit, searchQuery],
+    const categoriesPaginationQuery = ({ page = 1, limit = 10, searchQuery = "", active = "all" }) => useQuery({
+        queryKey: ['categories', 'paginatedList', page, limit, searchQuery, active],
         enabled: canView,
         queryFn: () => api.get('/categories', {
-            params: { page, limit, searchQuery }
+            params: { page, limit, searchQuery, active }
         }).then(res => res.data?.data || {}),
         staleTime: 1000 * 10,
     });

@@ -28,11 +28,11 @@ export const useSubCategories = () => {
         }
     });
 
-    const subCategoriesPaginationQuery = ({ page = 1, limit = 10, searchQuery = "", parentCategory = "" }) => useQuery({
-        queryKey: ['subCategories', 'paginatedList', page, limit, searchQuery, parentCategory],
+    const subCategoriesPaginationQuery = ({ page = 1, limit = 10, searchQuery = "", parentCategory = "", webHomeCategory = "", active = "" }) => useQuery({
+        queryKey: ['subCategories', 'paginatedList', page, limit, searchQuery, parentCategory, webHomeCategory, active],
         enabled: canView,
         queryFn: () => api.get('/categories/subCategories', {
-            params: { page, limit, searchQuery, parentCategory }
+            params: { page, limit, searchQuery, parentCategory, webHomeCategory, active }
         }).then(res => res.data?.data || {}),
         staleTime: 1000 * 10,
     });

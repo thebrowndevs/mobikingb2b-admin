@@ -39,6 +39,8 @@ export default function Page() {
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const searchVal = searchParams.get('search') || '';
     const parentCategory = searchParams.get('parentCategory') || 'all';
+    const webHomeCategory = searchParams.get('webHomeCategory') || 'all';
+    const activeFilter = searchParams.get('active') || 'all';
 
     const [searchInput, setSearchInput] = useState(searchVal);
 
@@ -94,18 +96,28 @@ export default function Page() {
         updateParams({ parentCategory: val, page: 1 });
     };
 
+    const handleWebHomeCategoryChange = (val) => {
+        updateParams({ webHomeCategory: val, page: 1 });
+    };
+
+    const handleActiveFilterChange = (val) => {
+        updateParams({ active: val, page: 1 });
+    };
+
     const handleReset = () => {
         setSearchInput('');
         router.push(pathname);
     };
 
+    const isFiltered = searchVal || parentCategory !== 'all' || webHomeCategory !== 'all' || activeFilter !== 'all';
+
     // Hooks
-    const { 
-        subCategoriesPaginationQuery, 
-        deleteSubCategory, 
-        permissions: { canView, canAdd, canEdit, canDelete } 
+    const {
+        subCategoriesPaginationQuery,
+        deleteSubCategory,
+        permissions: { canView, canAdd, canEdit, canDelete }
     } = useSubCategories();
-    
+
     const { categoriesQuery } = useCategories();
 
     // Fetch parent categories for filter dropdown list
@@ -118,6 +130,8 @@ export default function Page() {
         limit,
         searchQuery: searchVal,
         parentCategory: parentCategory === 'all' ? '' : parentCategory,
+        webHomeCategory: webHomeCategory === 'all' ? '' : webHomeCategory,
+        active: activeFilter === 'all' ? '' : activeFilter,
     });
 
     const subCategoriesResponse = paginatedSubCategories.data || {};
@@ -149,59 +163,104 @@ export default function Page() {
 
     return (
         <InnerDashboardLayout>
-            <div className="w-full mb-6">
-                <h1 className="text-primary font-bold text-3xl tracking-tighter">Sub Categories</h1>
-                <p className="text-sm text-slate-500 font-medium">Manage and organize parent category splits and sub-groupings</p>
+            <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h1 className="text-primary font-bold text-3xl tracking-tighter">Sub Categories</h1>
+                    <p className="text-sm text-slate-500 font-medium">Manage and organize parent category splits and sub-groupings</p>
+                </div>
+                {canAdd && (
+                    <Button
+                        onClick={handleAddClick}
+                        className="shrink-0 bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text shadow-none font-semibold text-xs h-9"
+                    >
+                        <CirclePlus className="mr-1.5 h-4 w-4" /> Add New
+                    </Button>
+                )}
             </div>
 
             <div>
-                {/* Control bar: Search, Parent Category Filter, Total Badge, Add Button */}
-                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-5 mt-4">
-                    <div className="flex items-center gap-3 flex-1">
-                        {/* Search Input */}
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                            <Input
-                                placeholder="Search subcategories by name or slug..."
-                                value={searchInput}
-                                onChange={(e) => setSearchInput(e.target.value)}
-                                className="pl-9 pr-8 text-sm bg-back2 border-bdr2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-none"
-                            />
-                            {searchInput && (
-                                <button
-                                    onClick={handleReset}
-                                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-650 transition-colors"
-                                    title="Clear search"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
-                            )}
-                        </div>
+                {/* Control bar: Search on left, Filters + Total Badge on right */}
+                <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-3 mb-5 mt-4 w-full">
+                    {/* Left Container: Search Input */}
+                    <div className="relative flex-1 min-w-0">
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <Input
+                            placeholder="Search subcategories by name or slug..."
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            className="pl-9 pr-8 text-sm bg-back2 border-bdr2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-none w-full"
+                        />
+                        {searchInput && (
+                            <button
+                                onClick={handleReset}
+                                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-650 transition-colors"
+                                title="Clear search"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Right Container: Filters + Total Badge + Reset */}
+                    <div className="flex items-center gap-2 flex-wrap xl:flex-nowrap justify-start xl:justify-end">
+                        {/* Active Status Filter */}
+                        <Select
+                            value={activeFilter}
+                            onValueChange={handleActiveFilterChange}
+                        >
+                            <SelectTrigger className="w-auto min-w-[125px] bg-back2 border-bdr2 text-slate-700 shadow-none text-xs h-9 font-medium">
+                                <div className="flex items-center gap-1.5 truncate">
+                                    <Filter className="w-3.5 h-3.5 text-slate-400" />
+                                    <SelectValue placeholder="Status: All" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent className="bg-back2 border border-bdr2 shadow-none rounded-xl text-xs">
+                                <SelectItem value="all">Status: All</SelectItem>
+                                <SelectItem value="true">Active</SelectItem>
+                                <SelectItem value="false">Inactive</SelectItem>
+                            </SelectContent>
+                        </Select>
 
                         {/* Parent Category Filter Dropdown */}
-                        <div className="w-[200px] shrink-0">
-                            <Select
-                                value={parentCategory}
-                                onValueChange={handleParentCategoryChange}
-                            >
-                                <SelectTrigger className="bg-back2 border-bdr2 text-slate-700 shadow-none text-sm">
-                                    <div className="flex items-center gap-2 truncate">
-                                        <Filter className="w-3.5 h-3.5 text-slate-400" />
-                                        <SelectValue placeholder="All Categories" />
-                                    </div>
-                                </SelectTrigger>
-                                <SelectContent className="bg-back2 border border-bdr2 shadow-none rounded-xl">
-                                    <SelectItem value="all">All Categories</SelectItem>
-                                    {parentCategories.map((cat) => (
-                                        <SelectItem key={cat._id} value={cat._id}>
-                                            {cat.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        <Select
+                            value={parentCategory}
+                            onValueChange={handleParentCategoryChange}
+                        >
+                            <SelectTrigger className="w-auto min-w-[140px] bg-back2 border-bdr2 text-slate-700 shadow-none text-xs h-9 font-medium">
+                                <div className="flex items-center gap-1.5 truncate">
+                                    <Filter className="w-3.5 h-3.5 text-slate-400" />
+                                    <SelectValue placeholder="All Categories" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent className="bg-back2 border border-bdr2 shadow-none rounded-xl text-xs">
+                                <SelectItem value="all">All Categories</SelectItem>
+                                {parentCategories.map((cat) => (
+                                    <SelectItem key={cat._id} value={cat._id}>
+                                        {cat.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
 
-                        {(searchInput || parentCategory !== 'all') && (
+                        {/* Web Home Filter Dropdown */}
+                        <Select
+                            value={webHomeCategory}
+                            onValueChange={handleWebHomeCategoryChange}
+                        >
+                            <SelectTrigger className="w-auto min-w-[140px] bg-back2 border-bdr2 text-slate-700 shadow-none text-xs h-9 font-medium">
+                                <div className="flex items-center gap-1.5 truncate">
+                                    <Filter className="w-3.5 h-3.5 text-slate-400" />
+                                    <SelectValue placeholder="Web Home Filter" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent className="bg-back2 border border-bdr2 shadow-none rounded-xl text-xs">
+                                <SelectItem value="all">Web Home: All</SelectItem>
+                                <SelectItem value="true">In Web Home</SelectItem>
+                                <SelectItem value="false">Not In Web Home</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {isFiltered && (
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -212,24 +271,14 @@ export default function Page() {
                                 Reset
                             </Button>
                         )}
-                    </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             className="shrink-0 bg-back2 border-bdr2 text-slate-700 shadow-none font-semibold text-xs h-9"
                             disabled
                         >
                             Total: {pagination?.totalSubCategories || 0}
                         </Button>
-                        {canAdd &&
-                            <Button 
-                                onClick={handleAddClick} 
-                                className="shrink-0 bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text shadow-none font-semibold text-xs h-9"
-                            >
-                                <CirclePlus className="mr-1.5 h-4 w-4" /> Add New
-                            </Button>
-                        }
                     </div>
                 </div>
 
@@ -316,7 +365,7 @@ export default function Page() {
                     </Pagination>
                 </div>
 
-                <SubCategoryDrawer 
+                <SubCategoryDrawer
                     open={drawerOpen}
                     onOpenChange={setDrawerOpen}
                     slug={selectedSlug}

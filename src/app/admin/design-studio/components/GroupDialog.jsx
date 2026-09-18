@@ -19,7 +19,7 @@ import { Switch } from "@/components/ui/switch";
 const formSchema = z.object({
     heading: z.string().min(1, "Heading is required"),
     slug: z.string().min(1, "Slug is required"),
-    groupType: z.enum(['categories', 'subcategories', 'products'], {
+    groupType: z.enum(['categories', 'subcategories', 'products', 'brand', 'image', 'category', 'subcategory', 'product'], {
         required_error: "Group Type is required"
     }),
     placement: z.enum(['grid', 'scroll']).default('scroll'),
@@ -168,7 +168,7 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent className="w-[100vw] sm:max-w-2xl overflow-y-auto bg-back1 text-slate-800 border-l border-bdr2 p-6 flex flex-col justify-between">
+            <SheetContent className="w-full max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl overflow-y-auto bg-back1 text-slate-800 border-l border-bdr2 p-4 sm:p-6 flex flex-col justify-between">
                 <div>
                     <SheetHeader className="mb-5 space-y-1 p-0 gap-0">
                         <SheetTitle className="text-2xl font-bold tracking-tighter text-slate-900">
@@ -183,7 +183,7 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-6">
 
                             {/* SECTION 1: GENERAL INFO */}
-                            <div className="bg-back2 border border-bdr2 rounded-xl p-5 space-y-4 shadow-none">
+                            <div className="bg-back2 border border-bdr2 rounded-xl p-4 sm:p-5 space-y-4 shadow-none">
                                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-450 border-b border-slate-100 pb-2">
                                     1. Basic Info
                                 </h3>
@@ -240,6 +240,8 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                                                         <SelectItem value="products">Product Cards Grid</SelectItem>
                                                         <SelectItem value="subcategories">Sub-Categories Grid</SelectItem>
                                                         <SelectItem value="categories">Categories Grid</SelectItem>
+                                                        <SelectItem value="brand">Brand Cards Grid</SelectItem>
+                                                        <SelectItem value="image">Image Banners Carousel</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                                 <FormMessage />
@@ -290,44 +292,46 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                             </div>
 
                             {/* SECTION 2: WEB CUSTOMIZATION CARD */}
-                            <div className="bg-back2 border border-bdr2 rounded-xl p-5 space-y-4 shadow-none">
+                            <div className="bg-back2 border border-bdr2 rounded-xl p-4 sm:p-5 space-y-4 shadow-none">
                                 <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-500 border-b border-slate-100 pb-2 flex items-center gap-1.5">
                                     <Laptop size={14} /> 2. Web Configuration
                                 </h3>
 
-                                {/* Web Banner */}
-                                <div className="space-y-2 border border-bdr2 rounded-lg p-3 bg-back1">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex flex-col">
-                                            <span className="text-[11px] font-bold text-slate-700">Web Banner Image</span>
-                                            <span className="text-[10px] text-slate-400 font-medium">Recommended Aspect Ratio: 16:3 (e.g. 1920x360)</span>
+                                {/* Web Banner - Hidden for Image Groups */}
+                                {groupType !== 'image' && (
+                                    <div className="space-y-2 border border-bdr2 rounded-lg p-3 bg-back1">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex flex-col">
+                                                <span className="text-[11px] font-bold text-slate-700">Web Banner Image</span>
+                                                <span className="text-[10px] text-slate-400 font-medium">Recommended Aspect Ratio: 16:3 (e.g. 1920x360)</span>
+                                            </div>
+                                            <FormField
+                                                control={control}
+                                                name="isWebBannerVisible"
+                                                render={({ field }) => (
+                                                    <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-500">
+                                                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                                        <span>Visible</span>
+                                                    </label>
+                                                )}
+                                            />
                                         </div>
-                                        <FormField
-                                            control={control}
-                                            name="isWebBannerVisible"
-                                            render={({ field }) => (
-                                                <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-500">
-                                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                                                    <span>Visible</span>
+                                        <div className="relative">
+                                            <input type="file" id="webBannerFile" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'webBanner')} />
+                                            {watch('webBanner') ? (
+                                                <div className="relative w-full border border-bdr2 rounded-lg overflow-hidden bg-white aspect-[16/3]">
+                                                    <Image src={watch('webBanner')} alt="web banner" fill className="object-cover" unoptimized />
+                                                    <button type="button" onClick={() => setValue('webBanner', '')} className="absolute right-2 top-2 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200 z-10"><X size={12} /></button>
+                                                </div>
+                                            ) : (
+                                                <label htmlFor="webBannerFile" className="flex flex-col items-center justify-center w-full aspect-[16/3] border-2 border-dashed border-slate-200 rounded-lg cursor-pointer bg-white hover:border-slate-350 transition-all">
+                                                    {uploadingField === 'webBanner' ? <Loader2 className="animate-spin text-primary" /> : <UploadCloud size={20} className="text-slate-400" />}
+                                                    <span className="text-[11px] text-slate-400 mt-1">Upload Web Banner (16:3)</span>
                                                 </label>
                                             )}
-                                        />
+                                        </div>
                                     </div>
-                                    <div className="relative">
-                                        <input type="file" id="webBannerFile" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'webBanner')} />
-                                        {watch('webBanner') ? (
-                                            <div className="relative w-full border border-bdr2 rounded-lg overflow-hidden bg-white aspect-[16/3]">
-                                                <Image src={watch('webBanner')} alt="web banner" fill className="object-cover" unoptimized />
-                                                <button type="button" onClick={() => setValue('webBanner', '')} className="absolute right-2 top-2 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200 z-10"><X size={12} /></button>
-                                            </div>
-                                        ) : (
-                                            <label htmlFor="webBannerFile" className="flex flex-col items-center justify-center w-full aspect-[16/3] border-2 border-dashed border-slate-200 rounded-lg cursor-pointer bg-white hover:border-slate-350 transition-all">
-                                                {uploadingField === 'webBanner' ? <Loader2 className="animate-spin text-primary" /> : <UploadCloud size={20} className="text-slate-400" />}
-                                                <span className="text-[11px] text-slate-400 mt-1">Upload Web Banner (16:3)</span>
-                                            </label>
-                                        )}
-                                    </div>
-                                </div>
+                                )}
 
                                 {/* Web Background Color */}
                                 <div className="space-y-2 border border-bdr2 rounded-lg p-3 bg-back1">
@@ -357,45 +361,47 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                                 </div>
                             </div>
 
-                             {/* SECTION 3: APP CUSTOMIZATION CARD */}
-                            <div className="bg-back2 border border-bdr2 rounded-xl p-5 space-y-4 shadow-none">
+                            {/* SECTION 3: APP CUSTOMIZATION CARD */}
+                            <div className="bg-back2 border border-bdr2 rounded-xl p-4 sm:p-5 space-y-4 shadow-none">
                                 <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600 border-b border-slate-100 pb-2 flex items-center gap-1.5">
                                     <Smartphone size={14} /> 3. Mobile Web & App Configuration
                                 </h3>
 
-                                {/* App Banner */}
-                                <div className="space-y-2 border border-bdr2 rounded-lg p-3 bg-back1">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex flex-col">
-                                            <span className="text-[11px] font-bold text-slate-700">Mobile Web & App Banner Image</span>
-                                            <span className="text-[10px] text-slate-400 font-medium">Recommended Aspect Ratio: 5:2 (e.g. 1000x400)</span>
+                                {/* App Banner - Hidden for Image Groups */}
+                                {groupType !== 'image' && (
+                                    <div className="space-y-2 border border-bdr2 rounded-lg p-3 bg-back1">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex flex-col">
+                                                <span className="text-[11px] font-bold text-slate-700">Mobile Web & App Banner Image</span>
+                                                <span className="text-[10px] text-slate-400 font-medium">Recommended Aspect Ratio: 5:2 (e.g. 1000x400)</span>
+                                            </div>
+                                            <FormField
+                                                control={control}
+                                                name="isAppBannerVisible"
+                                                render={({ field }) => (
+                                                    <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-500">
+                                                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                                        <span>Visible</span>
+                                                    </label>
+                                                )}
+                                            />
                                         </div>
-                                        <FormField
-                                            control={control}
-                                            name="isAppBannerVisible"
-                                            render={({ field }) => (
-                                                <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-500">
-                                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                                                    <span>Visible</span>
+                                        <div className="relative">
+                                            <input type="file" id="appBannerFile" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'appBanner')} />
+                                            {watch('appBanner') ? (
+                                                <div className="relative w-full border border-bdr2 rounded-lg overflow-hidden bg-white aspect-[5/2]">
+                                                    <Image src={watch('appBanner')} alt="app banner" fill className="object-cover" unoptimized />
+                                                    <button type="button" onClick={() => setValue('appBanner', '')} className="absolute right-2 top-2 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200 z-10"><X size={12} /></button>
+                                                </div>
+                                            ) : (
+                                                <label htmlFor="appBannerFile" className="flex flex-col items-center justify-center w-full aspect-[5/2] border-2 border-dashed border-slate-200 rounded-lg cursor-pointer bg-white hover:border-slate-350 transition-all">
+                                                    {uploadingField === 'appBanner' ? <Loader2 className="animate-spin text-primary" /> : <UploadCloud size={20} className="text-slate-400" />}
+                                                    <span className="text-[11px] text-slate-400 mt-1">Upload Mobile Web & App Banner (5:2)</span>
                                                 </label>
                                             )}
-                                        />
+                                        </div>
                                     </div>
-                                    <div className="relative">
-                                        <input type="file" id="appBannerFile" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'appBanner')} />
-                                        {watch('appBanner') ? (
-                                            <div className="relative w-full border border-bdr2 rounded-lg overflow-hidden bg-white aspect-[5/2]">
-                                                <Image src={watch('appBanner')} alt="app banner" fill className="object-cover" unoptimized />
-                                                <button type="button" onClick={() => setValue('appBanner', '')} className="absolute right-2 top-2 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200 z-10"><X size={12} /></button>
-                                            </div>
-                                        ) : (
-                                            <label htmlFor="appBannerFile" className="flex flex-col items-center justify-center w-full aspect-[5/2] border-2 border-dashed border-slate-200 rounded-lg cursor-pointer bg-white hover:border-slate-350 transition-all">
-                                                {uploadingField === 'appBanner' ? <Loader2 className="animate-spin text-primary" /> : <UploadCloud size={20} className="text-slate-400" />}
-                                                <span className="text-[11px] text-slate-400 mt-1">Upload Mobile Web & App Banner (5:2)</span>
-                                            </label>
-                                        )}
-                                    </div>
-                                </div>
+                                )}
 
                                 {/* App Background Color */}
                                 <div className="space-y-2 border border-bdr2 rounded-lg p-3 bg-back1">
@@ -426,25 +432,27 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                             </div>
 
                             {/* SECTION 5: BANNERS REDIRECT LINK */}
-                            <div className="bg-back2 border border-bdr2 rounded-xl p-5 space-y-4 shadow-none">
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-450 border-b border-slate-100 pb-2">
-                                    5. Banners Redirect Link
-                                </h3>
-                                <FormField
-                                    control={control}
-                                    name="bannerLink"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-slate-700 font-semibold text-xs">Redirect Destination URL</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="e.g. /category/electronics" className="bg-back1 border-bdr2 text-sm" {...field} />
-                                            </FormControl>
-                                            <FormDescription className="text-[10px] text-slate-400">Destination link when users click on the banners.</FormDescription>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
+                            {groupType !== 'image' && (
+                                <div className="bg-back2 border border-bdr2 rounded-xl p-4 sm:p-5 space-y-4 shadow-none">
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-450 border-b border-slate-100 pb-2">
+                                        5. Banners Redirect Link
+                                    </h3>
+                                    <FormField
+                                        control={control}
+                                        name="bannerLink"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-slate-700 font-semibold text-xs">Redirect Destination URL</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="e.g. /category/electronics" className="bg-back1 border-bdr2 text-sm" {...field} />
+                                                </FormControl>
+                                                <FormDescription className="text-[10px] text-slate-400">Destination link when users click on the banners.</FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            )}
 
                         </form>
                     </Form>

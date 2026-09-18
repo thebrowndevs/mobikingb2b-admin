@@ -26,6 +26,14 @@ export const useBrands = () => {
         }
     });
 
+    const brandsAdminPaginationQuery = ({ page = 1, limit = 10, searchQuery = "", active = "" }) => useQuery({
+        queryKey: ['brands', 'adminList', page, limit, searchQuery, active],
+        queryFn: () => api.get('/brands/admin', {
+            params: { page, limit, searchQuery, active }
+        }).then(res => res.data?.data || {}),
+        staleTime: 1000 * 10,
+    });
+
     // Create Brand mutation
     const createBrand = useMutation({
         mutationFn: ({ data }) => api.post('/brands/add', data),
@@ -65,6 +73,6 @@ export const useBrands = () => {
 
     return {
         // brandsQuery, createBrand, deleteBrand,
-        brandsQuery, updateBrand, createBrand,
+        brandsQuery, brandsAdminPaginationQuery, updateBrand, createBrand,
     };
 };

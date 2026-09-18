@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from '@/components/ui/button';
 import { Pencil } from "lucide-react";
 import Image from 'next/image';
@@ -11,10 +9,15 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import TableSkeleton from '@/components/custom/TableSkeleton';
 import { AnimatePresence, motion } from "framer-motion";
+import { useBrands } from '@/hooks/useBrands';
+import toast from 'react-hot-toast';
 
-export default function BrandsListView({ isLoading, error, brands, onEdit, onDelete, isDeleting, deleteError, canEdit = true }) {
+export default function BrandsListView({ isLoading, error, brands, onEdit, onDelete, isDeleting, deleteError, canEdit = true, page = 1, limit = 10 }) {
+    const { updateBrand } = useBrands();
 
     if (isLoading) return <TableSkeleton showHeader={false} />;
     if (error) return <div className="text-red-605 p-4 bg-back2 border border-bdr2 rounded-xl">Error: {error.message}</div>;
@@ -28,6 +31,7 @@ export default function BrandsListView({ isLoading, error, brands, onEdit, onDel
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-16">#</TableHead>
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-28">Image</TableHead>
                         <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4">Name</TableHead>
+                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-40">Status</TableHead>
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-32">Action</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -43,7 +47,7 @@ export default function BrandsListView({ isLoading, error, brands, onEdit, onDel
                                 transition={{ duration: 0.2 }}
                                 className="border-b border-bdr2 last:border-b-0 hover:bg-slate-50/40 transition-colors"
                             >
-                                <TableCell className="text-center align-middle font-medium text-slate-400 py-3">{index + 1}</TableCell>
+                                <TableCell className="text-center align-middle font-medium text-slate-400 py-3">{(page - 1) * limit + index + 1}</TableCell>
                                 <TableCell className="text-center align-middle py-3">
                                     <div className="flex justify-center">
                                         <Image
@@ -58,11 +62,38 @@ export default function BrandsListView({ isLoading, error, brands, onEdit, onDel
                                 </TableCell>
                                 <TableCell className="text-left align-middle font-bold text-slate-800 py-3">{item.name}</TableCell>
                                 <TableCell className="text-center align-middle py-3">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Switch
+                                            checked={item.active !== false}
+                                            disabled={!canEdit}
+                                            onCheckedChange={async checked => {
+                                                const toastId = toast.loading("Updating brand status...");
+                                                try {
+                                                    await updateBrand.mutateAsync({
+                                                        data: { brandId: item._id, active: checked }
+                                                    });
+                                                    toast.dismiss(toastId);
+                                                } catch (err) {
+                                                    toast.dismiss(toastId);
+                                                }
+                                            }}
+                                        />
+                                        <Badge
+                                            className={`text-[10px] px-2 py-0.5 font-bold uppercase shadow-none ${item.active !== false
+                                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
+                                                : 'bg-rose-50 text-rose-700 border border-rose-150'
+                                                }`}
+                                        >
+                                            {item.active !== false ? 'Active' : 'Inactive'}
+                                        </Badge>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-center align-middle py-3">
                                     <div className="flex justify-center gap-1.5">
                                         {canEdit && (
-                                            <Button 
-                                                size="sm" 
-                                                variant="ghost" 
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
                                                 className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-650 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 rounded-lg transition-all shadow-none"
                                                 onClick={() => onEdit(item)}
                                             >

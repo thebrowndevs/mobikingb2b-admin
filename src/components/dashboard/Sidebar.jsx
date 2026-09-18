@@ -30,7 +30,7 @@ const GROUPS = [
     {
         title: "Design & Layouts",
         icon: <Paintbrush className="w-4 h-4 text-pink-500" />,
-        keys: ["design-studio", "websiteLayout", "appLayout"]
+        keys: ["design-studio", "websiteLayout", "appLayout", "appCategoryLayout"]
     },
     {
         title: "Operations & Config",

@@ -129,6 +129,12 @@ export const ADMIN_SIDEBAR_LINKS = [
     icon: <FaHome />,
   },
   {
+    key: "appCategoryLayout",
+    label: "App Category Layout",
+    href: "/admin/app-category-layout",
+    icon: <FaThLarge />,
+  },
+  {
     key: "couponCodes",
     label: "Coupon Codes",
     href: "/admin/couponCodes",

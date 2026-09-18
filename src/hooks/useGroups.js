@@ -25,11 +25,11 @@ export const useGroups = () => {
         }
     });
 
-    const groupsPaginationQuery = ({ page = 1, limit = 10, searchQuery = "" }) => useQuery({
-        queryKey: ['groups', 'adminList', page, limit, searchQuery],
+    const groupsPaginationQuery = ({ page = 1, limit = 10, searchQuery = "", active = "", groupType = "", appCategoryGroup = "", webHomeGroup = "", appHomeGroup = "" }) => useQuery({
+        queryKey: ['groups', 'adminList', page, limit, searchQuery, active, groupType, appCategoryGroup, webHomeGroup, appHomeGroup],
         enabled: canView,
         queryFn: () => api.get('/groups/admin/list', {
-            params: { page, limit, searchQuery }
+            params: { page, limit, searchQuery, active, groupType, appCategoryGroup, webHomeGroup, appHomeGroup }
         }).then(res => res.data?.data || {}),
         staleTime: 1000 * 10, // 10 seconds cache
     });

@@ -116,85 +116,102 @@ export default function Page() {
 
     return (
         <InnerDashboardLayout>
-            <div className="w-full mb-6">
-                <h1 className="text-primary font-bold text-3xl tracking-tighter">Products</h1>
-                <p className="text-sm text-slate-500 font-medium">Manage B2B inventory items, slabs wholesale pricing, and variants specifications</p>
+            <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h1 className="text-primary font-bold text-3xl tracking-tighter">Products</h1>
+                    <p className="text-sm text-slate-500 font-medium">Manage B2B inventory items, slabs wholesale pricing, and variants specifications</p>
+                </div>
+                {canAdd && (
+                    <div className="flex gap-2 shrink-0">
+                        <Button
+                            onClick={() => setBulkUploadOpen(true)}
+                            variant="outline"
+                            className="shrink-0 bg-back2 border-bdr2 text-slate-700 shadow-none font-semibold text-xs h-9 gap-1.5"
+                        >
+                            <FileSpreadsheet className="h-4 w-4 text-indigo-600" />
+                            Bulk Upload
+                        </Button>
+                        <Button
+                            onClick={handleAddClick}
+                            className="shrink-0 bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text shadow-none font-semibold text-xs h-9"
+                        >
+                            <CirclePlus className="mr-1.5 h-4 w-4" /> Add New
+                        </Button>
+                    </div>
+                )}
             </div>
 
             <div className="space-y-4">
                 {/* Control bar */}
-                <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 mt-4">
-                    <div className="flex flex-wrap items-center gap-3 flex-1">
-                        {/* Search Input */}
-                        <div className="relative flex-1 min-w-[240px]">
-                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                            <Input
-                                placeholder="Search products by title or sku..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 pr-8 text-sm bg-back2 border-bdr2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-none"
-                            />
-                            {searchTerm && (
-                                <button
-                                    onClick={() => setSearchTerm('')}
-                                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-650 transition-colors"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Category Dropdown */}
-                        <div className="w-[160px] shrink-0">
-                            <Select
-                                value={categoryFilter || "all"}
-                                onValueChange={(val) => {
-                                    setCategoryFilter(val === 'all' ? undefined : val);
-                                    setPage(1);
-                                }}
+                <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 mt-4 w-full">
+                    {/* Left Container: Search Input */}
+                    <div className="relative flex-1 min-w-0">
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <Input
+                            placeholder="Search products by title or sku..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-9 pr-8 text-sm bg-back2 border-bdr2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-none w-full"
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-650 transition-colors"
                             >
-                                <SelectTrigger className="bg-back2 border-bdr2 text-slate-700 shadow-none text-sm">
-                                    <div className="flex items-center gap-2 truncate">
-                                        <Filter className="w-3.5 h-3.5 text-slate-400" />
-                                        <SelectValue placeholder="Category" />
-                                    </div>
-                                </SelectTrigger>
-                                <SelectContent className="bg-back2 border border-bdr2 shadow-none rounded-xl">
-                                    <SelectItem value="all">All Categories</SelectItem>
-                                    {subCategories?.map((n) => (
-                                        <SelectItem key={n._id} value={String(n._id)}>
-                                            {n.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                                <X className="h-4 w-4" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Right Container: Filters + Total Badge + Reset */}
+                    <div className="flex items-center gap-2 flex-wrap justify-start md:justify-end">
+                        {/* Category Dropdown */}
+                        <Select
+                            value={categoryFilter || "all"}
+                            onValueChange={(val) => {
+                                setCategoryFilter(val === 'all' ? undefined : val);
+                                setPage(1);
+                            }}
+                        >
+                            <SelectTrigger className="w-auto min-w-[140px] bg-back2 border-bdr2 text-slate-700 shadow-none text-xs h-9 font-medium">
+                                <div className="flex items-center gap-1.5 truncate">
+                                    <Filter className="w-3.5 h-3.5 text-slate-400" />
+                                    <SelectValue placeholder="Category" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent className="bg-back2 border border-bdr2 shadow-none rounded-xl text-xs">
+                                <SelectItem value="all">All Categories</SelectItem>
+                                {subCategories?.map((n) => (
+                                    <SelectItem key={n._id} value={String(n._id)}>
+                                        {n.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
 
                         {/* Filters Dropdown */}
-                        <div className="w-[160px] shrink-0">
-                            <Select
-                                value={typeFilter || "all"}
-                                onValueChange={(val) => {
-                                    setTypeFilter(val === 'all' ? '' : val);
-                                    setPage(1);
-                                }}
-                            >
-                                <SelectTrigger className="bg-back2 border-bdr2 text-slate-700 shadow-none text-sm">
-                                    <div className="flex items-center gap-2 truncate">
-                                        <Filter className="w-3.5 h-3.5 text-slate-400" />
-                                        <SelectValue placeholder="Stock Filters" />
-                                    </div>
-                                </SelectTrigger>
-                                <SelectContent className="bg-back2 border border-bdr2 shadow-none rounded-xl">
-                                    <SelectItem value="all">All Items</SelectItem>
-                                    {FILTERS?.map((n, idx) => (
-                                        <SelectItem key={idx} value={n.key}>
-                                            {n.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        <Select
+                            value={typeFilter || "all"}
+                            onValueChange={(val) => {
+                                setTypeFilter(val === 'all' ? '' : val);
+                                setPage(1);
+                            }}
+                        >
+                            <SelectTrigger className="w-auto min-w-[130px] bg-back2 border-bdr2 text-slate-700 shadow-none text-xs h-9 font-medium">
+                                <div className="flex items-center gap-1.5 truncate">
+                                    <Filter className="w-3.5 h-3.5 text-slate-400" />
+                                    <SelectValue placeholder="Stock Filters" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent className="bg-back2 border border-bdr2 shadow-none rounded-xl text-xs">
+                                <SelectItem value="all">All Items</SelectItem>
+                                {FILTERS?.map((n, idx) => (
+                                    <SelectItem key={idx} value={n.key}>
+                                        {n.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
 
                         {isFiltered && (
                             <Button
@@ -207,9 +224,7 @@ export default function Page() {
                                 Reset
                             </Button>
                         )}
-                    </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
                         <Button
                             variant="outline"
                             className="shrink-0 bg-back2 border-bdr2 text-slate-700 shadow-none font-semibold text-xs h-9"
@@ -217,24 +232,6 @@ export default function Page() {
                         >
                             Total: {products.data?.pagination?.totalProducts || 0}
                         </Button>
-                        {canAdd && (
-                            <div className="flex gap-2 shrink-0">
-                                <Button
-                                    onClick={() => setBulkUploadOpen(true)}
-                                    variant="outline"
-                                    className="shrink-0 bg-back2 border-bdr2 text-slate-700 shadow-none font-semibold text-xs h-9 gap-1.5"
-                                >
-                                    <FileSpreadsheet className="h-4 w-4 text-indigo-600" />
-                                    Bulk Upload
-                                </Button>
-                                <Button
-                                    onClick={handleAddClick}
-                                    className="shrink-0 bg-primary-btn hover:bg-primary-btn-hover text-primary-btn-text shadow-none font-semibold text-xs h-9"
-                                >
-                                    <CirclePlus className="mr-1.5 h-4 w-4" /> Add New
-                                </Button>
-                            </div>
-                        )}
                     </div>
                 </div>
 
