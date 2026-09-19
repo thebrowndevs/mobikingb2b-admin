@@ -24,6 +24,7 @@ const formSchema = z.object({
     }),
     placement: z.enum(['grid', 'scroll']).default('scroll'),
     active: z.boolean().default(true),
+    hideName: z.boolean().default(false),
 
     // Web Customization
     webBanner: z.string().optional().nullable(),
@@ -54,6 +55,7 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
             groupType: "products",
             placement: "scroll",
             active: true,
+            hideName: false,
             webBanner: "",
             isWebBannerVisible: false,
             webBackgroundColor: "#ffffff",
@@ -92,6 +94,7 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                 groupType: selectedGroup.groupType || "products",
                 placement: selectedGroup.placement || "scroll",
                 active: selectedGroup.active !== undefined ? selectedGroup.active : true,
+                hideName: selectedGroup.hideName !== undefined ? !!selectedGroup.hideName : false,
 
                 webBanner: selectedGroup.webBanner || "",
                 isWebBannerVisible: !!selectedGroup.isWebBannerVisible,
@@ -114,6 +117,7 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                 groupType: "products",
                 placement: "scroll",
                 active: true,
+                hideName: false,
                 webBanner: "",
                 isWebBannerVisible: false,
                 webBackgroundColor: "#ffffff",
@@ -222,8 +226,8 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                                     />
                                 </div>
 
-                                {/* Row 3: Group Type, View Type, Active switch */}
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                {/* Row 3: Group Type, View Type, Active switch & Hide Name switch */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <FormField
                                         control={control}
                                         name="groupType"
@@ -281,7 +285,25 @@ function GroupDialog({ open, onOpenChange, selectedGroup, onCreate, onUpdate, is
                                                     <div className="flex items-center h-4">
                                                         <Switch checked={field.value} onCheckedChange={field.onChange} />
                                                         <span className="text-xs font-medium text-slate-500 ml-2">
-                                                            {field.value ? "Visible to users" : "Hidden"}
+                                                            {field.value ? "Visible" : "Hidden"}
+                                                        </span>
+                                                    </div>
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={control}
+                                        name="hideName"
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-col space-y-2.5">
+                                                <FormLabel className="text-slate-700 font-semibold text-xs">Hide Name</FormLabel>
+                                                <FormControl>
+                                                    <div className="flex items-center h-4">
+                                                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                                        <span className="text-xs font-medium text-slate-500 ml-2">
+                                                            {field.value ? "Name Hidden" : "Show Name"}
                                                         </span>
                                                     </div>
                                                 </FormControl>

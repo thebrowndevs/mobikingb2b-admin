@@ -97,7 +97,16 @@ export default function GroupsTable({
                                     </TableCell>
 
                                     {/* Heading */}
-                                    <TableCell className="font-semibold text-slate-800 text-sm">{group.heading}</TableCell>
+                                    <TableCell className="font-semibold text-slate-800 text-sm">
+                                        <div className="flex items-center gap-1.5">
+                                            <span>{group.heading}</span>
+                                            {group.hideName && (
+                                                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                                    Hidden Name
+                                                </span>
+                                            )}
+                                        </div>
+                                    </TableCell>
 
                                     {/* Slug */}
                                     <TableCell className="font-mono text-xs text-slate-500">{group.slug || '-'}</TableCell>

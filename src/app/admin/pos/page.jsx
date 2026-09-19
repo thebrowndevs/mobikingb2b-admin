@@ -395,11 +395,11 @@ function Page() {
                     <h1 className="text-3xl font-bold text-slate-800 tracking-tighter"> Create POS Quotation</h1>
                     <p className="text-sm text-slate-500">Generate a wholesale POS invoice or quotation dynamically</p>
                 </div>
-                <div>
+                {/* <div>
                     <Button variant="outline" size="sm" className="border-slate-200 text-slate-700 hover:bg-slate-50 h-8 text-xs">
                         <Link href={'/admin/posOrders'}>View History</Link>
                     </Button>
-                </div>
+                </div> */}
             </div>
 
             <Form {...form}>

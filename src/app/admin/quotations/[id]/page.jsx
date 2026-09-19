@@ -239,6 +239,8 @@ export default function QuotationDetailsPage() {
     const handleSelectProduct = async (prod) => {
         setSelectedProduct(prod)
         setSelectedVariant(null)
+        setSearchResults([])
+        setSearchQuery("")
         try {
             const res = await api.get(`/products/${prod._id}`)
             setSelectedProduct(res.data?.data || prod)
@@ -424,13 +426,13 @@ export default function QuotationDetailsPage() {
     const isActionable = !['Booked', 'Rejected', 'Cancelled'].includes(quotation.status)
 
     const canAddItem = () => {
-        if (quotation.isLocked && !isAdmin) return false;
+        if (quotation.isLocked) return false;
         if (!isAdmin && !canEdit) return false;
         return isActionable;
     }
 
     const canEditQuantity = () => {
-        if (quotation.isLocked && !isAdmin) return false;
+        if (quotation.isLocked) return false;
         if (!isAdmin && !canEdit) return false;
         return isActionable;
     }
@@ -679,8 +681,8 @@ export default function QuotationDetailsPage() {
                                                 {isAddingItem ? 'Cancel' : 'Add Item'}
                                             </Button>
                                         )}
-                                        {/* Edit Items: admin only */}
-                                        {isAdmin && (
+                                        {/* Edit Items: admin only (hidden if locked) */}
+                                        {isAdmin && !quotation.isLocked && (
                                             isEditingItems ? (
                                                 <>
                                                     <LoaderButton
@@ -721,11 +723,11 @@ export default function QuotationDetailsPage() {
                                 )}
                             </CardHeader>
                             <CardContent>
-                                {/* Lock warning banner for employees */}
-                                {quotation.isLocked && !isAdmin && (
+                                {/* Lock warning banner */}
+                                {quotation.isLocked && (
                                     <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-xs text-amber-700">
                                         <Lock className="w-4 h-4 shrink-0 text-amber-600" />
-                                        <span className="font-semibold">Quotation is locked. Contact admin to make changes.</span>
+                                        <span className="font-semibold">Quotation is locked. Unlock to make changes.</span>
                                     </div>
                                 )}
 
@@ -1169,7 +1171,7 @@ export default function QuotationDetailsPage() {
                                                         {totals.discountPercent > 0 ? `(${totals.discountPercent}%) ` : ''}
                                                         ₹{totals.discount?.toLocaleString() || '0'}
                                                     </span>
-                                                    {isActionable && !hasPerItemDiscounts() && (isAdmin || canEdit) && !quotation?.isLocked && !isAdmin && (
+                                                    {isActionable && !hasPerItemDiscounts() && (isAdmin || canEdit) && !quotation?.isLocked && (
                                                         <Button
                                                             size="icon"
                                                             variant="ghost"
@@ -1239,7 +1241,7 @@ export default function QuotationDetailsPage() {
                                             ) : (
                                                 <div className="flex items-center gap-1.5">
                                                     <span className="font-bold text-slate-700">₹{totals.deliveryCharge?.toLocaleString() || '0'}</span>
-                                                    {isActionable && (isAdmin || canEdit) && !quotation?.isLocked && !isAdmin && (
+                                                    {isActionable && (isAdmin || canEdit) && !quotation?.isLocked && (
                                                         <Button
                                                             size="icon"
                                                             variant="ghost"

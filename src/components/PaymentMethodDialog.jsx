@@ -159,7 +159,7 @@ function PaymentMethodDialog({ open, onOpenChange, order }) {
                                 <SelectItem value="UPI">
                                     <div className="flex items-center gap-2">
                                         <IoQrCode className="w-4 h-4 text-gray-600" />
-                                        <span>UPI</span>
+                                        <span>QR Code</span>
                                     </div>
                                 </SelectItem>
                                 <SelectItem value="Online">
@@ -172,12 +172,6 @@ function PaymentMethodDialog({ open, onOpenChange, order }) {
                                     <div className="flex items-center gap-2">
                                         <ImHome className="w-4 h-4 text-gray-600" />
                                         <span>COD</span>
-                                    </div>
-                                </SelectItem>
-                                <SelectItem value="Mixed">
-                                    <div className="flex items-center gap-2">
-                                        <BsCashCoin className="w-4 h-4 text-gray-600" />
-                                        <span>Mixed</span>
                                     </div>
                                 </SelectItem>
                             </SelectContent>

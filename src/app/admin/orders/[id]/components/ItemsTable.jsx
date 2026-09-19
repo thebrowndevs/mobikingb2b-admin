@@ -107,7 +107,8 @@ function ItemsTable({
     }, [isEditing, order])
 
     const canEditOrderItems = () => {
-        if (!isAdmin) return false;
+        if (!isAdmin && !canEdit) return false;
+        if (order?.isLocked) return false;
         if (order?.couponLocked) return false;
         if (order?.shippingType === 'Manual') {
             return !['Shipped', 'Delivered', 'Cancelled', 'Rejected', 'Returned'].includes(order?.status);
@@ -124,7 +125,7 @@ function ItemsTable({
 
     const canAddItem = () => {
         if (!isAdmin && !canEdit) return false;
-        if (order?.isLocked && !isAdmin) return false;
+        if (order?.isLocked) return false;
         if (order?.couponLocked) return false;
         if (order?.shippingType === 'Manual') {
             return !['Shipped', 'Delivered', 'Cancelled', 'Rejected', 'Returned'].includes(order?.status);
@@ -156,13 +157,13 @@ function ItemsTable({
     }
 
     const selectProduct = async (prod) => {
+        setSearchResults([])
+        setSearchQuery("")
         setSearching(true)
         try {
             const res = await api.get(`/products/${prod._id}`)
             const fullProd = res.data?.data
             setSelectedProduct(fullProd)
-            setSearchResults([])
-            setSearchQuery("")
 
             // Default variant selection
             if (fullProd?.variants) {
@@ -884,7 +885,7 @@ function ItemsTable({
                                         <span className={order?.discount > 0 ? "text-emerald-600 font-bold" : "font-bold text-slate-700"}>
                                             {order?.discount > 0 ? `-${order?.discountPercent > 0 ? `(${order.discountPercent}%) ` : ''}₹${order?.discount?.toLocaleString()}` : '—'}
                                         </span>
-                                        {(isAdmin || canEdit) && !order?.couponLocked && !order?.isLocked && !isAdmin && !(order?.items?.some(it => (it.discount || 0) > 0)) && (
+                                        {(isAdmin || canEdit) && !order?.couponLocked && !order?.isLocked && !(order?.items?.some(it => (it.discount || 0) > 0)) && (
                                             <Button
                                                 size="icon"
                                                 variant="ghost"
@@ -947,7 +948,7 @@ function ItemsTable({
                                 ) : (
                                     <div className="flex items-center gap-1.5">
                                         <span className="font-bold text-slate-700">₹{totals.deliveryCharge?.toLocaleString()}</span>
-                                        {(isAdmin || canEdit) && !order?.isLocked && !isAdmin && (
+                                        {(isAdmin || canEdit) && !order?.isLocked && (
                                             <Button
                                                 size="icon"
                                                 variant="ghost"
@@ -982,6 +983,7 @@ function ItemsTable({
                                         const canRemoveRoleBased = isAdmin || (canEdit && order?.couponAppliedByRole !== 'admin');
                                         const showRemoveButton = isStaff &&
                                             canRemoveRoleBased &&
+                                            !order?.isLocked &&
                                             order?.paymentStatus !== "Paid" &&
                                             !isAppliedPaymentPaid &&
                                             !['Shipped', 'Delivered', 'Cancelled', 'Rejected', 'Returned'].includes(order?.status);
@@ -1010,7 +1012,7 @@ function ItemsTable({
                                         Coupons cannot be applied when a global discount is active.
                                     </span>
                                 ) : (
-                                    (isAdmin || canEdit) && order?.paymentStatus !== "Paid" && !['Shipped', 'Delivered', 'Cancelled', 'Rejected', 'Returned'].includes(order?.status) ? (
+                                    (isAdmin || canEdit) && !order?.isLocked && order?.paymentStatus !== "Paid" && !['Shipped', 'Delivered', 'Cancelled', 'Rejected', 'Returned'].includes(order?.status) ? (
                                         <div className="flex items-center gap-1.5">
                                             <Input
                                                 placeholder="Enter Coupon"

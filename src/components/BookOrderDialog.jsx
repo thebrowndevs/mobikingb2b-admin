@@ -30,7 +30,22 @@ export default function BookOrderDialog({
     const [paymentSubtotal, setPaymentSubtotal] = useState("")
     const [paymentDiscount, setPaymentDiscount] = useState("")
     const [paymentMethod, setPaymentMethod] = useState("Online")
+    const [paymentId, setPaymentId] = useState("")
     const [paymentStatus, setPaymentStatus] = useState("Pending")
+
+    // Handle method change & reset payment ID
+    const handleBookingMethodChange = (newMethod) => {
+        setBookingPaymentMethod(newMethod)
+        setPaymentId("")
+    }
+
+    const handleRecordMethodChange = (newMethod) => {
+        setPaymentMethod(newMethod)
+        setPaymentId("")
+        if (newMethod === "Online") {
+            setPaymentStatus("Pending")
+        }
+    }
 
     // Prefill payment fields when quotation changes or dialog opens
     useEffect(() => {
@@ -43,10 +58,18 @@ export default function BookOrderDialog({
         }
     }, [quotation, isOpen, bookingPaymentMethod])
 
+    const calcAmount = Math.max(0, Number(paymentSubtotal || 0) - Number(paymentDiscount || 0));
+
     const handleSubmit = () => {
+        if (recordPayment && calcAmount > (quotation?.orderAmount || 0)) {
+            return;
+        }
+
+        const derivedPaymentMode = (recordPayment && calcAmount >= (quotation?.orderAmount || 0)) ? "complete" : "parcel";
+
         const payload = {
             quotationId: quotation._id,
-            paymentMode: bookingPaymentMode,
+            paymentMode: derivedPaymentMode,
             method: bookingPaymentMethod,
             length: Number(bookingLength),
             breadth: Number(bookingBreadth),
@@ -65,7 +88,8 @@ export default function BookOrderDialog({
                     discount: disc,
                     amount: amt,
                     method: paymentMethod,
-                    status: paymentStatus,
+                    status: paymentMethod === "Online" ? "Pending" : paymentStatus,
+                    paymentId: paymentId.trim() || undefined,
                     notes: "Auto-recorded during booking"
                 }
             ]
@@ -95,28 +119,21 @@ export default function BookOrderDialog({
                     <div className="grid grid-cols-2 gap-3 bg-indigo-50/55 p-3 rounded-lg border border-indigo-100/50 mb-1">
                         <div className="flex flex-col gap-1">
                             <span className="text-xs text-indigo-900 font-bold">PAYMENT MODE</span>
-                            <Select onValueChange={setBookingPaymentMode} defaultValue={bookingPaymentMode}>
-                                <SelectTrigger className="border-slate-200 h-9 bg-white">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="complete">Complete</SelectItem>
-                                    <SelectItem value="parcel">Parcel</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <div className="h-9 px-3 bg-white border border-slate-200 rounded-md flex items-center text-xs font-bold text-indigo-950 uppercase">
+                                {recordPayment && calcAmount >= (quotation?.orderAmount || 0) ? "Complete" : "Parcel"}
+                            </div>
                         </div>
                         <div className="flex flex-col gap-1">
                             <span className="text-xs text-indigo-900 font-bold">PAYMENT METHOD</span>
-                            <Select onValueChange={setBookingPaymentMethod} defaultValue={bookingPaymentMethod}>
+                            <Select onValueChange={handleBookingMethodChange} value={bookingPaymentMethod}>
                                 <SelectTrigger className="border-slate-200 h-9 bg-white">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="COD">COD</SelectItem>
                                     <SelectItem value="Online">Online</SelectItem>
-                                    <SelectItem value="UPI">UPI</SelectItem>
+                                    <SelectItem value="UPI">QR Code</SelectItem>
                                     <SelectItem value="Cash">Cash</SelectItem>
-                                    <SelectItem value="Mixed">Mixed</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -144,7 +161,16 @@ export default function BookOrderDialog({
                                         <Input
                                             type="number"
                                             value={paymentSubtotal}
-                                            onChange={(e) => setPaymentSubtotal(e.target.value)}
+                                            max={quotation?.orderAmount || undefined}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const num = parseFloat(val);
+                                                if (!isNaN(num) && num > (quotation?.orderAmount || 0)) {
+                                                    setPaymentSubtotal(String(quotation?.orderAmount || 0));
+                                                } else {
+                                                    setPaymentSubtotal(val);
+                                                }
+                                            }}
                                             className="h-8 border-slate-200 text-xs bg-white"
                                             placeholder="Subtotal"
                                         />
@@ -162,38 +188,52 @@ export default function BookOrderDialog({
                                     <div className="flex flex-col gap-1">
                                         <span className="text-[10px] text-slate-400 font-semibold">Amount (₹)</span>
                                         <div className="h-8 flex items-center font-bold text-xs text-slate-900 bg-slate-50 px-2 rounded border border-slate-200">
-                                            ₹{Math.max(0, Number(paymentSubtotal || 0) - Number(paymentDiscount || 0)).toLocaleString()}
+                                            ₹{calcAmount.toLocaleString()}
                                         </div>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="flex flex-col gap-1">
                                         <span className="text-[10px] text-slate-400 font-semibold">Method</span>
-                                        <Select onValueChange={setPaymentMethod} value={paymentMethod}>
+                                        <Select onValueChange={handleRecordMethodChange} value={paymentMethod}>
                                             <SelectTrigger className="border-slate-200 h-8 text-xs bg-white">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="Online">Online</SelectItem>
-                                                <SelectItem value="UPI">UPI</SelectItem>
+                                                <SelectItem value="UPI">QR Code</SelectItem>
                                                 <SelectItem value="Cash">Cash</SelectItem>
-                                                <SelectItem value="Mixed">Mixed</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
                                     <div className="flex flex-col gap-1">
                                         <span className="text-[10px] text-slate-400 font-semibold">Status</span>
-                                        <Select onValueChange={setPaymentStatus} value={paymentStatus}>
+                                        <Select
+                                            onValueChange={setPaymentStatus}
+                                            value={paymentMethod === "Online" ? "Pending" : paymentStatus}
+                                            disabled={paymentMethod === "Online"}
+                                        >
                                             <SelectTrigger className="border-slate-200 h-8 text-xs bg-white">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="Pending">Pending</SelectItem>
-                                                <SelectItem value="Paid">Paid</SelectItem>
+                                                <SelectItem value="Paid" disabled={paymentMethod === "Online"}>Paid</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
                                 </div>
+                                {(paymentMethod === "UPI" || paymentMethod === "Online") && (
+                                    <div className="flex flex-col gap-1 mt-1">
+                                        <span className="text-[10px] text-slate-400 font-semibold">Payment ID / Transaction Ref</span>
+                                        <Input
+                                            value={paymentId}
+                                            onChange={(e) => setPaymentId(e.target.value)}
+                                            placeholder="Enter Payment ID / Ref"
+                                            className="h-8 border-slate-200 text-xs bg-white"
+                                        />
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

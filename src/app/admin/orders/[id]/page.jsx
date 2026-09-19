@@ -1,5 +1,5 @@
 "use client"
-import { Car, Printer, Download, Truck, Edit2, Plus, Calendar, FileText, Copy, Link2, ChevronLeft, ShoppingBag, Clock } from "lucide-react"
+import { Car, Printer, Download, Truck, Edit2, Plus, Calendar, FileText, Copy, Link2, ChevronLeft, ShoppingBag, Clock, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import PCard from '@/components/custom/PCard';
 import InnerDashboardLayout from '@/components/dashboard/InnerDashboardLayout';
@@ -90,6 +90,7 @@ function page() {
     const [editingPayment, setEditingPayment] = useState(null)
     const [paymentSubtotal, setPaymentSubtotal] = useState("")
     const [paymentDiscount, setPaymentDiscount] = useState("")
+    const [paymentTxnId, setPaymentTxnId] = useState("")
 
     // Generate payment link state
     const [generateLinkOpen, setGenerateLinkOpen] = useState(false)
@@ -387,6 +388,13 @@ function page() {
 
                     <PersonalDetails order={order} canEdit={canEdit} />
 
+                    {order?.isLocked && (
+                        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-800 font-semibold">
+                            <Lock className="w-4 h-4 shrink-0 text-amber-600" />
+                            <span>Order is locked. Unlock to make changes.</span>
+                        </div>
+                    )}
+
                     <ItemsTable
                         order={order}
                         isNewOrder={isNewOrder}
@@ -460,7 +468,7 @@ function page() {
                                                     {payment.phonepeOrderId || payment.razorpayOrderId || "—"}
                                                 </td>
                                                 <td className="p-3 whitespace-nowrap text-xs font-mono text-slate-600">
-                                                    {payment.phonepePaymentId || payment.razorpayPaymentId || "—"}
+                                                    {payment.paymentId || payment.phonepePaymentId || payment.razorpayPaymentId || "—"}
                                                 </td>
                                                 <td className="p-3 whitespace-nowrap text-slate-900">
                                                     ₹{payment.subtotal?.toLocaleString() || "0"}
@@ -474,7 +482,7 @@ function page() {
                                                 <td className="p-3 text-slate-900 font-bold whitespace-nowrap">
                                                     ₹{payment.amount?.toLocaleString()}
                                                 </td>
-                                                <td className="p-3 whitespace-nowrap">{payment.method}</td>
+                                                <td className="p-3 whitespace-nowrap">{payment.method === "UPI" ? "QR Code" : payment.method}</td>
                                                 <td className="p-3 whitespace-nowrap">
                                                     <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${payment.status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                                                         {payment.status}
@@ -497,6 +505,7 @@ function page() {
                                                                 setPaymentMethod(payment.method);
                                                                 setPaymentStatus(payment.status);
                                                                 setPaymentPaidAt(payment.paidAt ? new Date(payment.paidAt).toISOString().split('T')[0] : "");
+                                                                setPaymentTxnId(payment.transactionId || payment.phonepePaymentId || payment.razorpayPaymentId || "");
                                                                 setEditPaymentOpen(true);
                                                             }}
                                                             className="text-indigo-650 hover:text-indigo-900 h-8 w-8 p-0"
@@ -814,7 +823,23 @@ function page() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="flex flex-col gap-1">
                                     <Label className="text-slate-500 font-semibold text-xs uppercase">Subtotal (₹)</Label>
-                                    <Input type="number" value={paymentSubtotal} onChange={(e) => setPaymentSubtotal(e.target.value)} placeholder="e.g. 5000" />
+                                    <Input
+                                        type="number"
+                                        value={paymentSubtotal}
+                                        max={order?.remainingAmount || undefined}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const num = parseFloat(val);
+                                            const disc = Number(paymentDiscount || 0);
+                                            const maxSubtotal = (order?.remainingAmount || 0) + disc;
+                                            if (!isNaN(num) && num > maxSubtotal) {
+                                                setPaymentSubtotal(String(maxSubtotal));
+                                            } else {
+                                                setPaymentSubtotal(val);
+                                            }
+                                        }}
+                                        placeholder="e.g. 5000"
+                                    />
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <Label className="text-slate-500 font-semibold text-xs uppercase">Discount (₹)</Label>
@@ -832,31 +857,52 @@ function page() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="flex flex-col gap-1">
                                     <Label className="text-slate-500 font-semibold text-xs uppercase">Payment Method</Label>
-                                    <Select onValueChange={(val) => setPaymentMethod(val)} defaultValue={paymentMethod}>
+                                    <Select
+                                        onValueChange={(val) => {
+                                            setPaymentMethod(val);
+                                            setPaymentTxnId("");
+                                            if (val === "Online") setPaymentStatus("Pending");
+                                        }}
+                                        defaultValue={paymentMethod}
+                                    >
                                         <SelectTrigger className="border-slate-200 h-9">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="Online">Online</SelectItem>
-                                            <SelectItem value="UPI">UPI</SelectItem>
+                                            <SelectItem value="UPI">QR Code</SelectItem>
                                             <SelectItem value="Cash">Cash</SelectItem>
-                                            <SelectItem value="Mixed">Mixed</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <Label className="text-slate-500 font-semibold text-xs uppercase">Transaction Status</Label>
-                                    <Select onValueChange={(val) => setPaymentStatus(val)} defaultValue={paymentStatus} disabled={!isAdmin}>
+                                    <Select
+                                        onValueChange={(val) => setPaymentStatus(val)}
+                                        value={paymentMethod === "Online" ? "Pending" : paymentStatus}
+                                        disabled={!isAdmin || paymentMethod === "Online"}
+                                    >
                                         <SelectTrigger className="border-slate-200 h-9">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="Paid">Paid</SelectItem>
                                             <SelectItem value="Pending">Pending</SelectItem>
+                                            <SelectItem value="Paid" disabled={paymentMethod === "Online"}>Paid</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                             </div>
+
+                            {(paymentMethod === "UPI" || paymentMethod === "Online") && (
+                                <div className="flex flex-col gap-1">
+                                    <Label className="text-slate-500 font-semibold text-xs uppercase">Payment ID / Transaction Ref (Optional)</Label>
+                                    <Input
+                                        value={paymentTxnId}
+                                        onChange={(e) => setPaymentTxnId(e.target.value)}
+                                        placeholder="Enter transaction ref or payment ID"
+                                    />
+                                </div>
+                            )}
 
                             <div className="flex flex-col gap-1">
                                 <Label className="text-slate-500 font-semibold text-xs uppercase">Paid Date (Optional)</Label>
@@ -880,7 +926,8 @@ function page() {
                                     method: paymentMethod,
                                     status: paymentStatus,
                                     notes: paymentNotes,
-                                    paidAt: paymentPaidAt
+                                    paidAt: paymentPaidAt,
+                                    transactionId: paymentTxnId.trim() || undefined
                                 })}
                                 loading={addPaymentMutation.isPending}
                                 className="bg-slate-900 hover:bg-slate-800 text-white font-semibold"
@@ -903,7 +950,25 @@ function page() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="flex flex-col gap-1">
                                     <Label className="text-slate-500 font-semibold text-xs uppercase">Subtotal (₹)</Label>
-                                    <Input type="number" value={paymentSubtotal} onChange={(e) => setPaymentSubtotal(e.target.value)} />
+                                    <Input
+                                        type="number"
+                                        value={paymentSubtotal}
+                                        max={order?.remainingAmount || undefined}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const num = parseFloat(val);
+                                            const disc = Number(paymentDiscount || 0);
+                                            const currentRecordDiscount = Number(editingPayment?.discount || 0);
+                                            const currentRecordSubtotal = Number(editingPayment?.subtotal || editingPayment?.amount || 0);
+                                            const maxSubtotal = (order?.remainingAmount || 0) + currentRecordSubtotal + disc - currentRecordDiscount;
+                                            if (!isNaN(num) && num > maxSubtotal) {
+                                                setPaymentSubtotal(String(maxSubtotal));
+                                            } else {
+                                                setPaymentSubtotal(val);
+                                            }
+                                        }}
+                                        placeholder="e.g. 5000"
+                                    />
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <Label className="text-slate-500 font-semibold text-xs uppercase">Discount (₹)</Label>
@@ -911,48 +976,60 @@ function page() {
                                 </div>
                             </div>
 
-                            {editingPayment?.coupon > 0 && (
-                                <div className="bg-emerald-50 p-2.5 rounded-lg border border-emerald-100/60 flex justify-between items-center text-xs text-emerald-800">
-                                    <span className="font-semibold">Coupon Discount Applied</span>
-                                    <span className="font-bold">-₹{editingPayment.coupon}</span>
-                                </div>
-                            )}
-
                             <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex justify-between items-center text-xs">
-                                <span className="font-bold text-slate-500 uppercase">Calculated Amount (₹)</span>
-                                <span className="font-bold text-slate-900 text-sm">
-                                    ₹{Math.max(0, Number(paymentSubtotal || 0) - Number(paymentDiscount || 0) - Number(editingPayment?.coupon || 0)).toLocaleString()}
-                                </span>
+                                <span className="font-semibold text-slate-500 uppercase">Calculated Amount (₹)</span>
+                                <span className="font-bold text-slate-900 text-sm">₹{((Number(paymentSubtotal) || 0) - (Number(paymentDiscount) || 0)).toLocaleString()}</span>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="flex flex-col gap-1">
                                     <Label className="text-slate-500 font-semibold text-xs uppercase">Payment Method</Label>
-                                    <Select onValueChange={(val) => setPaymentMethod(val)} defaultValue={paymentMethod}>
+                                    <Select
+                                        onValueChange={(val) => {
+                                            setPaymentMethod(val);
+                                            setPaymentTxnId("");
+                                            if (val === "Online") setPaymentStatus("Pending");
+                                        }}
+                                        defaultValue={paymentMethod}
+                                    >
                                         <SelectTrigger className="border-slate-200 h-9">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="Online">Online</SelectItem>
-                                            <SelectItem value="UPI">UPI</SelectItem>
+                                            <SelectItem value="UPI">QR Code</SelectItem>
                                             <SelectItem value="Cash">Cash</SelectItem>
-                                            <SelectItem value="Mixed">Mixed</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <Label className="text-slate-500 font-semibold text-xs uppercase">Transaction Status</Label>
-                                    <Select onValueChange={(val) => setPaymentStatus(val)} defaultValue={paymentStatus} disabled={!isAdmin}>
+                                    <Select
+                                        onValueChange={(val) => setPaymentStatus(val)}
+                                        value={paymentMethod === "Online" ? "Pending" : paymentStatus}
+                                        disabled={!isAdmin || paymentMethod === "Online"}
+                                    >
                                         <SelectTrigger className="border-slate-200 h-9">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="Paid">Paid</SelectItem>
                                             <SelectItem value="Pending">Pending</SelectItem>
+                                            <SelectItem value="Paid" disabled={paymentMethod === "Online"}>Paid</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                             </div>
+
+                            {(paymentMethod === "UPI" || paymentMethod === "Online") && (
+                                <div className="flex flex-col gap-1">
+                                    <Label className="text-slate-500 font-semibold text-xs uppercase">Payment ID / Transaction Ref (Optional)</Label>
+                                    <Input
+                                        value={paymentTxnId}
+                                        onChange={(e) => setPaymentTxnId(e.target.value)}
+                                        placeholder="Enter transaction ref or payment ID"
+                                    />
+                                </div>
+                            )}
 
                             <div className="flex flex-col gap-1">
                                 <Label className="text-slate-500 font-semibold text-xs uppercase">Paid Date (Optional)</Label>
@@ -977,7 +1054,8 @@ function page() {
                                         method: paymentMethod,
                                         status: paymentStatus,
                                         notes: paymentNotes,
-                                        paidAt: paymentPaidAt
+                                        paidAt: paymentPaidAt,
+                                        transactionId: paymentTxnId.trim() || undefined
                                     }
                                 })}
                                 loading={editPaymentMutation.isPending}
