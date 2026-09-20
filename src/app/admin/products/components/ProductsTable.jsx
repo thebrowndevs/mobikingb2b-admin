@@ -56,7 +56,6 @@ export default function ProductsListView({
                         <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-36">Category</TableHead>
                         <TableHead className="text-left font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-32">Price Range</TableHead>
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-28">Stock</TableHead>
-                        <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-28">Visibility</TableHead>
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-32">Stock Adj</TableHead>
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-24">Status</TableHead>
                         <TableHead className="text-center font-bold text-slate-700 text-xs uppercase tracking-wider py-4 w-24">Actions</TableHead>
@@ -112,26 +111,6 @@ export default function ProductsListView({
                                 <span className={`font-bold text-sm ${(product?.totalStock || 0) > 0 ? 'text-slate-800' : 'text-red-500'}`}>
                                     {product?.totalStock || 0}
                                 </span>
-                            </TableCell>
-
-                            {/* Visibility Chips */}
-                            <TableCell className="align-middle text-center" onClick={(e) => e.stopPropagation()}>
-                                <div className="flex flex-col gap-1 items-center">
-                                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none
-                                        ${product.webVisibility !== false
-                                            ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                                            : 'bg-slate-100 text-slate-400 border border-bdr2'
-                                        }`}>
-                                        <Globe size={9} />Web
-                                    </span>
-                                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none
-                                        ${product.appVisibility !== false
-                                            ? 'bg-violet-50 text-violet-600 border border-violet-200'
-                                            : 'bg-slate-100 text-slate-400 border border-bdr2'
-                                        }`}>
-                                        <Smartphone size={9} />App
-                                    </span>
-                                </div>
                             </TableCell>
 
                             {/* Stock Update button */}

@@ -33,7 +33,8 @@ const formSchema = z.object({
     city: z.string(),
     pincode: z.string(),
     state: z.string(),
-    country: z.string()
+    country: z.string(),
+    comments: z.string().optional()
 })
 
 function PersonalDetailsDialog({ open, onOpenChange, user }) {
@@ -48,7 +49,8 @@ function PersonalDetailsDialog({ open, onOpenChange, user }) {
             city: user?.city || "",
             pincode: user?.pincode || "",
             state: user?.state || "",
-            country: user?.country || ""
+            country: user?.country || "",
+            comments: user?.comments || ""
         }
     })
 
@@ -99,6 +101,20 @@ function PersonalDetailsDialog({ open, onOpenChange, user }) {
                                 />
                             ))}
                         </div>
+
+                        <FormField
+                            control={form.control}
+                            name="comments"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Notes / Remarks</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Enter notes or remarks..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
                         <DialogFooter>
                             <LoaderButton

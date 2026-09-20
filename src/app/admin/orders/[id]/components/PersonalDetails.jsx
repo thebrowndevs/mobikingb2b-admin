@@ -28,6 +28,7 @@ function PersonalDetails({ order, canEdit }) {
         ["Country", country || "—"],
         ["Pincode", pincode || "—"],
         ["Email", email],
+        ["Notes / Remarks", order?.comments || "—"],
     ]
 
     function isEditable() {

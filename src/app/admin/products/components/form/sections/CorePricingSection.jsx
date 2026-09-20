@@ -31,7 +31,7 @@ export default function CorePricingSection({ form }) {
       const calculatedBase = (numericPrice * (100 / (100 + numericGst))).toFixed(2);
       setValue("basePrice", Number(calculatedBase), { shouldValidate: true });
     } else {
-      setValue("basePrice", "", { shouldValidate: true });
+      setValue("basePrice", null, { shouldValidate: true });
     }
   }, [firstSlabPrice, watchGst, setValue]);
 

@@ -64,7 +64,7 @@ const step2Schema = z.object({
     return typeof val === "string" ? Number(val) : val;
   }, z.number().optional().nullable()),
   basePrice: z.preprocess((val) => {
-    if (val === "" || val === null || val === undefined) return undefined;
+    if (val === "" || val === null || val === undefined) return null;
     return typeof val === "string" ? Number(val) : val;
   }, z.number().optional().nullable()),
   discount: z.preprocess((val) => {
@@ -171,7 +171,7 @@ export default function ProductForm({ productId: initialProductId }) {
   useEffect(() => {
     if (product) {
       reset({
-        brandId: product?.brand || "",
+        brandId: typeof product?.brand === "object" ? product?.brand?._id || "" : product?.brand || "",
         fullName: product?.fullName || "",
         slug: product?.slug || "",
         sku: product?.sku || "",
@@ -237,7 +237,7 @@ export default function ProductForm({ productId: initialProductId }) {
         fullName: values.fullName,
         slug: values.slug,
         categoryId: values.categoryId,
-        brandId: values.brandId || null,
+        ...(values.brandId ? { brandId: values.brandId } : {}),
         sku: values.sku || "",
         hsn: values.hsn || "",
         tags: tagsArray,
@@ -338,20 +338,20 @@ export default function ProductForm({ productId: initialProductId }) {
           <div key={item.step} className="flex items-center gap-2 flex-1 justify-center last:flex-none">
             <div
               className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${activeStep === item.step
-                  ? "bg-indigo-600 text-white ring-4 ring-indigo-100"
-                  : activeStep > item.step
-                    ? "bg-emerald-100 text-emerald-600 border border-emerald-200"
-                    : "bg-back1 text-slate-400 border border-bdr2"
+                ? "bg-indigo-600 text-white ring-4 ring-indigo-100"
+                : activeStep > item.step
+                  ? "bg-emerald-100 text-emerald-600 border border-emerald-200"
+                  : "bg-back1 text-slate-400 border border-bdr2"
                 }`}
             >
               {activeStep > item.step ? <Check size={14} /> : item.step}
             </div>
             <span
               className={`text-xs font-bold uppercase tracking-wider ${activeStep === item.step
-                  ? "text-indigo-600 font-extrabold"
-                  : activeStep > item.step
-                    ? "text-slate-550"
-                    : "text-slate-400"
+                ? "text-indigo-600 font-extrabold"
+                : activeStep > item.step
+                  ? "text-slate-550"
+                  : "text-slate-400"
                 }`}
             >
               {item.label}

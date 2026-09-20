@@ -103,7 +103,7 @@ export default function GeneralDetailsSection({ form, categories }) {
           render={({ field }) => (
             <FormItem className="space-y-1.5">
               <FormLabel className="text-xs font-bold text-slate-550 uppercase tracking-wider">
-                Brand<span className="text-red-500"> *</span>
+                Brand
               </FormLabel>
               <div className="flex gap-1.5 items-center">
                 <FormControl>
@@ -240,10 +240,10 @@ export default function GeneralDetailsSection({ form, categories }) {
                     <Star
                       key={star}
                       className={`h-4.5 w-4.5 ${ratingValue >= star
-                          ? "text-amber-500 fill-amber-500"
-                          : ratingValue >= star - 0.5
-                            ? "text-amber-500 fill-amber-300"
-                            : "text-slate-200"
+                        ? "text-amber-500 fill-amber-500"
+                        : ratingValue >= star - 0.5
+                          ? "text-amber-500 fill-amber-300"
+                          : "text-slate-200"
                         }`}
                     />
                   ))}
